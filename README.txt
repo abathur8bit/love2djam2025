@@ -1,22 +1,26 @@
-# Love2D Jam 2025
-Game submission for [love jam 2025](https://itch.io/jam/love2d-jam-2025)
+# Asteroids
+A classic shooter written to test some collision logic.
+
+This is letter "A" of my 26 letter theme challenge. 
 
 # Running
-To run, execute the EXE file, or you need to have love installed and type
-
-```
-love .
-```
+Double click the executable/app file. 
 
 # Credits:
-Programming: [Coder8Bit](https://coder8bit.itch.io/)
-Programming: Vince#6486
-Sound: [Dr. Tune](https://drtune.itch.io/)
-UI: [Erferro](https://www.behance.net/alessioferracu3)
-
+Author: [Coder8Bit](https://coder8bit.itch.io/)
 Font: Wolfenstein
+Ship: <https://foozlecc.itch.io/void-main-ship>
+Math: <https://berbasoft.com/simplegametutorials/love/asteroids/>
 Tweening: [Flux](https://github.com/rxi/flux)
 
+Licenses listed below, and in license.txt.
+
+# Foozlecc
+License: (Creative Commons Zero, CC0)
+http://creativecommons.org/publicdomain/zero/1.0/
+
+This content is free to use and modify for all projects, including commercial projects.
+Attribution not required.  If you would like to support, consider a voluntary donation.
 
 # Flux
 Copyright (c) 2016 rxi
