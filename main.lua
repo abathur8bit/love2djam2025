@@ -1,23 +1,23 @@
 io.stdout:setvbuf("no")
 flux = require "lib.flux"
-require "lib.gui"
+gui = require "lib.gui"
 require "conf"
 
 gameTitle = "Love Jam 2025 Game"
 aspect=0.5625
 love.window.setTitle(gameTitle)
-flags={}
+flags = {}
 flags.fullscreen=fullscreen
 flags.borderless=false
 if fullscreen then flags.borderless=true end
 flags.fullscreentype="desktop"
--- flags.display=2
+ flags.display=2
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
 
-screenWidth=love.graphics.getWidth()
-screenHeight=love.graphics.getHeight()
+screenWidth = love.graphics.getWidth()
+screenHeight = love.graphics.getHeight()
 
 fontSheets = {
   large={filename="assets/wolf-font-sheet-large.png",font=nil},
@@ -25,8 +25,8 @@ fontSheets = {
   small={filename="assets/wolf-font-sheet-small.png",font=nil}
 }
 fontCharacters =  "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
-fontNormalColor=createColor(1,0,0)
-fontSelectedColor=createColor(1,1,0)
+fontNormalColor=gui.createColor(1,0,0)
+fontSelectedColor=gui.createColor(1,1,0)
 logoImage=love.graphics.newImage("assets/coder8bit.png")
 logo = {x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
 
@@ -44,6 +44,9 @@ local sfx = {
 }
 
 
+activeMenu = nil
+menuMain = {}
+
 -- Bring in the logo and other title parts after title is displayed
 function titleTweenComplete()
   flux.to(startText,0.5,{x=screenWidth/2,y=y1})
@@ -52,7 +55,7 @@ function titleTweenComplete()
 end
 
 function love.load(args)
-  keystate={up=false,down=false,left=false,right=false,fire=false}
+  keystate={up=false,down=false,left=false,right=false,fire=false,thrust=false,buttonA=false,buttonB=false,buttonMenu=false,buttonView=false}
 
   -- only load sound and music if we are not in a browser
   if inbrowser==false then
@@ -67,12 +70,15 @@ function love.load(args)
 --    music.title.music:play()
   end
   
+  -- load fonts listed in fontsheets
   for key,fontInfo in pairs(fontSheets) do
     fontInfo.font=love.graphics.newImageFont(fontInfo.filename,fontCharacters)
   end
   
+  
   local joysticks = love.joystick.getJoysticks()
   joystick = joysticks[1]
+  
   love.graphics.setLineStyle("rough");
 
   local y1=screenHeight/2-fontSheets.small.font:getHeight()/2
@@ -83,18 +89,76 @@ function love.load(args)
     text="A game by Coder8Bit\n"..
       "Vince\n"..
       "Dr. Tunes\n"..
-      "Erferro",
+      "OneSmallGhost",
     font=fontSheets.small.font}
-  startText = {x=-1000,y=y1,text="Press Fire to start",font=fontSheets.small.font}
+  startText = {x=-1000,y=y1,text="Press Escape to start",font=fontSheets.small.font}
   instructionText = {x=-1400,y=y2,text="Controls",font=fontSheets.small.font}
   
   flux.to(titleText,0.5,{x=10,y=10}):oncomplete(titleTweenComplete)
   flux.to(creditText,0.5,{x=10,y=titleText.y+titleText.font:getHeight()+offset})
+  
+  -- Sample menu
+  local x = screenWidth/2-150
+  local y = screenHeight/2-100
+  local w = 250
+  local h = 300
+  local menuWindowed=false
+  menuMain = gui.createMenu(
+    nil,
+    {"Play","Options","Quit"},
+    x,y,w,h,menuWindowed,
+    fontNormalColor,fontSelectedColor,
+    handleMenuMain,nil,
+    fontSheets.normal.font)
+  menuOptions = gui.createMenu(
+    nil,
+    {"One","Two","Back"},
+    x,y,w,h,menuWindowed,
+    fontNormalColor,fontSelectedColor,
+    handleMenuOptions,handleMenuOptionsBack,
+    fontSheets.normal.font)
 end
 
+function handleMenuMain(menu) 
+  local index=menu.selectedIndex
+  local text=menu.options[index]
+--  print("handle menu called with menu",index,text)
+  if text=="Quit" then
+    love.event.quit() -- user selected quit
+  elseif index==2 then
+    activeMenu=menuOptions
+  elseif index==1 then
+    activeMenu=nil  --close menu
+    currentMode=gameModes.playing
+  end
+end
+
+function handleMenuOptions(menu)
+  local index=menu.selectedIndex
+  local text=menu.options[index]
+  if index==3 then 
+    activeMenu=menuMain 
+  else 
+    activeMenu=nil 
+  end --close menu
+end
+
+function handleMenuOptionsBack(menu) 
+  local index=menu.selectedIndex
+  local text=menu.options[index]
+  print("handle back called with menu",index,text)
+  activeMenu=menuMain
+end
 
 function love.keypressed(key)
-  if key == "escape" then love.event.quit() end
+  print("key pressed ",key)
+  if key == "escape" then 
+    if activeMenu==nil then
+      activeMenu=menuMain 
+    else
+      activeMenu=nil  --close menu
+    end
+  end
 end
 
 function love.update(dt)
@@ -108,46 +172,46 @@ function love.update(dt)
     if hat=="u" then keystate.up=true end
     if hat=="d" then keystate.down=true end
     
-    if joystick:isDown(1) then keystate.fire=true end
-    if joystick:isDown(2) then keystate.thrust=true end
+    if joystick:isDown(1) then keystate.buttonA=true end
+    if joystick:isDown(2) then keystate.buttonB=true end
+    if joystick:isDown(8) then keystate.buttonMenu=true end
+      if activeMenu==nil then
+        activeMenu=menuMain 
+      else
+        activeMenu=nil  --close menu
+      end
+    end
   end
   
   if love.keyboard.isDown("a") or love.keyboard.isDown("left") then keystate.left=true end
   if love.keyboard.isDown("d") or love.keyboard.isDown("right") then keystate.right=true end
-  if love.keyboard.isDown("w") or love.keyboard.isDown("up") then keystate.thrust=true end
-  if love.keyboard.isDown("space") or love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then 
-    keystate.fire=true 
+  if love.keyboard.isDown("w") or love.keyboard.isDown("up") then keystate.up=true end
+  if love.keyboard.isDown("s") or love.keyboard.isDown("down") then keystate.down=true end
+  if love.keyboard.isDown("space") or love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") or love.keyboard.isDown("return") then 
+    keystate.buttonA=true 
   end
   
+  if activeMenu ~= nil then
+--    activeMenu:update(dt)
+    activeMenu:keystate(keystate)
+  else 
     if currentMode==gameModes.playing then 
-      -- some play logic
-  else
-    keydown=false
-    if waitForKeyUp then
-      for key in pairs(keystate) do  
-        if keystate[key]==true then keydown=true end
-      end
-    end
-    if keydown==false then
-      waitForKeyUp=false
-      for key in pairs(keystate) do 
-        if keystate[key]==true then 
-          if currentMode==gameModes.title then
-            currentMode=gameModes.playing
-          end
-        end 
-      end
+        -- some play logic
     end
   end
 end
 
 function love.draw()
-  if currentMode==gameModes.title then
+  if activeMenu ~= nil then
+      local red,green,blue=22/255,103/255,194/255 -- a dark cyan
+      love.graphics.clear(red,green,blue,1)
+    activeMenu:draw()
+  elseif currentMode==gameModes.title then
     drawTitle()
   else
-    love.graphics.setFont(fontSheets.large.font)
-    love.graphics.setColor(fontNormalColor)
-    centerText(screenWidth/2,screenHeight/2,"Impressive gameplay")
+      love.graphics.setFont(fontSheets.large.font)
+      love.graphics.setColor(fontNormalColor:components())
+      gui.centerText("Impressive gameplay",screenWidth/2,screenHeight/2)
   end
 end
 
@@ -165,8 +229,8 @@ function drawTitle()
   love.graphics.print(creditText.text,creditText.x,creditText.y)
   
   x,y=screenWidth/2,screenHeight/2
-  centerText(startText.x,startText.y,startText.text)
-  centerText(instructionText.x,instructionText.y,instructionText.text)
+  gui.centerText(startText.text,startText.x,startText.y)
+  gui.centerText(instructionText.text,instructionText.x,instructionText.y)
   love.graphics.setColor(1,1,1,1)
   x=10
   love.graphics.draw(logo.image,logo.x,logo.y)
