@@ -5,9 +5,13 @@ local anim8 = require 'lib.anim8'
 local windfield = require "lib.windfield"
 local flux = require "lib.flux"
 local gui = require "lib.gui"
+
 require "conf"
+version = {x=0,y=-100,text="a.b"}
+if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle = "Bad Wizard"
+  
 aspect=0.5625
 love.window.setTitle(gameTitle)
 flags = {}
@@ -145,6 +149,7 @@ function love.load(args)
   
   flux.to(titleText,0.5,{x=10,y=10}):oncomplete(titleTweenComplete)
   flux.to(creditText,0.5,{x=10,y=titleText.y+titleText.font:getHeight()+offset})
+  flux.to(version,0.5,{x=0,y=screenHeight-fontSheets.small.font:getHeight()})
   
   -- Sample menu
   local x = screenWidth/2-150
@@ -450,4 +455,11 @@ function drawTitle()
   love.graphics.setColor(1,1,1,1)
   x=10
   love.graphics.draw(logo.image,logo.x,logo.y)
+  drawVersion()
+end
+
+function drawVersion() 
+  love.graphics.setColor(fontNormalColor:components())
+  love.graphics.setFont(fontSheets.small.font)
+  love.graphics.print("v"..version.text,version.x,version.y)
 end
