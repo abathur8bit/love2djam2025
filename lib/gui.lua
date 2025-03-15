@@ -44,11 +44,25 @@ end
 
 
 -- Center text at the given point. 
-function gui.centerText(text,x,y)
+function gui.centerText(text,x,y,centerVertically)
 	local font       = love.graphics.getFont()
 	local textWidth  = font:getWidth(text)
 	local textHeight = font:getHeight()
-	love.graphics.print(text, x, y, 0, 1, 1, textWidth/2, textHeight/2)
+  
+  if centerVertically==nil then centerVertically=true end -- default to true
+  if centerVertically then 
+    love.graphics.print(text, x, y, 0, 1, 1, textWidth/2, textHeight/2)
+  else
+    love.graphics.print(text, x, y, 0, 1, 1, textWidth/2, 0)
+  end
+end
+
+-- Right aligns text at given point
+function gui.rightText(text,x,y)
+	local font       = love.graphics.getFont()
+	local textWidth  = font:getWidth(text)
+	local textHeight = font:getHeight()
+	love.graphics.print(text, x, y, 0, 1, 1, textWidth, 0)
 end
 
 -- draw a 10x10 crosshair in the color specified, or the current color if color is not specified

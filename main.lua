@@ -19,7 +19,7 @@ flags.display=1
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
-love.window.setPosition(2400,462,1)
+--love.window.setPosition(2400,462,1)
 
 screenWidth = love.graphics.getWidth()
 screenHeight = love.graphics.getHeight()
@@ -141,7 +141,7 @@ function love.load(args)
       "Afterlite",
     font=fontSheets.small.font}
   startText = {x=-1000,y=y1,text="Press Escape to start",font=fontSheets.small.font}
-  instructionText = {x=-1400,y=y2,text="Controls",font=fontSheets.small.font}
+  instructionText = {x=-1400,y=y2,text="Use your arrow keys",font=fontSheets.small.font}
   
   flux.to(titleText,0.5,{x=10,y=10}):oncomplete(titleTweenComplete)
   flux.to(creditText,0.5,{x=10,y=titleText.y+titleText.font:getHeight()+offset})
@@ -239,7 +239,19 @@ function love.update(dt)
   flux.update(dt)
   processInput(dt)
   char.keypressed=false
-  if keystate.up then
+  if keystate.up and keystate.left then
+    char.keypressed=true
+    char.direction="upleft"
+  elseif keystate.up and keystate.right then
+    char.keypressed=true
+    char.direction="upright"
+  elseif keystate.down and keystate.left then
+    char.keypressed=true
+    char.direction="downleft"
+  elseif keystate.down and keystate.right then
+    char.keypressed=true
+    char.direction="downright"
+  elseif keystate.up then
     char.keypressed=true
     char.direction="up"
   elseif keystate.down then
@@ -364,14 +376,59 @@ end
 
 function drawGame()
   cam:attach()
+    local panelWidth=400
+    local panelHeight=screenHeight
+    local offset=48
     love.graphics.setColor(1, 1, 1)
     map:drawLayer(map.layers["ground"])
     map:drawLayer(map.layers["coloring"])
     map:drawLayer(map.layers["decorations"])
     love.graphics.setColor(1,1,0,1)
-    local offset=48
-    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset,offset)
+    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,-(panelWidth/2))
   cam:detach()
+  drawSidePanel(panelWidth,panelHeight)
+end
+
+function drawSidePanel(w,h)
+  local offset=20
+  local panelColor=gui.createColor255(85,0,85)
+  local fontColor=gui.createColor255(153,229,80)
+  love.graphics.setColor(panelColor:components())
+  love.graphics.rectangle("fill",0,0,w,h)
+  
+  love.graphics.setColor(fontColor:components())
+  love.graphics.setFont(fontSheets.large.font)
+  love.graphics.print(gameTitle,6,6)
+  local y=fontSheets.large.font:getHeight()+offset+offset
+  local panelHeight=155
+  drawPlayerPanel(1,0,y,w,panelHeight,fontColor)
+  y=y+panelHeight+offset
+  drawPlayerPanel(2,0,y,w,panelHeight,fontColor)
+end
+
+function drawPlayerPanel(playerNumber,x,y,w,h,fontColor)
+  love.graphics.setColor(1,1,1,0.1)
+  love.graphics.rectangle("fill",x,y,w,h)
+  local offset=5
+  y=y+offset
+  x=x+offset
+  w=w-offset*2
+  h=h-offset*2
+  
+  local score=12345 -- TODO use real player score
+  local health=1010 -- TODO use real player health
+  local font=fontSheets.normal.font
+  
+  love.graphics.setColor(fontColor:components())
+  love.graphics.setFont(font)
+  gui.centerText(string.format("PLAYER %d",playerNumber),x+w/2,y,false)
+  y=y+font:getHeight()
+  love.graphics.print("SCORE",x,y)
+  gui.rightText("HEALTH",x+w,y)
+  y=y+font:getHeight()
+  love.graphics.print(string.format("%07d",score),x,y)
+  gui.rightText(string.format("%04d",health),x+w,y)
+  
 end
 
 function drawTitle() 
