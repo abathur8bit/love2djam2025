@@ -141,14 +141,14 @@ function loadMonster()
   monster.anims.idle.downleft  = anim8.newAnimation(monster.grid(1,1),0.15)
   
   monster.anims.walk={}
-  monster.anims.walk.up        = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.down      = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.right     = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.left      = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.upleft    = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.upright   = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.downright = anim8.newAnimation(monster.grid('1-8',1),0.15)
-  monster.anims.walk.downleft  = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.up        = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.down      = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.right     = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.left      = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.upleft    = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.upright   = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.downright = anim8.newAnimation(monster.grid('1-4',1),0.15)
+  monster.anims.walk.downleft  = anim8.newAnimation(monster.grid('1-4',1),0.15)
 end
   
 function love.load(args)
@@ -318,6 +318,7 @@ function love.update(dt)
   if char.keypressed then 
     char.animType="walk" 
     sfx.footsteps.sfx:play()
+    music.ingame.music:play()
   else 
     char.animType="idle"
     sfx.footsteps.sfx:stop()
@@ -440,7 +441,8 @@ function drawGame()
     map:drawLayer(map.layers["ground"])
     map:drawLayer(map.layers["coloring"])
     map:drawLayer(map.layers["decorations"])
-    love.graphics.setColor(1,1,0,1)
+    
+    love.graphics.setColor(1,1,1,1) -- no coloring of sprites
     char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset)
     monster.current:draw(monster.sheet,monster.x,monster.y,nil,monster.scale,monster.scale,offset)
   cam:detach()
