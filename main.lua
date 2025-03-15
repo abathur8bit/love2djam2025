@@ -1,9 +1,13 @@
 io.stdout:setvbuf("no")
-flux = require "lib.flux"
-gui = require "lib.gui"
+local sti  = require "lib.sti"
+local Camera = require 'lib.camera'
+local anim8 = require 'lib.anim8'
+local windfield = require "lib.windfield"
+local flux = require "lib.flux"
+local gui = require "lib.gui"
 require "conf"
 
-gameTitle = "Love Jam 2025 Game"
+gameTitle = "Bad Wizard"
 aspect=0.5625
 love.window.setTitle(gameTitle)
 flags = {}
@@ -11,10 +15,11 @@ flags.fullscreen=fullscreen
 flags.borderless=false
 if fullscreen then flags.borderless=true end
 flags.fullscreentype="desktop"
- flags.display=2
+flags.display=1
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
+love.window.setPosition(2400,462,1)
 
 screenWidth = love.graphics.getWidth()
 screenHeight = love.graphics.getHeight()
@@ -45,7 +50,9 @@ local sfx = {
 
 
 activeMenu = nil
-menuMain = {}
+mainMenu = {}
+
+badWizardImage = love.graphics.newImage("assets/Wizardsprites.png")
 
 -- Bring in the logo and other title parts after title is displayed
 function titleTweenComplete()
@@ -54,6 +61,34 @@ function titleTweenComplete()
     function() flux.to(logo,0.75,{x=logo.x,y=screenHeight-logo.image:getHeight()-10}):ease("elasticout") end)
 end
 
+function loadCharacter() 
+  char={}
+  
+  char.idleTimer=0.0
+  char.idleTimerDelay=5
+  char.sheet=love.graphics.newImage("assets/Wizardsprites.png")
+  char.grid=anim8.newGrid(96,96,char.sheet:getWidth(),char.sheet:getHeight())
+  char.animType="walk"
+  char.direction="downright"
+  char.keyPressed=false
+  char.x=screenWidth/2
+  char.y=screenHeight/2
+  char.w=96
+  char.h=96
+  char.scale=1
+  char.speed=char.scale*100
+  char.anims={}
+  char.anims.walk={}
+  char.anims.walk.up        = anim8.newAnimation(char.grid('21-24',1),0.15)
+  char.anims.walk.down      = anim8.newAnimation(char.grid('17-20',1),0.15)
+  char.anims.walk.right     = anim8.newAnimation(char.grid('29-32',1),0.15)
+  char.anims.walk.left      = anim8.newAnimation(char.grid('25-28',1),0.15)
+  char.anims.walk.upleft    = anim8.newAnimation(char.grid('13-16',1),0.15)
+  char.anims.walk.upright   = anim8.newAnimation(char.grid('9-12',1),0.15)
+  char.anims.walk.downright = anim8.newAnimation(char.grid('1-4',1),0.15)
+  char.anims.walk.downleft  = anim8.newAnimation(char.grid('5-8',1),0.15)
+end
+  
 function love.load(args)
   keystate={up=false,down=false,left=false,right=false,fire=false,thrust=false,buttonA=false,buttonB=false,buttonMenu=false,buttonView=false}
 
@@ -88,8 +123,8 @@ function love.load(args)
   creditText = {x=screenWidth+30,y=titleText.y+titleText.font:getHeight()+offset+50,
     text="A game by Coder8Bit\n"..
       "Vince\n"..
-      "Dr. Tunes\n"..
-      "OneSmallGhost",
+      "Dr. Tune\n"..
+      "Afterlite",
     font=fontSheets.small.font}
   startText = {x=-1000,y=y1,text="Press Escape to start",font=fontSheets.small.font}
   instructionText = {x=-1400,y=y2,text="Controls",font=fontSheets.small.font}
@@ -103,12 +138,12 @@ function love.load(args)
   local w = 250
   local h = 300
   local menuWindowed=false
-  menuMain = gui.createMenu(
+  mainMenu = gui.createMenu(
     nil,
     {"Play","Options","Quit"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
-    handleMenuMain,nil,
+    handlemainMenu,nil,
     fontSheets.normal.font)
   menuOptions = gui.createMenu(
     nil,
@@ -117,9 +152,11 @@ function love.load(args)
     fontNormalColor,fontSelectedColor,
     handleMenuOptions,handleMenuOptionsBack,
     fontSheets.normal.font)
+  
+  loadCharacter()
 end
 
-function handleMenuMain(menu) 
+function handlemainMenu(menu) 
   local index=menu.selectedIndex
   local text=menu.options[index]
 --  print("handle menu called with menu",index,text)
@@ -137,7 +174,7 @@ function handleMenuOptions(menu)
   local index=menu.selectedIndex
   local text=menu.options[index]
   if index==3 then 
-    activeMenu=menuMain 
+    activeMenu=mainMenu 
   else 
     activeMenu=nil 
   end --close menu
@@ -147,14 +184,14 @@ function handleMenuOptionsBack(menu)
   local index=menu.selectedIndex
   local text=menu.options[index]
   print("handle back called with menu",index,text)
-  activeMenu=menuMain
+  activeMenu=mainMenu
 end
 
 function love.keypressed(key)
   print("key pressed ",key)
   if key == "escape" then 
     if activeMenu==nil then
-      activeMenu=menuMain 
+      activeMenu=mainMenu 
     else
       activeMenu=nil  --close menu
     end
@@ -163,8 +200,29 @@ end
 
 function love.update(dt)
   flux.update(dt)
+  processInput(dt)
+  char.keypressed=false
+  if keystate.up then
+    char.keypressed=true
+    char.direction="up"
+  elseif keystate.down then
+    char.keypressed=true
+    char.direction="down"
+  elseif keystate.left then
+    char.keypressed=true
+    char.direction="left"
+  elseif keystate.right then
+    char.keypressed=true
+    char.direction="right"
+  end
   
+  char.current=char.anims["walk"][char.direction]
+  char.current:update(dt)
+end
+
+function processInput(dt)
   for key in pairs(keystate) do keystate[key] = false end   -- set all keys to not pressed
+  
   if joystick~=nil then
     local hat=joystick:getHat(1)
     if hat=="l" then keystate.left=true end
@@ -174,9 +232,10 @@ function love.update(dt)
     
     if joystick:isDown(1) then keystate.buttonA=true end
     if joystick:isDown(2) then keystate.buttonB=true end
-    if joystick:isDown(8) then keystate.buttonMenu=true end
+    if joystick:isDown(8) then 
+      keystate.buttonMenu=true 
       if activeMenu==nil then
-        activeMenu=menuMain 
+        activeMenu=mainMenu 
       else
         activeMenu=nil  --close menu
       end
@@ -195,9 +254,9 @@ function love.update(dt)
 --    activeMenu:update(dt)
     activeMenu:keystate(keystate)
   else 
-    if currentMode==gameModes.playing then 
-        -- some play logic
-    end
+--    if currentMode==gameModes.playing then 
+--        -- some play logic
+--    end
   end
 end
 
@@ -209,9 +268,12 @@ function love.draw()
   elseif currentMode==gameModes.title then
     drawTitle()
   else
-      love.graphics.setFont(fontSheets.large.font)
-      love.graphics.setColor(fontNormalColor:components())
-      gui.centerText("Impressive gameplay",screenWidth/2,screenHeight/2)
+--      love.graphics.setFont(fontSheets.large.font)
+--      love.graphics.setColor(fontNormalColor:components())
+--      gui.centerText("Impressive gameplay",screenWidth/2,screenHeight/2)
+      love.graphics.setColor(1,1,0,1)
+      local offset=48
+      char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset,offset)
   end
 end
 
@@ -234,4 +296,7 @@ function drawTitle()
   love.graphics.setColor(1,1,1,1)
   x=10
   love.graphics.draw(logo.image,logo.x,logo.y)
+  
+  love.graphics.setColor(1,1,0,1)
+  love.graphics.draw(badWizardImage,10,screenHeight/2)
 end

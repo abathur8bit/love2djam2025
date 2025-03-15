@@ -1,3 +1,3 @@
 inbrowser=false
-resolution=1920
+resolution=1000
 fullscreen=false
