@@ -18,8 +18,9 @@ flags = {}
 flags.fullscreen=fullscreen
 flags.borderless=false
 if fullscreen then flags.borderless=true end
+if fullscreen then flags.borderless=true end
 flags.fullscreentype="desktop"
-flags.display=1
+flags.display=2
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
@@ -45,11 +46,12 @@ waitForKeyUp=false
 
 -- music and sound
 music = {
---  title={filename="assets/title.mp3",music=nil},
---  ingame={filename="assets/ingame.mp3",music=nil},
+  title={filename="assets/Intro.mp3",music=nil},
+  ingame={filename="assets/Room 1 Idle.mp3",music=nil},
+  combat={filename="assets/Room 1 Combat.mp3",music=nil},
 }
 local sfx = {
---  explode={filename="assets/playerexplode.wav",sfx=nil}
+  footsteps={filename="assets/Footsteps.ogg",sfx=nil}
 }
 
 
@@ -70,6 +72,7 @@ end
 function loadCharacter() 
   char={}
   
+  char.score=0
   char.idleTimer=0.0
   char.idleTimerDelay=5
   char.sheet=love.graphics.newImage("assets/Wizardsprites.png")
@@ -106,6 +109,47 @@ function loadCharacter()
   char.anims.walk.downright = anim8.newAnimation(char.grid('1-4',1),0.15)
   char.anims.walk.downleft  = anim8.newAnimation(char.grid('5-8',1),0.15)
 end
+
+function loadMonster()
+  monster={}
+  
+  monster.idleTimer=0.0
+  monster.idleTimerDelay=5
+  monster.sheet=love.graphics.newImage("assets/helmet.png")
+  monster.grid=anim8.newGrid(64,64,monster.sheet:getWidth(),monster.sheet:getHeight())
+  monster.animType="walk"
+  monster.direction="right"
+  monster.direction="right"
+  monster.keyPressed=false
+  monster.x=screenWidth/2+100
+  monster.y=screenHeight/2+128
+  monster.w=64
+  monster.h=64
+  monster.scale=1
+  monster.speed=300
+  
+  monster.anims={}
+  
+  monster.anims.idle={}
+  monster.anims.idle.up        = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.down      = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.right     = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.left      = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.upleft    = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.upright   = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.downright = anim8.newAnimation(monster.grid(1,1),0.15)
+  monster.anims.idle.downleft  = anim8.newAnimation(monster.grid(1,1),0.15)
+  
+  monster.anims.walk={}
+  monster.anims.walk.up        = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.down      = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.right     = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.left      = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.upleft    = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.upright   = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.downright = anim8.newAnimation(monster.grid('1-8',1),0.15)
+  monster.anims.walk.downleft  = anim8.newAnimation(monster.grid('1-8',1),0.15)
+end
   
 function love.load(args)
   keystate={up=false,down=false,left=false,right=false,fire=false,thrust=false,buttonA=false,buttonB=false,buttonMenu=false,buttonView=false}
@@ -120,7 +164,7 @@ function love.load(args)
       musicInfo.music=love.audio.newSource(musicInfo.filename,"static")
       musicInfo.music:setLooping(true)
     end
---    music.title.music:play()
+    music.title.music:play()
   end
   
   -- load fonts listed in fontsheets
@@ -173,6 +217,7 @@ function love.load(args)
     fontSheets.normal.font)
   
   loadCharacter()
+  loadMonster()
   world = windfield.newWorld(0,0,true)
 	map = sti("maps/map-67.lua")
 
@@ -209,6 +254,8 @@ function handlemainMenu(menu)
   elseif index==1 then
     activeMenu=nil  --close menu
     currentMode=gameModes.playing
+    music.title.music:stop()
+    music.ingame.music:play()
   end
 end
 
@@ -225,12 +272,10 @@ end
 function handleMenuOptionsBack(menu) 
   local index=menu.selectedIndex
   local text=menu.options[index]
-  print("handle back called with menu",index,text)
   activeMenu=mainMenu
 end
 
 function love.keypressed(key)
-  print("key pressed ",key)
   if key == "escape" then 
     if activeMenu==nil then
       activeMenu=mainMenu 
@@ -272,11 +317,15 @@ function love.update(dt)
   
   if char.keypressed then 
     char.animType="walk" 
+    sfx.footsteps.sfx:play()
   else 
     char.animType="idle"
+    sfx.footsteps.sfx:stop()
   end
   char.current=char.anims[char.animType][char.direction]
   char.current:update(dt)
+  monster.current=monster.anims[monster.animType][monster.direction]
+  monster.current:update(dt)
   
   local vx=0
   local vy=0
@@ -325,6 +374,9 @@ function love.update(dt)
   world:update(dt)
   char.x = char.collider:getX()
   char.y = char.collider:getY()  
+  
+  char.score=char.score+1
+  char.score=char.score+1
 end
 
 function processInput(dt)
@@ -369,8 +421,8 @@ end
 
 function love.draw()
   if activeMenu ~= nil then
-      local red,green,blue=22/255,103/255,194/255 -- a dark cyan
-      love.graphics.clear(red,green,blue,1)
+    local red,green,blue=22/255,103/255,194/255 -- a dark cyan
+    love.graphics.clear(red,green,blue,1)
     activeMenu:draw()
   elseif currentMode==gameModes.title then
     drawTitle()
@@ -383,13 +435,14 @@ function drawGame()
   cam:attach()
     local panelWidth=400
     local panelHeight=screenHeight
-    local offset=48
+    local offset=-(panelWidth/2)
     love.graphics.setColor(1, 1, 1)
     map:drawLayer(map.layers["ground"])
     map:drawLayer(map.layers["coloring"])
     map:drawLayer(map.layers["decorations"])
     love.graphics.setColor(1,1,0,1)
-    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,-(panelWidth/2))
+    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset)
+    monster.current:draw(monster.sheet,monster.x,monster.y,nil,monster.scale,monster.scale,offset)
   cam:detach()
   drawSidePanel(panelWidth,panelHeight)
 end
@@ -420,8 +473,8 @@ function drawPlayerPanel(playerNumber,x,y,w,h,fontColor)
   w=w-offset*2
   h=h-offset*2
   
-  local score=12345 -- TODO use real player score
-  local health=1010 -- TODO use real player health
+  local score=char.score -- TODO use real player score
+  local health=char.score/4 -- TODO use real player health
   local font=fontSheets.normal.font
   
   love.graphics.setColor(fontColor:components())

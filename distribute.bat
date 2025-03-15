@@ -12,7 +12,7 @@ echo buildVersion=^"%1^">conf.lua
 echo inbrowser=true>>conf.lua
 echo resolution=1000>>conf.lua
 echo fullscreen=false>>conf.lua
-zip -9 -r %GAME%-web.love *.lua assets\*.png README.txt lib\* maps\*.png maps\*.lua
+zip -9 -r %GAME%-web.love *.lua assets\* README.txt lib\* maps\*.png maps\*.lua 
 
 echo buildVersion=^"%1^">conf.lua
 echo inbrowser=false>>conf.lua
