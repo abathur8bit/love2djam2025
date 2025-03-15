@@ -52,7 +52,9 @@ local sfx = {
 activeMenu = nil
 mainMenu = {}
 
-badWizardImage = love.graphics.newImage("assets/Wizardsprites.png")
+local map
+local cam = Camera()
+local world
 
 -- Bring in the logo and other title parts after title is displayed
 function titleTweenComplete()
@@ -76,8 +78,20 @@ function loadCharacter()
   char.w=96
   char.h=96
   char.scale=1
-  char.speed=char.scale*100
+  char.speed=300
+  
   char.anims={}
+  
+  char.anims.idle={}
+  char.anims.idle.up        = anim8.newAnimation(char.grid(21,1),0.15)
+  char.anims.idle.down      = anim8.newAnimation(char.grid(17,1),0.15)
+  char.anims.idle.right     = anim8.newAnimation(char.grid(29,1),0.15)
+  char.anims.idle.left      = anim8.newAnimation(char.grid(25,1),0.15)
+  char.anims.idle.upleft    = anim8.newAnimation(char.grid(13,1),0.15)
+  char.anims.idle.upright   = anim8.newAnimation(char.grid(9,1),0.15)
+  char.anims.idle.downright = anim8.newAnimation(char.grid(1,1),0.15)
+  char.anims.idle.downleft  = anim8.newAnimation(char.grid(5,1),0.15)
+  
   char.anims.walk={}
   char.anims.walk.up        = anim8.newAnimation(char.grid('21-24',1),0.15)
   char.anims.walk.down      = anim8.newAnimation(char.grid('17-20',1),0.15)
@@ -91,7 +105,7 @@ end
   
 function love.load(args)
   keystate={up=false,down=false,left=false,right=false,fire=false,thrust=false,buttonA=false,buttonB=false,buttonMenu=false,buttonView=false}
-
+  
   -- only load sound and music if we are not in a browser
   if inbrowser==false then
     for key,sfxInfo in pairs(sfx) do
@@ -154,6 +168,29 @@ function love.load(args)
     fontSheets.normal.font)
   
   loadCharacter()
+  world = windfield.newWorld(0,0,true)
+	map = sti("maps/map-67.lua")
+
+	-- Print version and other info
+	print("STI          : " .. sti._VERSION)
+	print("Map          : " .. map.tiledversion)
+  print("Window Width : " .. love.graphics.getWidth())
+  print("Window Height: " .. love.graphics.getHeight())
+
+  char.collider=world:newBSGRectangleCollider(char.x,char.y,32,64,8)
+  char.collider:setFixedRotation(true)
+  
+  walls = {}
+  local xoff,yoff=0,0
+  if map.layers["walls"].objects then
+    for i,obj in pairs(map.layers["walls"].objects) do
+      print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
+      
+      local wall = world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
+      wall:setType("static")
+      table.insert(walls,wall)
+    end
+  end
 end
 
 function handlemainMenu(menu) 
@@ -216,8 +253,61 @@ function love.update(dt)
     char.direction="right"
   end
   
-  char.current=char.anims["walk"][char.direction]
+  if char.keypressed then 
+    char.animType="walk" 
+  else 
+    char.animType="idle"
+  end
+  char.current=char.anims[char.animType][char.direction]
   char.current:update(dt)
+  
+  local vx=0
+  local vy=0
+  if char.keypressed == true then
+    if char.direction=="up" then 
+      vy=char.speed*-1
+    elseif char.direction=="down" then
+      vy=char.speed
+    elseif char.direction=="right" then
+      vx=char.speed
+    elseif char.direction=="left" then
+      vx=char.speed*-1
+    elseif char.direction=="upleft" then 
+      vx=char.speed*-1
+      vy=char.speed*-1
+    elseif char.direction=="upright" then
+      vx=char.speed
+      vy=char.speed*-1
+    elseif char.direction=="downright" then
+      vx=char.speed
+      vy=char.speed
+    elseif char.direction=="downleft" then
+      vx=char.speed*-1
+      vy=char.speed
+    end
+  end
+  
+  char.collider:setLinearVelocity(vx,vy)
+  
+  --restrict player position, look at player, and keep entire map visible
+  local mw = map.width * map.tilewidth
+  local mh = map.height * map.tileheight
+  
+  if char.x-char.w/2 < 0 then char.x = char.w/2 end
+  if char.y-char.h/2 < 0 then char.y = char.h/2 end
+  if char.x+char.w/2 > mw then char.x = mw-char.w/2 end
+  if char.y+char.h/2 > mh then char.y = mh-char.h/2 end
+  
+  cam:lookAt(char.x,char.y)
+  --keep entire map visible to camera
+  if cam.x < screenWidth/2 then cam.x = screenWidth/2 end
+  if cam.y < screenHeight/2 then cam.y = screenHeight/2 end
+  if cam.x > mw-screenWidth/2 then cam.x = mw-screenWidth/2 end
+  if cam.y > mh-screenHeight/2 then cam.y = mh-screenHeight/2 end
+  
+  world:update(dt)
+  char.x = char.collider:getX()
+  char.y = char.collider:getY()  
 end
 
 function processInput(dt)
@@ -268,13 +358,20 @@ function love.draw()
   elseif currentMode==gameModes.title then
     drawTitle()
   else
---      love.graphics.setFont(fontSheets.large.font)
---      love.graphics.setColor(fontNormalColor:components())
---      gui.centerText("Impressive gameplay",screenWidth/2,screenHeight/2)
-      love.graphics.setColor(1,1,0,1)
-      local offset=48
-      char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset,offset)
+    drawGame()
   end
+end
+
+function drawGame()
+  cam:attach()
+    love.graphics.setColor(1, 1, 1)
+    map:drawLayer(map.layers["ground"])
+    map:drawLayer(map.layers["coloring"])
+    map:drawLayer(map.layers["decorations"])
+    love.graphics.setColor(1,1,0,1)
+    local offset=48
+    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset,offset)
+  cam:detach()
 end
 
 function drawTitle() 
@@ -296,7 +393,4 @@ function drawTitle()
   love.graphics.setColor(1,1,1,1)
   x=10
   love.graphics.draw(logo.image,logo.x,logo.y)
-  
-  love.graphics.setColor(1,1,0,1)
-  love.graphics.draw(badWizardImage,10,screenHeight/2)
 end
