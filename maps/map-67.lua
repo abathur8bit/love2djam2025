@@ -68,7 +68,7 @@ return {
       },
       properties = {},
       wangsets = {},
-      tilecount = 180,
+      tilecount = 4500,
       tiles = {}
     }
   },

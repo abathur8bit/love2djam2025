@@ -1,20 +1,20 @@
 io.stdout:setvbuf("no")
-local sti  = require "lib.sti"
-local Camera = require 'lib.camera'
-local anim8 = require 'lib.anim8'
-local windfield = require "lib.windfield"
-local flux = require "lib.flux"
-local gui = require "lib.gui"
+local sti=require "lib.sti"
+local Camera=require 'lib.camera'
+local anim8=require 'lib.anim8'
+local windfield=require "lib.windfield"
+local flux=require "lib.flux"
+local gui=require "lib.gui"
 
 require "conf"
-version = {x=0,y=-100,text="a.b"}
+version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
-gameTitle = "Bad Wizard"
+gameTitle="Bad Wizard"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
-flags = {}
+flags={}
 flags.fullscreen=fullscreen
 flags.borderless=false
 if fullscreen then flags.borderless=true end
@@ -26,40 +26,41 @@ love.window.setMode(resolution,resolution*aspect,flags)
 love.graphics.scale(2,2)
 --love.window.setPosition(2400,462,1)
 
-screenWidth = love.graphics.getWidth()
-screenHeight = love.graphics.getHeight()
+screenWidth=love.graphics.getWidth()
+screenHeight=love.graphics.getHeight()
 
-fontSheets = {
+fontSheets={
   large={filename="assets/wolf-font-sheet-large.png",font=nil},
   normal={filename="assets/wolf-font-sheet.png",font=nil},
   small={filename="assets/wolf-font-sheet-small.png",font=nil}
 }
-fontCharacters =  "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
+fontCharacters= "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
 fontNormalColor=gui.createColor(1,0,0)
 fontSelectedColor=gui.createColor(1,1,0)
 logoImage=love.graphics.newImage("assets/coder8bit.png")
-logo = {x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
+logo={x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
 
-gameModes = {title=1,playing=2,dead=3,winner=4}
+gameModes={title=1,playing=2,dead=3,winner=4}
 currentMode=gameModes.title
 waitForKeyUp=false
 
 -- music and sound
-music = {
+music={
   title={filename="assets/Intro.mp3",music=nil},
   ingame={filename="assets/Room 1 Idle.mp3",music=nil},
   combat={filename="assets/Room 1 Combat.mp3",music=nil},
 }
-local sfx = {
+local sfx={
   footsteps={filename="assets/Footsteps.ogg",sfx=nil}
 }
 
 
-activeMenu = nil
-mainMenu = {}
+menuOptions=nil
+activeMenu=nil
+mainMenu={}
 
 local map
-local cam = Camera()
+local cam=Camera()
 local world
 
 -- Bring in the logo and other title parts after title is displayed
@@ -75,7 +76,7 @@ function loadCharacter()
   char.score=0
   char.idleTimer=0.0
   char.idleTimerDelay=5
-  char.sheet=love.graphics.newImage("assets/Wizardsprites.png")
+  char.sheet=love.graphics.newImage("assets/Player 1 Wizardsprites-sheet.png")
   char.grid=anim8.newGrid(96,96,char.sheet:getWidth(),char.sheet:getHeight())
   char.animType="walk"
   char.direction="downright"
@@ -173,42 +174,42 @@ function love.load(args)
   end
   
   
-  local joysticks = love.joystick.getJoysticks()
-  joystick = joysticks[1]
+  local joysticks=love.joystick.getJoysticks()
+  joystick=joysticks[1]
   
   love.graphics.setLineStyle("rough");
 
   local y1=screenHeight/2-fontSheets.small.font:getHeight()/2
   local y2=y1+fontSheets.small.font:getHeight()
   local offset=3
-  titleText = {x=screenWidth,y=0,text=gameTitle,font=fontSheets.large.font}
-  creditText = {x=screenWidth+30,y=titleText.y+titleText.font:getHeight()+offset+50,
+  titleText={x=screenWidth,y=0,text=gameTitle,font=fontSheets.large.font}
+  creditText={x=screenWidth+30,y=titleText.y+titleText.font:getHeight()+offset+50,
     text="A game by Coder8Bit\n"..
       "Vince\n"..
       "Dr. Tune\n"..
       "Afterlite",
     font=fontSheets.small.font}
-  startText = {x=-1000,y=y1,text="Press Escape to start",font=fontSheets.small.font}
-  instructionText = {x=-1400,y=y2,text="Use your arrow keys",font=fontSheets.small.font}
+  startText={x=-1000,y=y1,text="Press Escape to start",font=fontSheets.small.font}
+  instructionText={x=-1400,y=y2,text="Use your arrow keys",font=fontSheets.small.font}
   
   flux.to(titleText,0.5,{x=10,y=10}):oncomplete(titleTweenComplete)
   flux.to(creditText,0.5,{x=10,y=titleText.y+titleText.font:getHeight()+offset})
   flux.to(version,0.5,{x=0,y=screenHeight-fontSheets.small.font:getHeight()})
   
   -- Sample menu
-  local x = screenWidth/2-150
-  local y = screenHeight/2-100
-  local w = 250
-  local h = 300
+  local x=screenWidth/2-150
+  local y=screenHeight/2-100
+  local w=250
+  local h=300
   local menuWindowed=false
-  mainMenu = gui.createMenu(
+  mainMenu=gui.createMenu(
     nil,
     {"Play","Options","Quit"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
     handlemainMenu,nil,
     fontSheets.normal.font)
-  menuOptions = gui.createMenu(
+  menuOptions=gui.createMenu(
     nil,
     {"One","Two","Back"},
     x,y,w,h,menuWindowed,
@@ -218,8 +219,8 @@ function love.load(args)
   
   loadCharacter()
   loadMonster()
-  world = windfield.newWorld(0,0,true)
-	map = sti("maps/map-67.lua")
+  world=windfield.newWorld(0,0,true)
+	map=sti("maps/map-67.lua")
 
 	-- Print version and other info
 	print("STI          : " .. sti._VERSION)
@@ -230,13 +231,13 @@ function love.load(args)
   char.collider=world:newBSGRectangleCollider(char.x,char.y,32,64,8)
   char.collider:setFixedRotation(true)
   
-  walls = {}
+  walls={}
   local xoff,yoff=0,0
   if map.layers["walls"].objects then
     for i,obj in pairs(map.layers["walls"].objects) do
       print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
       
-      local wall = world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
+      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
       wall:setType("static")
       table.insert(walls,wall)
     end
@@ -254,8 +255,10 @@ function handlemainMenu(menu)
   elseif index==1 then
     activeMenu=nil  --close menu
     currentMode=gameModes.playing
-    music.title.music:stop()
-    music.ingame.music:play()
+    if inbrowser==false then
+      music.title.music:stop()
+      music.ingame.music:play()
+    end
   end
 end
 
@@ -317,11 +320,26 @@ function love.update(dt)
   
   if char.keypressed then 
     char.animType="walk" 
-    sfx.footsteps.sfx:play()
-    music.ingame.music:play()
+    if inbrowser==false then
+      sfx.footsteps.sfx:play()
+      if music.ingame.music:isPlaying() then
+        local musicPos=music.ingame.music:tell("seconds")
+        music.ingame.music:stop()
+        music.combat.music:seek(musicPos)
+        music.combat.music:play()
+      end
+    end
   else 
     char.animType="idle"
-    sfx.footsteps.sfx:stop()
+    if inbrowser==false then
+      sfx.footsteps.sfx:stop()
+      if music.combat.music:isPlaying() then
+        local musicPos=music.combat.music:tell("seconds")
+        music.combat.music:stop()
+        music.ingame.music:seek(musicPos,"seconds")
+        music.ingame.music:play()
+      end
+    end
   end
   char.current=char.anims[char.animType][char.direction]
   char.current:update(dt)
@@ -357,31 +375,31 @@ function love.update(dt)
   char.collider:setLinearVelocity(vx,vy)
   
   --restrict player position, look at player, and keep entire map visible
-  local mw = map.width * map.tilewidth
-  local mh = map.height * map.tileheight
+  local mw=map.width * map.tilewidth
+  local mh=map.height * map.tileheight
   
-  if char.x-char.w/2 < 0 then char.x = char.w/2 end
-  if char.y-char.h/2 < 0 then char.y = char.h/2 end
-  if char.x+char.w/2 > mw then char.x = mw-char.w/2 end
-  if char.y+char.h/2 > mh then char.y = mh-char.h/2 end
+  if char.x-char.w/2 < 0 then char.x=char.w/2 end
+  if char.y-char.h/2 < 0 then char.y=char.h/2 end
+  if char.x+char.w/2 > mw then char.x=mw-char.w/2 end
+  if char.y+char.h/2 > mh then char.y=mh-char.h/2 end
   
   cam:lookAt(char.x,char.y)
   --keep entire map visible to camera
-  if cam.x < screenWidth/2 then cam.x = screenWidth/2 end
-  if cam.y < screenHeight/2 then cam.y = screenHeight/2 end
-  if cam.x > mw-screenWidth/2 then cam.x = mw-screenWidth/2 end
-  if cam.y > mh-screenHeight/2 then cam.y = mh-screenHeight/2 end
+  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
+  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
+  if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
+  if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
   
   world:update(dt)
-  char.x = char.collider:getX()
-  char.y = char.collider:getY()  
+  char.x=char.collider:getX()
+  char.y=char.collider:getY()  
   
   char.score=char.score+1
   char.score=char.score+1
 end
 
 function processInput(dt)
-  for key in pairs(keystate) do keystate[key] = false end   -- set all keys to not pressed
+  for key in pairs(keystate) do keystate[key]=false end   -- set all keys to not pressed
   
   if joystick~=nil then
     local hat=joystick:getHat(1)
@@ -451,7 +469,7 @@ end
 
 function drawSidePanel(w,h)
   local offset=20
-  local panelColor=gui.createColor255(85,0,85)
+  local panelColor=gui.createColor255(0,0,0)
   local fontColor=gui.createColor255(153,229,80)
   love.graphics.setColor(panelColor:components())
   love.graphics.rectangle("fill",0,0,w,h)
@@ -459,15 +477,22 @@ function drawSidePanel(w,h)
   love.graphics.setColor(fontColor:components())
   love.graphics.setFont(fontSheets.large.font)
   love.graphics.print(gameTitle,6,6)
-  local y=fontSheets.large.font:getHeight()+offset+offset
+  local y=fontSheets.large.font:getHeight()+offset
+  love.graphics.setFont(fontSheets.normal.font)
+  gui.centerText(string.format("LEVEL %d",666),w/2,y,false)
+  y=y+fontSheets.large.font:getHeight()+offset+offset
   local panelHeight=155
-  drawPlayerPanel(1,0,y,w,panelHeight,fontColor)
+  drawPlayerPanel(1,0,y,w,panelHeight,gui.createColor255(153,229,80),gui.createColor255(106,190,48,255))
   y=y+panelHeight+offset
-  drawPlayerPanel(2,0,y,w,panelHeight,fontColor)
+  drawPlayerPanel(2,0,y,w,panelHeight,gui.createColor255(102,225,243),gui.createColor255(43, 125, 199,255))
+  y=y+panelHeight+offset
+  drawPlayerPanel(3,0,y,w,panelHeight,gui.createColor255(221,229,235),gui.createColor255(145,148,151,255))
+  y=y+panelHeight+offset
+  drawPlayerPanel(4,0,y,w,panelHeight,gui.createColor255(243,214,18),gui.createColor255(227,120,3,255))
 end
 
-function drawPlayerPanel(playerNumber,x,y,w,h,fontColor)
-  love.graphics.setColor(1,1,1,0.1)
+function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
+  love.graphics.setColor(bgColor:components())
   love.graphics.rectangle("fill",x,y,w,h)
   local offset=5
   y=y+offset
@@ -493,8 +518,8 @@ end
 
 function drawTitle() 
   local x,y=titleText.x,titleText.y
-  local fontLarge = fontSheets.large
-  local fontSmall = fontSheets.small
+  local fontLarge=fontSheets.large
+  local fontSmall=fontSheets.small
   love.graphics.setColor(fontNormalColor:components())
 --  love.graphics.line(screenWidth/2,0,screenWidth/2,screenHeight)
 --  love.graphics.line(0,screenHeight/2,screenWidth,screenHeight/2)

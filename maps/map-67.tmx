@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="40">
+ <editorsettings>
+  <export target="map-67.lua" format="lua"/>
+ </editorsettings>
  <tileset firstgid="1" name="TileSet v1.0" tilewidth="32" tileheight="32" tilecount="100" columns="10">
   <image source="TileSet v1.0.png" width="320" height="320"/>
  </tileset>
- <tileset firstgid="101" name="lee" tilewidth="32" tileheight="32" tilecount="180" columns="12">
+ <tileset firstgid="101" name="lee" tilewidth="32" tileheight="32" tilecount="4500" columns="12">
   <image source="tileset-01.png" width="384" height="480"/>
  </tileset>
  <layer id="2" name="ground" width="100" height="100">

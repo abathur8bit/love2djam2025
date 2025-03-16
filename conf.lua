@@ -1,4 +1,4 @@
-buildVersion="0.3-TESTER"
-inbrowser=false
+buildVersion="0.05"
+inbrowser=true
 resolution=1600
 fullscreen=false
