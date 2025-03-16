@@ -1,4 +1,20 @@
+# Player colors
 1 green 99e550 153,229,80   6abe30 106,190,48
 2 cyan  66e1f3 102,225,243  2b7dc7 43,125,199
 3 white dde5eb 221,229,235  919497 145,148,151
 4 yellow f3d612 243,214,18  e37803 227,120,3
+
+game = {}
+gameMode
+levelNumber
+map
+sound
+numPlayers
+players = {{}
+
+
+https://github.com/a327ex/windfield?tab=readme-ov-file#capture-collision-events
+  if box:enter('Solid') then
+        box:applyLinearImpulse(1000, 0)
+        box:applyAngularImpulse(5000)
+    end

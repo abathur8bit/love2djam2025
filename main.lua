@@ -5,6 +5,7 @@ local anim8=require 'lib.anim8'
 local windfield=require "lib.windfield"
 local flux=require "lib.flux"
 local gui=require "lib.gui"
+local player
 
 require "conf"
 version={x=0,y=-100,text="a.b"}
@@ -41,8 +42,6 @@ logoImage=love.graphics.newImage("assets/coder8bit.png")
 logo={x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
 
 gameModes={title=1,playing=2,dead=3,winner=4}
-currentMode=gameModes.title
-waitForKeyUp=false
 
 -- music and sound
 music={
@@ -61,7 +60,22 @@ mainMenu={}
 
 local map
 local cam=Camera()
-local world
+local sidePanelWidth=400
+local playerPanelHeight=155
+local currentMode=gameModes.title
+local waitForKeyUp=false
+local numPlayers=1
+local options={debug=true,showCrosshairs=true,showCamera=true}
+local players={}
+-- where players spawn
+local entery={x=-1,y=-1}
+-- rectangle that if touched, will exit the level
+local exit={x=-1,y=-1,w=0,h=0}
+-- when player steps on door, all walls of the same number are removed from the ground layer
+-- TODO when a ground tile is removed, the wall has to be removed as well
+local doors={}
+-- what prevents a player from moving through a tile
+local walls={}
 
 -- Bring in the logo and other title parts after title is displayed
 function titleTweenComplete()
@@ -73,20 +87,23 @@ end
 function loadCharacter() 
   char={}
   
-  char.score=0
-  char.idleTimer=0.0
-  char.idleTimerDelay=5
-  char.sheet=love.graphics.newImage("assets/Player 1 Wizardsprites-sheet.png")
-  char.grid=anim8.newGrid(96,96,char.sheet:getWidth(),char.sheet:getHeight())
-  char.animType="walk"
-  char.direction="downright"
-  char.keyPressed=false
   char.x=screenWidth/2
   char.y=screenHeight/2
   char.w=96
   char.h=96
   char.scale=1
+  char.color=gui.createColor(1,1,1)
+  char.score=0
+  char.idleTimer=0.0
+  char.idleTimerDelay=5
+  char.sheet=love.graphics.newImage("assets/Player 1 Wizardsprites-sheet.png")
+  char.grid=anim8.newGrid(char.w,char.h,char.sheet:getWidth(),char.sheet:getHeight())
+  char.animType="walk"
+  char.direction="downright"
+  char.keyPressed=false
   char.speed=300
+  char.fireRate=0.2
+  char.fireRateTimer=char.fireRate
   
   char.anims={}
   
@@ -114,18 +131,18 @@ end
 function loadMonster()
   monster={}
   
-  monster.idleTimer=0.0
-  monster.idleTimerDelay=5
-  monster.sheet=love.graphics.newImage("assets/helmet.png")
-  monster.grid=anim8.newGrid(64,64,monster.sheet:getWidth(),monster.sheet:getHeight())
-  monster.animType="walk"
-  monster.direction="right"
-  monster.direction="right"
-  monster.keyPressed=false
   monster.x=screenWidth/2+100
   monster.y=screenHeight/2+128
   monster.w=64
   monster.h=64
+  monster.idleTimer=0.0
+  monster.idleTimerDelay=5
+  monster.sheet=love.graphics.newImage("assets/helmet.png")
+  monster.grid=anim8.newGrid(monster.w,monster.w,monster.sheet:getWidth(),monster.sheet:getHeight())
+  monster.animType="walk"
+  monster.direction="right"
+  monster.direction="right"
+  monster.keyPressed=false
   monster.scale=1
   monster.speed=300
   
@@ -151,7 +168,18 @@ function loadMonster()
   monster.anims.walk.downright = anim8.newAnimation(monster.grid('1-4',1),0.15)
   monster.anims.walk.downleft  = anim8.newAnimation(monster.grid('1-4',1),0.15)
 end
-  
+
+function fireBullet(player,dt) 
+  if (player.fireRateTimer>player.fireRate or player.fireRateTimer==-1) then
+    if inbrowser==false then
+      sfx.fire:stop()
+      sfx.fire:play()
+    end
+    
+    player.fireRateTimer=0
+  end
+end
+
 function love.load(args)
   keystate={up=false,down=false,left=false,right=false,fire=false,thrust=false,buttonA=false,buttonB=false,buttonMenu=false,buttonView=false}
   
@@ -211,7 +239,7 @@ function love.load(args)
     fontSheets.normal.font)
   menuOptions=gui.createMenu(
     nil,
-    {"One","Two","Back"},
+    {"Show Crosshairs","Show Camera","Back"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
     handleMenuOptions,handleMenuOptionsBack,
@@ -219,7 +247,6 @@ function love.load(args)
   
   loadCharacter()
   loadMonster()
-  world=windfield.newWorld(0,0,true)
 	map=sti("maps/map-67.lua")
 
 	-- Print version and other info
@@ -228,18 +255,24 @@ function love.load(args)
   print("Window Width : " .. love.graphics.getWidth())
   print("Window Height: " .. love.graphics.getHeight())
 
-  char.collider=world:newBSGRectangleCollider(char.x,char.y,32,64,8)
-  char.collider:setFixedRotation(true)
   
-  walls={}
   local xoff,yoff=0,0
   if map.layers["walls"].objects then
     for i,obj in pairs(map.layers["walls"].objects) do
       print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
       
-      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
-      wall:setType("static")
-      table.insert(walls,wall)
+      -- TODO collison 
+--      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
+--      table.insert(walls,wall)
+    end
+  end
+  if map.layers["triggers"].objects then
+    for i,obj in pairs(map.layers["triggers"].objects) do
+      print("trigger at ",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
+      
+--      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
+--      wall:setType("kinematic")
+--      table.insert(walls,wall)
     end
   end
 end
@@ -251,6 +284,7 @@ function handlemainMenu(menu)
   if text=="Quit" then
     love.event.quit() -- user selected quit
   elseif index==2 then
+    updateOptionMenuItems()
     activeMenu=menuOptions
   elseif index==1 then
     activeMenu=nil  --close menu
@@ -262,12 +296,42 @@ function handlemainMenu(menu)
   end
 end
 
+function updateOptionMenuItems() 
+  local crosshairOption="Show Crosshairs: "
+  local cameraOption="Show Camera: "
+  if options.showCrosshairs then 
+    crosshairOption=crosshairOption.."Yes"
+  else 
+    crosshairOption=crosshairOption.."No"
+  end
+  if options.showCamera then 
+    cameraOption=cameraOption.."Yes"
+  else 
+    cameraOption=cameraOption.."No"
+  end
+  menuOptions.options = {crosshairOption,cameraOption,"Back"}
+end
+
 function handleMenuOptions(menu)
   local index=menu.selectedIndex
   local text=menu.options[index]
   if index==3 then 
     activeMenu=mainMenu 
-  else 
+  elseif index==1 then
+    if options.showCrosshairs then 
+      options.showCrosshairs=false
+    else
+      options.showCrosshairs=true
+    end
+    updateOptionMenuItems()
+  elseif index==2 then
+    if options.showCamera then
+      options.showCamera=false
+    else
+      options.showCamera=true
+    end
+    updateOptionMenuItems()
+  else
     activeMenu=nil 
   end --close menu
 end
@@ -350,29 +414,28 @@ function love.update(dt)
   local vy=0
   if char.keypressed == true then
     if char.direction=="up" then 
-      vy=char.speed*-1
+      char.y=char.y-char.speed*dt
     elseif char.direction=="down" then
-      vy=char.speed
+      char.y=char.y+char.speed*dt
     elseif char.direction=="right" then
-      vx=char.speed
+      char.x=char.x+char.speed*dt
     elseif char.direction=="left" then
-      vx=char.speed*-1
+      char.x=char.x-char.speed*dt
     elseif char.direction=="upleft" then 
-      vx=char.speed*-1
-      vy=char.speed*-1
+      char.x=char.x-char.speed*dt
+      char.y=char.y-char.speed*dt
     elseif char.direction=="upright" then
-      vx=char.speed
-      vy=char.speed*-1
+      char.x=char.x+char.speed*dt
+      char.y=char.y-char.speed*dt
     elseif char.direction=="downright" then
-      vx=char.speed
-      vy=char.speed
+      char.x=char.x+char.speed*dt
+      char.y=char.y+char.speed*dt
     elseif char.direction=="downleft" then
-      vx=char.speed*-1
-      vy=char.speed
+      char.x=char.x-char.speed*dt
+      char.y=char.y+char.speed*dt
     end
   end
   
-  char.collider:setLinearVelocity(vx,vy)
   
   --restrict player position, look at player, and keep entire map visible
   local mw=map.width * map.tilewidth
@@ -385,17 +448,66 @@ function love.update(dt)
   
   cam:lookAt(char.x,char.y)
   --keep entire map visible to camera
-  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
+--  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
+--  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
+--  if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
+--  if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
+  if cam.x<sidePanelWidth then cam.x=sidePanelWidth end
   if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
   if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
   if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
   
-  world:update(dt)
-  char.x=char.collider:getX()
-  char.y=char.collider:getY()  
+  checkTriggers()
   
-  char.score=char.score+1
-  char.score=char.score+1
+  char.score=char.score+1   -- TODO remove when real score is ready
+end
+
+
+function checkTriggers()
+  char.color=gui.createColor(1,1,1)
+  for i,obj in pairs(map.layers["triggers"].objects) do
+    if checkRect(char.x-char.w/2,char.y-char.h/2,char.w,char.h,obj.x,obj.y,obj.width,obj.height) then
+      if string.find(obj.name,"door") then
+        char.color=gui.createColor(0,1,0)
+        local doorNum = parseDoorNumber(obj.name)
+        local tx,ty=map:convertPixelToTile(obj.x,obj.y)
+        local tx,ty=map:convertPixelToTile(obj.x,obj.y)
+        print("found tile at ",tx,ty,obj.id)
+        map:setLayerTile("ground",tx,ty,13)
+--        openWalls(doorNum)
+      else
+        char.color=gui.createColor(1,0,0)
+      end
+    end
+  end
+end
+
+function parseDoorNumber(door)
+  local i=string.find(door,"-")
+  assert(i,"door name should be like door-01")
+  i=i+1
+  local n=string.sub(door,i)
+  return n
+end
+
+function openWalls(doorNum)
+  map:convertPixelToTile (x, y)
+  Map:setLayerTile (layer, x, y, gid)
+end
+
+function checkRect(x,y,w,h,rx,ry,rw,rh)
+  local left1=x
+  local right1=x+w
+  local top1=y
+  local bottom1=y+h
+  local left2=rx
+  local right2=rx+rw
+  local top2=ry
+  local bottom2=ry+rh
+  
+  return left1<right2 and right1 > left2
+                      and top1 < bottom2
+                      and bottom1 > top2 
 end
 
 function processInput(dt)
@@ -448,28 +560,54 @@ function love.draw()
   else
     drawGame()
   end
+  if options.showCrosshairs then
+    gui.crosshair(screenWidth/2,screenHeight/2,1,0,0,1,true)
+    gui.crosshair(sidePanelWidth+(screenWidth-sidePanelWidth)/2,screenHeight/2,1,1,1,1,true)
+  end
 end
 
+-- draw the game, like the player, monsters, map, etc
 function drawGame()
   cam:attach()
-    local panelWidth=400
-    local panelHeight=screenHeight
-    local offset=-(panelWidth/2)
     love.graphics.setColor(1, 1, 1)
     map:drawLayer(map.layers["ground"])
     map:drawLayer(map.layers["coloring"])
     map:drawLayer(map.layers["decorations"])
-    
     love.graphics.setColor(1,1,1,1) -- no coloring of sprites
-    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,offset)
-    monster.current:draw(monster.sheet,monster.x,monster.y,nil,monster.scale,monster.scale,offset)
+    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,char.w/2,char.h/2)
+    monster.current:draw(monster.sheet,monster.x,monster.y,nil,monster.scale,monster.scale)
+    if options.showCrosshairs then
+      gui.crosshair(char.x,char.y,char.color:components())
+      drawTriggers()
+    end
   cam:detach()
-  drawSidePanel(panelWidth,panelHeight)
+  drawSidePanel(sidePanelWidth,screenHeight)
+  if options.showCamera then drawCamera() end
 end
 
+function drawTriggers() 
+  for i,obj in pairs(map.layers["triggers"].objects) do
+    love.graphics.rectangle("line",obj.x,obj.y,obj.width,obj.height)
+  end
+  love.graphics.rectangle("line",char.x-char.w/2,char.y-char.h/2,char.w,char.h)
+  
+end
+
+function drawCamera()
+  love.graphics.setFont(fontSheets.small.font)
+  love.graphics.setColor(1,1,1,1)
+  love.graphics.print(string.format("camera %dx%d",cam.x,cam.y),10,screenHeight-love.graphics.getFont():getHeight())
+  
+          local tx,ty=map:convertPixelToTile(char.x,char.y)
+  local props=map:getTileProperties("ground",1,1)
+  for key,value in pairs(props) do print("key value",key,value) end
+--  love.graphics.print("tile id "..
+end
+
+-- side panel contains the title, level number, player panels
 function drawSidePanel(w,h)
   local offset=20
-  local panelColor=gui.createColor255(0,0,0)
+  local panelColor=gui.createColor255(0,0,0,128)
   local fontColor=gui.createColor255(153,229,80)
   love.graphics.setColor(panelColor:components())
   love.graphics.rectangle("fill",0,0,w,h)
@@ -481,16 +619,16 @@ function drawSidePanel(w,h)
   love.graphics.setFont(fontSheets.normal.font)
   gui.centerText(string.format("LEVEL %d",666),w/2,y,false)
   y=y+fontSheets.large.font:getHeight()+offset+offset
-  local panelHeight=155
-  drawPlayerPanel(1,0,y,w,panelHeight,gui.createColor255(153,229,80),gui.createColor255(106,190,48,255))
-  y=y+panelHeight+offset
-  drawPlayerPanel(2,0,y,w,panelHeight,gui.createColor255(102,225,243),gui.createColor255(43, 125, 199,255))
-  y=y+panelHeight+offset
-  drawPlayerPanel(3,0,y,w,panelHeight,gui.createColor255(221,229,235),gui.createColor255(145,148,151,255))
-  y=y+panelHeight+offset
-  drawPlayerPanel(4,0,y,w,panelHeight,gui.createColor255(243,214,18),gui.createColor255(227,120,3,255))
+  drawPlayerPanel(1,0,y,w,playerPanelHeight,gui.createColor255(153,229,80),gui.createColor255(106,190,48,255))
+  y=y+playerPanelHeight+offset
+  drawPlayerPanel(2,0,y,w,playerPanelHeight,gui.createColor255(102,225,243),gui.createColor255(43, 125, 199,255))
+  y=y+playerPanelHeight+offset
+  drawPlayerPanel(3,0,y,w,playerPanelHeight,gui.createColor255(221,229,235),gui.createColor255(145,148,151,255))
+  y=y+playerPanelHeight+offset
+  drawPlayerPanel(4,0,y,w,playerPanelHeight,gui.createColor255(243,214,18),gui.createColor255(227,120,3,255))
 end
 
+-- player panel contains the players score, hp, and power ups
 function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
   love.graphics.setColor(bgColor:components())
   love.graphics.rectangle("fill",x,y,w,h)
@@ -516,6 +654,7 @@ function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
   
 end
 
+-- draw the title page
 function drawTitle() 
   local x,y=titleText.x,titleText.y
   local fontLarge=fontSheets.large
@@ -538,6 +677,7 @@ function drawTitle()
   drawVersion()
 end
 
+-- draw just the version number
 function drawVersion() 
   love.graphics.setColor(fontNormalColor:components())
   love.graphics.setFont(fontSheets.small.font)
