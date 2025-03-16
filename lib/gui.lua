@@ -66,18 +66,27 @@ function gui.rightText(text,x,y)
 end
 
 -- draw a 10x10 crosshair in the color specified, or the current color if color is not specified
-function gui.crosshair(x,y,r,g,b,a)
+function gui.crosshair(x,y,r,g,b,a,fullscreen)
+  local w=10
+  local h=10
+  if fullscreen~=nil and fullscreen then
+    w=love.graphics.getWidth()
+    h=love.graphics.getHeight()
+  end
+  
   if r==nil then 
     -- use whatever color is already active
-    love.graphics.line(x,y-10,x,y+10)
-    love.graphics.line(x-10,y,x+10,y)
+    love.graphics.line(x,y-h,x,y+h)
+    love.graphics.line(x-w,y,x+w,y)
   else
     -- use the color provided
     love.graphics.setColor(r,g,b,a)
-    love.graphics.line(x,y-10,x,y+10)
-    love.graphics.line(x-10,y,x+10,y)
+    love.graphics.line(x,y-h,x,y+h)
+    love.graphics.line(x-w,y,x+w,y)
   end
 end
+
+
 
 -- creates a menu that will draw itself and call handler(menu) when the user presses *enter*. 
 -- Call selectNext and selectPrevious for up/down arrow movements.
