@@ -1,6 +1,8 @@
 io.stdout:setvbuf("no")
 for a in pairs(arg) do print("a="..a) end
 
+-- words for test
+
 local sti=require "lib.sti"
 local Camera=require 'lib.camera'
 local anim8=require 'lib.anim8'
