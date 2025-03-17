@@ -4,6 +4,7 @@ local gui=require "lib.gui"
 
 function createMonster(id,x,y,w,h,filename)
   s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
+  s.type="monster"
   s.id=id
   s.z=9 -- make sure it's under the player
   s.score=0

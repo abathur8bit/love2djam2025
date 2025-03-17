@@ -1,26 +1,29 @@
-require "shape"
+local shape=require "shape"
 
-function createBullet(x,y,angle,vx,vy,color,rocket)
+function createBullet(x,y,angle,color,rocket)
   if rocket==nil then rocket=false end
   if color == nil then color = createColor(1,1,1) end
-  s=createShape(x,y,1,1,0,color)
-  s.z=2
+  s=shape.createShape(x,y,1,1,angle,color)
+  s.z=11
   s.type="bullet"
-  s.vx=vx
-  s.vy=vy
-  s.angle=angle
-  s.radius=3
-  s.sprite=love.graphics.newImage("assets/bullet.png")
-  s.anglespeed=0
+  s.growMin=3
+  s.growMax=10
+  s.growSpeed=60
+  s.radius=s.growMin
   s.maxspeed=200
   s.thrust=500
-  s.friction=0
-  s.scale=2
+  s.scale=1
   s.update=updateBullet
   s.draw=drawBullet
   s.time=3.5
   s.rocket=rocket
-  return s
+
+  local ax,ay=0,0
+  ax = math.sin(s.angle)*s.thrust
+  ay = -math.cos(s.angle)*s.thrust  
+  s.vx = s.vx + ax*s.thrust
+  s.vy = s.vy + ay*s.thrust
+return s
 end
 
 function updateBullet(self,dt)
@@ -30,6 +33,9 @@ function updateBullet(self,dt)
     return false 
   end
   
+  self.radius=self.radius+self.growSpeed*dt
+  if self.radius>self.growMax then self.radius=self.growMin end
+
   if self.rocket then
     --bullet will speed up over time
     local ax,ay=0,0
@@ -49,6 +55,6 @@ function updateBullet(self,dt)
 end
 
 function drawBullet(self)
-  love.graphics.setColor(self.color.red,self.color.green,self.color.blue,self.color.alpha)
+  love.graphics.setColor(self.color:components())
   love.graphics.circle('fill', self.x, self.y,self.radius)
 end

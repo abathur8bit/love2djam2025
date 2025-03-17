@@ -54,6 +54,9 @@ music={
   combat={filename="assets/Room 1 Combat.mp3",music=nil},
 }
 sfx={
+  shoot={filename="assets/shoot.wav",sfx=nil},
+  hit={filename="assets/explode.wav",sfx=nil},
+  kill={filename="assets/playerexplode.wav",sfx=nil},
   footsteps={filename="assets/Footsteps.ogg",sfx=nil}
 }
 
@@ -70,7 +73,7 @@ local playerPanelHeight=155
 local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
-local options={debug=true,showCrosshairs=true,showCamera=true}
+local options={debug=true,showExtras=true,showCamera=true}
 local currentPlayer=1
 -- where players spawn
 local entery={x=-1,y=-1}
@@ -92,11 +95,18 @@ end
 function fireBullet(player,dt) 
   if (player.fireRateTimer>player.fireRate or player.fireRateTimer==-1) then
     if inbrowser==false then
-      sfx.fire:stop()
-      sfx.fire:play()
+      sfx.shoot.sfx:stop()
+      sfx.shoot.sfx:play()
     end
     
     player.fireRateTimer=0
+    local distance=15
+    local x=player.x
+    local y=player.y
+    local angle=player.angle 
+    local dx=math.sin(angle)*distance
+    local dy=-math.cos(angle)*distance
+    world:addShape(createBullet(x+dx,y+dy,angle,player.color))
   end
 end
 
@@ -106,6 +116,7 @@ function love.load(args)
   -- only load sound and music if we are not in a browser
   if inbrowser==false then
     for key,sfxInfo in pairs(sfx) do
+      print("loading sound "..sfxInfo.filename)
       sfxInfo.sfx=love.audio.newSource(sfxInfo.filename,"static")
     end
     for key,musicInfo in pairs(music) do
@@ -282,7 +293,10 @@ function love.update(dt)
   world:update(dt)
   handlePlayerCameraMovement(dt)
   checkTriggers()
-  
+  if world.players[currentPlayer].firing then
+    fireBullet(world.players[currentPlayer],dt)
+  end
+
   world.players[currentPlayer].score=world.players[currentPlayer].score+1   -- TODO remove when real score is ready
 end
 
@@ -398,6 +412,8 @@ end
 function processInput()
   readInput()
   world.players[currentPlayer].keypressed=false
+  world.players[currentPlayer].firing=false
+
   if keystate.up and keystate.left then
     world.players[currentPlayer].keypressed=true
     world.players[currentPlayer].direction="upleft"
@@ -422,6 +438,8 @@ function processInput()
   elseif keystate.right then
     world.players[currentPlayer].keypressed=true
     world.players[currentPlayer].direction="right"
+  elseif keystate.buttonA then
+    world.players[currentPlayer].firing=true
   end
 end
 
@@ -467,7 +485,9 @@ end
 function drawCamera()
   love.graphics.setFont(fontSheets.small.font)
   love.graphics.setColor(1,1,1,1)
-  love.graphics.print(string.format("camera %dx%d",cam.x,cam.y),10,screenHeight-love.graphics.getFont():getHeight())
+  local firing="no"
+  if world.players[currentPlayer].firing then firing="yes" end
+  love.graphics.print(string.format("camera %dx%d player firing %s",cam.x,cam.y,firing),10,screenHeight-love.graphics.getFont():getHeight())
   
   local tx,ty=map:convertPixelToTile(world.players[currentPlayer].x,world.players[currentPlayer].y)
   local props=map:getTileProperties("ground",1,1)

@@ -1,11 +1,10 @@
-require "player"
+local a=true
+local s=(a and "yes" or "no")
+print(a,s)local a=true
 
-player = createPlayer(1,10,10,64,64,0)
+a=false
+s=(a==true and "yes" or "no")
+print(a,s)
 
-print("foo")
-for key,value in pairs(player) do
-  print(key,value)
-end
 
-player:update(0)
-player:draw()
+print(string.format("a is %s",(a==true "yes" or "no")))

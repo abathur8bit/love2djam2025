@@ -3,14 +3,16 @@ local shape = require "shape"
 local gui=require "lib.gui"
 
 function createPlayer(id,x,y,w,h,filename) 
-  s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
+  local color=gui.createColor(153,229,80,1)
+  if id==2 then color=gui.createColor(102,225,243,1) end
+  if id==3 then color=gui.createColor(221,229,235,1) end
+  if id==4 then color=gui.createColor(243,214,18,1) end
+
+  s=shape.createShape(x,y,w,h,0,color)
+  s.type="player"
   s.id=id
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH
-  s.fireRate=0.2
-  s.fireRateTimer=s.fireRate
-  s.keyPressed=false
-  s.speed=300
   s.animType="idle"
   s.direction="downright"
   s.update=updatePlayer
@@ -22,6 +24,7 @@ function createPlayer(id,x,y,w,h,filename)
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
+  s.firing=false
   s.speed=300
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
@@ -49,6 +52,7 @@ function createPlayer(id,x,y,w,h,filename)
 end
 
 function updatePlayer(self,dt)
+  self.fireRateTimer=self.fireRateTimer+dt
   if self.keypressed then 
     self.animType="walk" 
     if inbrowser==false then
@@ -78,24 +82,32 @@ function updatePlayer(self,dt)
   if self.keypressed == true then
     if self.direction=="up" then 
       self.y=self.y-self.speed*dt
+      self.angle=0
     elseif self.direction=="down" then
       self.y=self.y+self.speed*dt
+      self.angle=180
     elseif self.direction=="right" then
       self.x=self.x+self.speed*dt
+      self.angle=90
     elseif self.direction=="left" then
       self.x=self.x-self.speed*dt
+      self.angle=270
     elseif self.direction=="upleft" then 
       self.x=self.x-self.speed*dt
       self.y=self.y-self.speed*dt
+      self.angle=315
     elseif self.direction=="upright" then
       self.x=self.x+self.speed*dt
       self.y=self.y-self.speed*dt
+      self.angle=45
     elseif self.direction=="downright" then
       self.x=self.x+self.speed*dt
       self.y=self.y+self.speed*dt
+      self.angle=135
     elseif self.direction=="downleft" then
       self.x=self.x-self.speed*dt
       self.y=self.y+self.speed*dt
+      self.angle=225
     end
   end
   
