@@ -85,29 +85,29 @@ function updatePlayer(self,dt)
       self.angle=0
     elseif self.direction=="down" then
       self.y=self.y+self.speed*dt
-      self.angle=180
+      self.angle=180*math.pi/180
     elseif self.direction=="right" then
       self.x=self.x+self.speed*dt
-      self.angle=90
+      self.angle=90*math.pi/180
     elseif self.direction=="left" then
       self.x=self.x-self.speed*dt
-      self.angle=270
+      self.angle=270*math.pi/180
     elseif self.direction=="upleft" then 
       self.x=self.x-self.speed*dt
       self.y=self.y-self.speed*dt
-      self.angle=315
+      self.angle=315*math.pi/180
     elseif self.direction=="upright" then
       self.x=self.x+self.speed*dt
       self.y=self.y-self.speed*dt
-      self.angle=45
+      self.angle=45*math.pi/180
     elseif self.direction=="downright" then
       self.x=self.x+self.speed*dt
       self.y=self.y+self.speed*dt
-      self.angle=135
+      self.angle=135*math.pi/180
     elseif self.direction=="downleft" then
       self.x=self.x-self.speed*dt
       self.y=self.y+self.speed*dt
-      self.angle=225
+      self.angle=225*math.pi/180
     end
   end
   

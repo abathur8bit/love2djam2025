@@ -10,7 +10,7 @@ function shape.createShape(x,y,w,h,angle,color)
   s.z=10
   s.w=w
   s.h=h
-  s.angle=0
+  s.angle=angle
   s.vx=0
   s.vy=0
   s.color=color

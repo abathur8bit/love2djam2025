@@ -103,12 +103,14 @@ function fireBullet(player,dt)
     end
     
     player.fireRateTimer=0
-    local distance=15
+    local distance=96/2-5 -- a little away from the edge of the player
     local x=player.x
     local y=player.y
-    local angle=player.angle 
+    local angle=player.angle
     local dx=math.sin(angle)*distance
     local dy=-math.cos(angle)*distance
+
+    print("bullet ",x,y,dx,dy,angle)
     world:addShape(createBullet(x+dx,y+dy,angle,player.color))
   end
 end
