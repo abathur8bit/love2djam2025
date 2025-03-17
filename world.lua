@@ -1,7 +1,10 @@
+local sti=require "lib.sti"
+print("STI:", sti._VERSION)
+
 require "shape"
 
 -- create world of width x height pixels in size
-function createWorld(width,height,screenWidth,screenHeight)
+function createWorld(screenWidth,screenHeight)
   w={}
   
   -- world vars
@@ -12,6 +15,7 @@ function createWorld(width,height,screenWidth,screenHeight)
   w.height=height
   w.screenWidth=screenWidth
   w.screenHeight=screenHeight
+  w.map={}
   
   -- functions
   w.update=updateWorld
@@ -19,7 +23,15 @@ function createWorld(width,height,screenWidth,screenHeight)
   w.addShape=addWorldShape
   w.addPlayer=addPlayerShape
   w.addMonster=addMonsterShape
+  w.loadMap=loadMap
   return w
+end
+
+function loadMap(self, filename)
+  self.map=sti(filename)
+  print("Map:", self.map.tiledversion)
+  self.width=self.map.width*self.map.tilewidth
+  self.height=self.map.height*self.map.tileheight
 end
 
 function addPlayerShape(self,p)
@@ -55,6 +67,10 @@ function updateWorld(self,dt)
 end
 
 function drawWorld(self)
+  love.graphics.setColor(1, 1, 1)
+  self.map:drawLayer(self.map.layers["ground"])
+  self.map:drawLayer(self.map.layers["coloring"])
+  self.map:drawLayer(self.map.layers["decorations"])
   love.graphics.setColor(1,1,1,1)
   for i,s in ipairs(self.shapes) do 
     s:draw() 

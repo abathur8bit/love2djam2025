@@ -1,9 +1,7 @@
 io.stdout:setvbuf("no")
 for a in pairs(arg) do print("a="..a) end
 
--- words for test
 
-local sti=require "lib.sti"
 local Camera=require 'lib.camera'
 local anim8=require 'lib.anim8'
 local windfield=require "lib.windfield"
@@ -71,7 +69,6 @@ activeMenu=nil
 mainMenu={}
 
 local world 
-local map
 local cam=Camera()
 local sidePanelWidth=400
 local playerPanelHeight=155
@@ -182,30 +179,27 @@ function love.load(args)
     fontNormalColor,fontSelectedColor,
     handleMenuOptions,handleMenuOptionsBack,
     fontSheets.normal.font)
-  
-	map=sti("maps/map-67.lua")
 
 	-- Print version and other info
-	print("STI          : " .. sti._VERSION)
-	print("Map          : " .. map.tiledversion)
   print("Window Width : " .. love.graphics.getWidth())
   print("Window Height: " .. love.graphics.getHeight())
 
-  local px,py=findPlayerSpawnPoint(map)
+  world=createWorld(screenWidth,screenHeight)
+  world:loadMap("maps/map-67.lua")
+  local px,py=findPlayerSpawnPoint(world.map)
   if px==nil then
     px=screenWidth/2
     py=screenHeight/2
   end
-  world=createWorld(map.width*map.tilewidth,map.height*map.tileheight,screenWidth,screenHeight)
   world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+070,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+140,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+070,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+140,64,64,"assets/helmet.png"))
 
-  findWalls(map)
-  findTriggers(map)
-  createPowerups(map)
+  findWalls(world.map)
+  findTriggers(world.map)
+  createPowerups(world.map)
 end
 
 function createPowerups(map)
@@ -338,8 +332,8 @@ function love.update(dt)
   flux.update(dt)
   processInput()
   world:update(dt)
-  handlePlayerCameraMovement(dt)
-  checkTriggers()
+  handlePlayerCameraMovement(world.map, dt)
+  checkTriggers(world.map)
   if world.players[currentPlayer].firing then
     fireBullet(world.players[currentPlayer],dt)
   end
@@ -347,7 +341,7 @@ function love.update(dt)
   world.players[currentPlayer].score=world.players[currentPlayer].score+1   -- TODO remove when real score is ready
 end
 
-function handlePlayerCameraMovement(dt)
+function handlePlayerCameraMovement(map, dt)
   --restrict player position, look at player, and keep entire map visible
   local mw=map.width * map.tilewidth
   local mh=map.height * map.tileheight
@@ -369,7 +363,7 @@ function handlePlayerCameraMovement(dt)
   if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
 end
 
-function checkTriggers()
+function checkTriggers(map)
   world.players[currentPlayer].color=gui.createColor(1,1,1)
   for i,obj in pairs(map.layers["triggers"].objects) do
     if checkRect(world.players[currentPlayer].x-world.players[currentPlayer].w/2,world.players[currentPlayer].y-world.players[currentPlayer].h/2,world.players[currentPlayer].w,world.players[currentPlayer].h,obj.x,obj.y,obj.width,obj.height) then
@@ -396,9 +390,10 @@ function parseDoorNumber(door)
   return n
 end
 
+
 function openWalls(doorNum)
-  map:convertPixelToTile (x, y)
-  Map:setLayerTile (layer, x, y, gid)
+  --map:convertPixelToTile (x, y)
+  --map:setLayerTile (layer, x, y, gid)
 end
 
 function checkRect(x,y,w,h,rx,ry,rw,rh)
@@ -507,29 +502,26 @@ end
 
 -- draw the game, like the player, monsters, map, etc
 function drawGame()
+  love.graphics.setColor(1, 1, 1)
   cam:attach()
-    love.graphics.setColor(1, 1, 1)
-    map:drawLayer(map.layers["ground"])
-    map:drawLayer(map.layers["coloring"])
-    map:drawLayer(map.layers["decorations"])
     world:draw()
     if options.showExtras then
       gui.crosshair(world.players[currentPlayer].x,world.players[currentPlayer].y,world.players[currentPlayer].color:components())
-      drawTriggers()
+      drawTriggers(world.map)
     end
   cam:detach()
   drawSidePanel(sidePanelWidth,screenHeight)
-  if options.showCamera then drawCamera() end
+  if options.showCamera then drawCamera(world.map) end
 end
 
-function drawTriggers() 
+function drawTriggers(map) 
   for i,obj in pairs(map.layers["triggers"].objects) do
     love.graphics.rectangle("line",obj.x,obj.y,obj.width,obj.height)
   end
   love.graphics.rectangle("line",world.players[currentPlayer].x-world.players[currentPlayer].w/2,world.players[currentPlayer].y-world.players[currentPlayer].h/2,world.players[currentPlayer].w,world.players[currentPlayer].h)
 end
 
-function drawCamera()
+function drawCamera(map)
   love.graphics.setFont(fontSheets.small.font)
   love.graphics.setColor(1,1,1,1)
   local firing="no"
