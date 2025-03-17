@@ -53,7 +53,7 @@ music={
   ingame={filename="assets/Room 1 Idle.mp3",music=nil},
   combat={filename="assets/Room 1 Combat.mp3",music=nil},
 }
-local sfx={
+sfx={
   footsteps={filename="assets/Footsteps.ogg",sfx=nil}
 }
 
