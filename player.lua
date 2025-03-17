@@ -44,7 +44,7 @@ function createPlayer(id,x,y,w,h,filename)
   s.anims.walk.upright   = anim8.newAnimation(s.grid('9-12',1),0.15)
   s.anims.walk.downright = anim8.newAnimation(s.grid('1-4',1),0.15)
   s.anims.walk.downleft  = anim8.newAnimation(s.grid('5-8',1),0.15)
-
+  s.current=s.anims[s.animType][s.direction]
   return s
 end
 

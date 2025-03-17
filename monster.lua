@@ -44,11 +44,13 @@ function createMonster(id,x,y,w,h,filename)
   s.anims.walk.upright   = anim8.newAnimation(s.grid('1-4',1),0.15)
   s.anims.walk.downright = anim8.newAnimation(s.grid('1-4',1),0.15)
   s.anims.walk.downleft  = anim8.newAnimation(s.grid('1-4',1),0.15)
+  s.current=s.anims[s.animType][s.direction]
 
   return s
 end
 
 function updateMonster(self,dt)
+  self.current=self.anims[self.animType][self.direction]
   self.current:update(dt)
 end
 

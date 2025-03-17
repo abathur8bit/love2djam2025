@@ -160,7 +160,7 @@ function love.load(args)
     fontSheets.normal.font)
   menuOptions=gui.createMenu(
     nil,
-    {"Show Crosshairs","Show Camera","Back"},
+    {"Show Extras","Show Camera","Back"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
     handleMenuOptions,handleMenuOptionsBack,
@@ -222,9 +222,9 @@ function handlemainMenu(menu)
 end
 
 function updateOptionMenuItems() 
-  local crosshairOption="Show Crosshairs: "
+  local crosshairOption="Show Extras: "
   local cameraOption="Show Camera: "
-  if options.showCrosshairs then 
+  if options.showExtras then 
     crosshairOption=crosshairOption.."Yes"
   else 
     crosshairOption=crosshairOption.."No"
@@ -243,10 +243,10 @@ function handleMenuOptions(menu)
   if index==3 then 
     activeMenu=mainMenu 
   elseif index==1 then
-    if options.showCrosshairs then 
-      options.showCrosshairs=false
+    if options.showExtras then 
+      options.showExtras=false
     else
-      options.showCrosshairs=true
+      options.showExtras=true
     end
     updateOptionMenuItems()
   elseif index==2 then
@@ -279,34 +279,15 @@ end
 
 function love.update(dt)
   flux.update(dt)
-  processInput(dt)
-  players[currentPlayer].keypressed=false
-  if keystate.up and keystate.left then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="upleft"
-  elseif keystate.up and keystate.right then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="upright"
-  elseif keystate.down and keystate.left then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="downleft"
-  elseif keystate.down and keystate.right then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="downright"
-  elseif keystate.up then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="up"
-  elseif keystate.down then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="down"
-  elseif keystate.left then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="left"
-  elseif keystate.right then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="right"
-  end
+  processInput()
+  world:update(dt)
+  handlePlayerCameraMovement(dt)
+  checkTriggers()
   
+  players[currentPlayer].score=players[currentPlayer].score+1   -- TODO remove when real score is ready
+end
+
+function handlePlayerCameraMovement(dt)
   if players[currentPlayer].keypressed then 
     players[currentPlayer].animType="walk" 
     if inbrowser==false then
@@ -330,9 +311,6 @@ function love.update(dt)
       end
     end
   end
-  players[currentPlayer].current=players[currentPlayer].anims[players[currentPlayer].animType][players[currentPlayer].direction]
-  monster.current=monster.anims[monster.animType][monster.direction]
-  world:update(dt)
 
   local vx=0
   local vy=0
@@ -380,12 +358,7 @@ function love.update(dt)
   if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
   if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
   if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
-  
-  checkTriggers()
-  
-  players[currentPlayer].score=players[currentPlayer].score+1   -- TODO remove when real score is ready
 end
-
 
 function checkTriggers()
   players[currentPlayer].color=gui.createColor(1,1,1)
@@ -434,7 +407,7 @@ function checkRect(x,y,w,h,rx,ry,rw,rh)
                       and bottom1 > top2 
 end
 
-function processInput(dt)
+function readInput(dt)
   for key in pairs(keystate) do keystate[key]=false end   -- set all keys to not pressed
   
   if joystick~=nil then
@@ -474,6 +447,36 @@ function processInput(dt)
   end
 end
 
+function processInput()
+  readInput()
+  players[currentPlayer].keypressed=false
+  if keystate.up and keystate.left then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="upleft"
+  elseif keystate.up and keystate.right then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="upright"
+  elseif keystate.down and keystate.left then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="downleft"
+  elseif keystate.down and keystate.right then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="downright"
+  elseif keystate.up then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="up"
+  elseif keystate.down then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="down"
+  elseif keystate.left then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="left"
+  elseif keystate.right then
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="right"
+  end
+end
+
 function love.draw()
   if activeMenu ~= nil then
     local red,green,blue=22/255,103/255,194/255 -- a dark cyan
@@ -484,9 +487,8 @@ function love.draw()
   else
     drawGame()
   end
-  if options.showCrosshairs then
+  if options.showExtras then
     gui.crosshair(screenWidth/2,screenHeight/2,1,0,0,1,true)
-    gui.crosshair(sidePanelWidth+(screenWidth-sidePanelWidth)/2,screenHeight/2,1,1,1,1,true)
   end
 end
 
@@ -498,7 +500,7 @@ function drawGame()
     map:drawLayer(map.layers["coloring"])
     map:drawLayer(map.layers["decorations"])
     world:draw()
-    if options.showCrosshairs then
+    if options.showExtras then
       gui.crosshair(players[currentPlayer].x,players[currentPlayer].y,players[currentPlayer].color:components())
       drawTriggers()
     end
