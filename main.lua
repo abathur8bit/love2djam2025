@@ -1,4 +1,6 @@
 io.stdout:setvbuf("no")
+for a in pairs(arg) do print("a="..a) end
+
 local sti=require "lib.sti"
 local Camera=require 'lib.camera'
 local anim8=require 'lib.anim8'
@@ -10,6 +12,7 @@ require "world"
 require "player"
 require "bullet"
 require "monster"
+require "powerup"
 require "conf"
 
 version={x=0,y=-100,text="a.b"}
@@ -184,32 +187,72 @@ function love.load(args)
   print("Window Width : " .. love.graphics.getWidth())
   print("Window Height: " .. love.graphics.getHeight())
 
+  local px,py=findPlayerSpawnPoint(map)
+  if px==nil then
+    px=screenWidth/2
+    py=screenHeight/2
+  end
   world=createWorld(map.width*map.tilewidth,map.height*map.tileheight,screenWidth,screenHeight)
-  world:addPlayer (createPlayer (1,screenWidth/2,screenHeight/2,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+  world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+070,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+140,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+070,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+140,64,64,"assets/helmet.png"))
-  
+
+  findWalls(map)
+  findTriggers(map)
+  createPowerups(map)
+end
+
+function createPowerups(map)
+  if map.layers["powerups"].objects then
+    print("found powerups")
+    for _,powerup in pairs(map.layers["powerups"].objects) do
+      if powerup.name=="bean" then
+        world:addShape(createPowerup("earth",powerup.x,powerup.y,powerup.width,powerup.height))
+      end
+    end
+  end
+end
+
+function findWalls(map)
   local xoff,yoff=0,0
   if map.layers["walls"].objects then
     for i,obj in pairs(map.layers["walls"].objects) do
-      print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
+      -- print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
       
       -- TODO collison 
 --      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
 --      table.insert(walls,wall)
     end
   end
+end
+
+function findTriggers(map)
+  local xoff,yoff=0,0
   if map.layers["triggers"].objects then
     for i,obj in pairs(map.layers["triggers"].objects) do
-      print("trigger at ",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
+      -- print("trigger at ",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
       
 --      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
 --      wall:setType("kinematic")
 --      table.insert(walls,wall)
     end
   end
+end
+
+function findPlayerSpawnPoint(map)
+  if map.layers["enter_exit"].objects then
+    print("enter exit layer found")
+    for _,obj in pairs(map.layers["enter_exit"].objects) do
+      if obj.name=="enter" then
+        print("found enter point at ",obj.x,obj.y)
+        -- return the center of the spawn point
+        return obj.x+obj.width/2,obj.y+obj.height/2
+      end
+    end
+  end
+  return nil
 end
 
 function handlemainMenu(menu) 

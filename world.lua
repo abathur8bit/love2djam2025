@@ -33,7 +33,7 @@ function addMonsterShape(self,m)
 end
 
 function addWorldShape(self,s)
-  if s==nil then error("shape is nil. Did you forget to return in the create?") end
+  if s==nil then error("shape is nil. Did you forget to return in your create function?") end
   table.insert(self.shapes,s)
   table.sort(self.shapes,
     function(a,b) 

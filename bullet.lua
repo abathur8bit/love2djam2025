@@ -12,7 +12,6 @@ function createBullet(x,y,angle,color,rocket)
   s.radius=s.growMin
   s.maxspeed=200
   s.thrust=500
-  s.scale=1
   s.update=updateBullet
   s.draw=drawBullet
   s.time=3.5
