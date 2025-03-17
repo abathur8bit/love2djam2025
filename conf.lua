@@ -1,5 +1,5 @@
 buildVersion="0.05"
-inbrowser=true
+inbrowser=false
 resolution=1600
 fullscreen=false
 
