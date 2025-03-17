@@ -49,8 +49,58 @@ function createPlayer(id,x,y,w,h,filename)
 end
 
 function updatePlayer(self,dt)
-  self.current=self.anims[self.animType][self.direction]
-  self.current:update(dt)
+  if self.keypressed then 
+    self.animType="walk" 
+    if inbrowser==false then
+      sfx.footsteps.sfx:play()
+      if music.ingame.music:isPlaying() then
+        local musicPos=music.ingame.music:tell("seconds")
+        music.ingame.music:stop()
+        music.combat.music:seek(musicPos)
+        music.combat.music:play()
+      end
+    end
+  else 
+    self.animType="idle"
+    if inbrowser==false then
+      sfx.footsteps.sfx:stop()
+      if music.combat.music:isPlaying() then
+        local musicPos=music.combat.music:tell("seconds")
+        music.combat.music:stop()
+        music.ingame.music:seek(musicPos,"seconds")
+        music.ingame.music:play()
+      end
+    end
+  end
+
+  local vx=0
+  local vy=0
+  if self.keypressed == true then
+    if self.direction=="up" then 
+      self.y=self.y-self.speed*dt
+    elseif self.direction=="down" then
+      self.y=self.y+self.speed*dt
+    elseif self.direction=="right" then
+      self.x=self.x+self.speed*dt
+    elseif self.direction=="left" then
+      self.x=self.x-self.speed*dt
+    elseif self.direction=="upleft" then 
+      self.x=self.x-self.speed*dt
+      self.y=self.y-self.speed*dt
+    elseif self.direction=="upright" then
+      self.x=self.x+self.speed*dt
+      self.y=self.y-self.speed*dt
+    elseif self.direction=="downright" then
+      self.x=self.x+self.speed*dt
+      self.y=self.y+self.speed*dt
+    elseif self.direction=="downleft" then
+      self.x=self.x-self.speed*dt
+      self.y=self.y+self.speed*dt
+    end
+  end
+  
+  self.current=self.anims[self.animType][self.direction]  -- set the correct animation
+  self.current:update(dt) -- update anim8
 end
 
 function drawPlayer(self)

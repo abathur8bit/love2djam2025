@@ -5,6 +5,7 @@ local gui=require "lib.gui"
 function createMonster(id,x,y,w,h,filename)
   s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
   s.id=id
+  s.z=9 -- make sure it's under the player
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH
   s.fireRate=0.2
@@ -50,8 +51,8 @@ function createMonster(id,x,y,w,h,filename)
 end
 
 function updateMonster(self,dt)
-  self.current=self.anims[self.animType][self.direction]
-  self.current:update(dt)
+  self.current=self.anims[self.animType][self.direction]  -- set the correct animation
+  self.current:update(dt) -- update anim8
 end
 
 function drawMonster(self)

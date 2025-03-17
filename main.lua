@@ -72,7 +72,6 @@ local waitForKeyUp=false
 local numPlayers=1
 local options={debug=true,showCrosshairs=true,showCamera=true}
 local currentPlayer=1
-local players={}
 -- where players spawn
 local entery={x=-1,y=-1}
 -- rectangle that if touched, will exit the level
@@ -175,11 +174,11 @@ function love.load(args)
   print("Window Height: " .. love.graphics.getHeight())
 
   world=createWorld(map.width*map.tilewidth,map.height*map.tileheight,screenWidth,screenHeight)
-  players[currentPlayer] = createPlayer(1,screenWidth/2,screenHeight/2,96,96,"assets/Player 1 Wizardsprites-sheet.png")
-  world:addPlayer(players[currentPlayer])
-  monster=createMonster(1,players[currentPlayer].x+100,players[currentPlayer].y,64,64,"assets/helmet.png")
-  world:addMonster(monster)
-
+  world:addPlayer (createPlayer (1,screenWidth/2,screenHeight/2,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+  world:addMonster(createMonster(1,world.players[currentPlayer].x+070,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
+  world:addMonster(createMonster(1,world.players[currentPlayer].x+140,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
+  world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+070,64,64,"assets/helmet.png"))
+  world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+140,64,64,"assets/helmet.png"))
   
   local xoff,yoff=0,0
   if map.layers["walls"].objects then
@@ -284,71 +283,20 @@ function love.update(dt)
   handlePlayerCameraMovement(dt)
   checkTriggers()
   
-  players[currentPlayer].score=players[currentPlayer].score+1   -- TODO remove when real score is ready
+  world.players[currentPlayer].score=world.players[currentPlayer].score+1   -- TODO remove when real score is ready
 end
 
 function handlePlayerCameraMovement(dt)
-  if players[currentPlayer].keypressed then 
-    players[currentPlayer].animType="walk" 
-    if inbrowser==false then
-      sfx.footsteps.sfx:play()
-      if music.ingame.music:isPlaying() then
-        local musicPos=music.ingame.music:tell("seconds")
-        music.ingame.music:stop()
-        music.combat.music:seek(musicPos)
-        music.combat.music:play()
-      end
-    end
-  else 
-    players[currentPlayer].animType="idle"
-    if inbrowser==false then
-      sfx.footsteps.sfx:stop()
-      if music.combat.music:isPlaying() then
-        local musicPos=music.combat.music:tell("seconds")
-        music.combat.music:stop()
-        music.ingame.music:seek(musicPos,"seconds")
-        music.ingame.music:play()
-      end
-    end
-  end
-
-  local vx=0
-  local vy=0
-  if players[currentPlayer].keypressed == true then
-    if players[currentPlayer].direction=="up" then 
-      players[currentPlayer].y=players[currentPlayer].y-players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="down" then
-      players[currentPlayer].y=players[currentPlayer].y+players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="right" then
-      players[currentPlayer].x=players[currentPlayer].x+players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="left" then
-      players[currentPlayer].x=players[currentPlayer].x-players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="upleft" then 
-      players[currentPlayer].x=players[currentPlayer].x-players[currentPlayer].speed*dt
-      players[currentPlayer].y=players[currentPlayer].y-players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="upright" then
-      players[currentPlayer].x=players[currentPlayer].x+players[currentPlayer].speed*dt
-      players[currentPlayer].y=players[currentPlayer].y-players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="downright" then
-      players[currentPlayer].x=players[currentPlayer].x+players[currentPlayer].speed*dt
-      players[currentPlayer].y=players[currentPlayer].y+players[currentPlayer].speed*dt
-    elseif players[currentPlayer].direction=="downleft" then
-      players[currentPlayer].x=players[currentPlayer].x-players[currentPlayer].speed*dt
-      players[currentPlayer].y=players[currentPlayer].y+players[currentPlayer].speed*dt
-    end
-  end
-  
-  
   --restrict player position, look at player, and keep entire map visible
   local mw=map.width * map.tilewidth
   local mh=map.height * map.tileheight
   
-  if players[currentPlayer].x-players[currentPlayer].w/2 < 0 then players[currentPlayer].x=players[currentPlayer].w/2 end
-  if players[currentPlayer].y-players[currentPlayer].h/2 < 0 then players[currentPlayer].y=players[currentPlayer].h/2 end
-  if players[currentPlayer].x+players[currentPlayer].w/2 > mw then players[currentPlayer].x=mw-players[currentPlayer].w/2 end
-  if players[currentPlayer].y+players[currentPlayer].h/2 > mh then players[currentPlayer].y=mh-players[currentPlayer].h/2 end
+  if world.players[currentPlayer].x-world.players[currentPlayer].w/2 < 0  then world.players[currentPlayer].x=   world.players[currentPlayer].w/2 end
+  if world.players[currentPlayer].y-world.players[currentPlayer].h/2 < 0  then world.players[currentPlayer].y=   world.players[currentPlayer].h/2 end
+  if world.players[currentPlayer].x+world.players[currentPlayer].w/2 > mw then world.players[currentPlayer].x=mw-world.players[currentPlayer].w/2 end
+  if world.players[currentPlayer].y+world.players[currentPlayer].h/2 > mh then world.players[currentPlayer].y=mh-world.players[currentPlayer].h/2 end
   
-  cam:lookAt(players[currentPlayer].x,players[currentPlayer].y)
+  cam:lookAt(world.players[currentPlayer].x,world.players[currentPlayer].y)
   --keep entire map visible to camera
 --  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
 --  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
@@ -361,11 +309,11 @@ function handlePlayerCameraMovement(dt)
 end
 
 function checkTriggers()
-  players[currentPlayer].color=gui.createColor(1,1,1)
+  world.players[currentPlayer].color=gui.createColor(1,1,1)
   for i,obj in pairs(map.layers["triggers"].objects) do
-    if checkRect(players[currentPlayer].x-players[currentPlayer].w/2,players[currentPlayer].y-players[currentPlayer].h/2,players[currentPlayer].w,players[currentPlayer].h,obj.x,obj.y,obj.width,obj.height) then
+    if checkRect(world.players[currentPlayer].x-world.players[currentPlayer].w/2,world.players[currentPlayer].y-world.players[currentPlayer].h/2,world.players[currentPlayer].w,world.players[currentPlayer].h,obj.x,obj.y,obj.width,obj.height) then
       if string.find(obj.name,"door") then
-        players[currentPlayer].color=gui.createColor(0,1,0)
+        world.players[currentPlayer].color=gui.createColor(0,1,0)
         local doorNum = parseDoorNumber(obj.name)
         local tx,ty=map:convertPixelToTile(obj.x,obj.y)
         local tx,ty=map:convertPixelToTile(obj.x,obj.y)
@@ -373,7 +321,7 @@ function checkTriggers()
         map:setLayerTile("ground",tx,ty,13)
 --        openWalls(doorNum)
       else
-        players[currentPlayer].color=gui.createColor(1,0,0)
+        world.players[currentPlayer].color=gui.createColor(1,0,0)
       end
     end
   end
@@ -449,31 +397,31 @@ end
 
 function processInput()
   readInput()
-  players[currentPlayer].keypressed=false
+  world.players[currentPlayer].keypressed=false
   if keystate.up and keystate.left then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="upleft"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="upleft"
   elseif keystate.up and keystate.right then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="upright"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="upright"
   elseif keystate.down and keystate.left then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="downleft"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="downleft"
   elseif keystate.down and keystate.right then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="downright"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="downright"
   elseif keystate.up then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="up"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="up"
   elseif keystate.down then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="down"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="down"
   elseif keystate.left then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="left"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="left"
   elseif keystate.right then
-    players[currentPlayer].keypressed=true
-    players[currentPlayer].direction="right"
+    world.players[currentPlayer].keypressed=true
+    world.players[currentPlayer].direction="right"
   end
 end
 
@@ -501,7 +449,7 @@ function drawGame()
     map:drawLayer(map.layers["decorations"])
     world:draw()
     if options.showExtras then
-      gui.crosshair(players[currentPlayer].x,players[currentPlayer].y,players[currentPlayer].color:components())
+      gui.crosshair(world.players[currentPlayer].x,world.players[currentPlayer].y,world.players[currentPlayer].color:components())
       drawTriggers()
     end
   cam:detach()
@@ -513,7 +461,7 @@ function drawTriggers()
   for i,obj in pairs(map.layers["triggers"].objects) do
     love.graphics.rectangle("line",obj.x,obj.y,obj.width,obj.height)
   end
-  love.graphics.rectangle("line",players[currentPlayer].x-players[currentPlayer].w/2,players[currentPlayer].y-players[currentPlayer].h/2,players[currentPlayer].w,players[currentPlayer].h)
+  love.graphics.rectangle("line",world.players[currentPlayer].x-world.players[currentPlayer].w/2,world.players[currentPlayer].y-world.players[currentPlayer].h/2,world.players[currentPlayer].w,world.players[currentPlayer].h)
 end
 
 function drawCamera()
@@ -521,7 +469,7 @@ function drawCamera()
   love.graphics.setColor(1,1,1,1)
   love.graphics.print(string.format("camera %dx%d",cam.x,cam.y),10,screenHeight-love.graphics.getFont():getHeight())
   
-  local tx,ty=map:convertPixelToTile(players[currentPlayer].x,players[currentPlayer].y)
+  local tx,ty=map:convertPixelToTile(world.players[currentPlayer].x,world.players[currentPlayer].y)
   local props=map:getTileProperties("ground",1,1)
   for key,value in pairs(props) do print("key value",key,value) end
 --  love.graphics.print("tile id "..
@@ -561,8 +509,8 @@ function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
   w=w-offset*2
   h=h-offset*2
   
-  local score=players[currentPlayer].score -- TODO use real player score
-  local health=players[currentPlayer].score/4 -- TODO use real player health
+  local score=world.players[currentPlayer].score -- TODO use real player score
+  local health=world.players[currentPlayer].score/4 -- TODO use real player health
   local font=fontSheets.normal.font
   
   love.graphics.setColor(fontColor:components())
