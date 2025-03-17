@@ -2,9 +2,11 @@ local shape=require "shape"
 local anim8=require 'lib.anim8'
 local gui=require "lib.gui"
 
-function createMonster(id,x,y,w,h,filename)
+behaviours={"dumb","smart"}
+function createMonster(id,x,y,w,h,filename,behaviour)
   s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
   s.type="monster"
+  s.behaviour=behaviour
   s.id=id
   s.z=9 -- make sure it's under the player
   s.score=0

@@ -5,13 +5,14 @@ local flux=require "lib.flux"
 
 powerupType={"earth","fire","water"}
 
-function createPowerup(type,x,y,w,h)
+function createPowerup(powerupType,x,y,w,h)
   s=shape.createShape(x,y,16,16,0,gui.createColor(1,1,1,1))
+  s.type="powerup"
   s.scaleMin=4
   s.scaleMax=6
   s.scaleDir=1
   s.scale=math.random(s.scaleMin,s.scaleMax)
-  s.type=type
+  s.powerupType=powerupType
   s.update=updatePowerup
   s.draw=drawPowerup
   s.speed=8
