@@ -5,9 +5,13 @@ local anim8=require 'lib.anim8'
 local windfield=require "lib.windfield"
 local flux=require "lib.flux"
 local gui=require "lib.gui"
-local player
 
+require "world"
+require "player"
+require "bullet"
+require "monster"
 require "conf"
+
 version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
@@ -58,6 +62,7 @@ menuOptions=nil
 activeMenu=nil
 mainMenu={}
 
+local world 
 local map
 local cam=Camera()
 local sidePanelWidth=400
@@ -66,6 +71,7 @@ local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
 local options={debug=true,showCrosshairs=true,showCamera=true}
+local currentPlayer=1
 local players={}
 -- where players spawn
 local entery={x=-1,y=-1}
@@ -82,91 +88,6 @@ function titleTweenComplete()
   flux.to(startText,0.5,{x=screenWidth/2,y=y1})
   flux.to(instructionText,0.5,{x=screenWidth/2,y=y2}):oncomplete(
     function() flux.to(logo,0.75,{x=logo.x,y=screenHeight-logo.image:getHeight()-10}):ease("elasticout") end)
-end
-
-function loadCharacter() 
-  char={}
-  
-  char.x=screenWidth/2
-  char.y=screenHeight/2
-  char.w=96
-  char.h=96
-  char.scale=1
-  char.color=gui.createColor(1,1,1)
-  char.score=0
-  char.idleTimer=0.0
-  char.idleTimerDelay=5
-  char.sheet=love.graphics.newImage("assets/Player 1 Wizardsprites-sheet.png")
-  char.grid=anim8.newGrid(char.w,char.h,char.sheet:getWidth(),char.sheet:getHeight())
-  char.animType="walk"
-  char.direction="downright"
-  char.keyPressed=false
-  char.speed=300
-  char.fireRate=0.2
-  char.fireRateTimer=char.fireRate
-  
-  char.anims={}
-  
-  char.anims.idle={}
-  char.anims.idle.up        = anim8.newAnimation(char.grid(21,1),0.15)
-  char.anims.idle.down      = anim8.newAnimation(char.grid(17,1),0.15)
-  char.anims.idle.right     = anim8.newAnimation(char.grid(29,1),0.15)
-  char.anims.idle.left      = anim8.newAnimation(char.grid(25,1),0.15)
-  char.anims.idle.upleft    = anim8.newAnimation(char.grid(13,1),0.15)
-  char.anims.idle.upright   = anim8.newAnimation(char.grid(9,1),0.15)
-  char.anims.idle.downright = anim8.newAnimation(char.grid(1,1),0.15)
-  char.anims.idle.downleft  = anim8.newAnimation(char.grid(5,1),0.15)
-  
-  char.anims.walk={}
-  char.anims.walk.up        = anim8.newAnimation(char.grid('21-24',1),0.15)
-  char.anims.walk.down      = anim8.newAnimation(char.grid('17-20',1),0.15)
-  char.anims.walk.right     = anim8.newAnimation(char.grid('29-32',1),0.15)
-  char.anims.walk.left      = anim8.newAnimation(char.grid('25-28',1),0.15)
-  char.anims.walk.upleft    = anim8.newAnimation(char.grid('13-16',1),0.15)
-  char.anims.walk.upright   = anim8.newAnimation(char.grid('9-12',1),0.15)
-  char.anims.walk.downright = anim8.newAnimation(char.grid('1-4',1),0.15)
-  char.anims.walk.downleft  = anim8.newAnimation(char.grid('5-8',1),0.15)
-end
-
-function loadMonster()
-  monster={}
-  
-  monster.x=screenWidth/2+100
-  monster.y=screenHeight/2+128
-  monster.w=64
-  monster.h=64
-  monster.idleTimer=0.0
-  monster.idleTimerDelay=5
-  monster.sheet=love.graphics.newImage("assets/helmet.png")
-  monster.grid=anim8.newGrid(monster.w,monster.w,monster.sheet:getWidth(),monster.sheet:getHeight())
-  monster.animType="walk"
-  monster.direction="right"
-  monster.direction="right"
-  monster.keyPressed=false
-  monster.scale=1
-  monster.speed=300
-  
-  monster.anims={}
-  
-  monster.anims.idle={}
-  monster.anims.idle.up        = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.down      = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.right     = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.left      = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.upleft    = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.upright   = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.downright = anim8.newAnimation(monster.grid(1,1),0.15)
-  monster.anims.idle.downleft  = anim8.newAnimation(monster.grid(1,1),0.15)
-  
-  monster.anims.walk={}
-  monster.anims.walk.up        = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.down      = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.right     = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.left      = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.upleft    = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.upright   = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.downright = anim8.newAnimation(monster.grid('1-4',1),0.15)
-  monster.anims.walk.downleft  = anim8.newAnimation(monster.grid('1-4',1),0.15)
 end
 
 function fireBullet(player,dt) 
@@ -245,8 +166,6 @@ function love.load(args)
     handleMenuOptions,handleMenuOptionsBack,
     fontSheets.normal.font)
   
-  loadCharacter()
-  loadMonster()
 	map=sti("maps/map-67.lua")
 
 	-- Print version and other info
@@ -254,6 +173,12 @@ function love.load(args)
 	print("Map          : " .. map.tiledversion)
   print("Window Width : " .. love.graphics.getWidth())
   print("Window Height: " .. love.graphics.getHeight())
+
+  world=createWorld(map.width*map.tilewidth,map.height*map.tileheight,screenWidth,screenHeight)
+  players[currentPlayer] = createPlayer(1,screenWidth/2,screenHeight/2,96,96,"assets/Player 1 Wizardsprites-sheet.png")
+  world:addPlayer(players[currentPlayer])
+  monster=createMonster(1,players[currentPlayer].x+100,players[currentPlayer].y,64,64,"assets/helmet.png")
+  world:addMonster(monster)
 
   
   local xoff,yoff=0,0
@@ -355,35 +280,35 @@ end
 function love.update(dt)
   flux.update(dt)
   processInput(dt)
-  char.keypressed=false
+  players[currentPlayer].keypressed=false
   if keystate.up and keystate.left then
-    char.keypressed=true
-    char.direction="upleft"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="upleft"
   elseif keystate.up and keystate.right then
-    char.keypressed=true
-    char.direction="upright"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="upright"
   elseif keystate.down and keystate.left then
-    char.keypressed=true
-    char.direction="downleft"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="downleft"
   elseif keystate.down and keystate.right then
-    char.keypressed=true
-    char.direction="downright"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="downright"
   elseif keystate.up then
-    char.keypressed=true
-    char.direction="up"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="up"
   elseif keystate.down then
-    char.keypressed=true
-    char.direction="down"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="down"
   elseif keystate.left then
-    char.keypressed=true
-    char.direction="left"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="left"
   elseif keystate.right then
-    char.keypressed=true
-    char.direction="right"
+    players[currentPlayer].keypressed=true
+    players[currentPlayer].direction="right"
   end
   
-  if char.keypressed then 
-    char.animType="walk" 
+  if players[currentPlayer].keypressed then 
+    players[currentPlayer].animType="walk" 
     if inbrowser==false then
       sfx.footsteps.sfx:play()
       if music.ingame.music:isPlaying() then
@@ -394,7 +319,7 @@ function love.update(dt)
       end
     end
   else 
-    char.animType="idle"
+    players[currentPlayer].animType="idle"
     if inbrowser==false then
       sfx.footsteps.sfx:stop()
       if music.combat.music:isPlaying() then
@@ -405,34 +330,33 @@ function love.update(dt)
       end
     end
   end
-  char.current=char.anims[char.animType][char.direction]
-  char.current:update(dt)
+  players[currentPlayer].current=players[currentPlayer].anims[players[currentPlayer].animType][players[currentPlayer].direction]
   monster.current=monster.anims[monster.animType][monster.direction]
-  monster.current:update(dt)
-  
+  world:update(dt)
+
   local vx=0
   local vy=0
-  if char.keypressed == true then
-    if char.direction=="up" then 
-      char.y=char.y-char.speed*dt
-    elseif char.direction=="down" then
-      char.y=char.y+char.speed*dt
-    elseif char.direction=="right" then
-      char.x=char.x+char.speed*dt
-    elseif char.direction=="left" then
-      char.x=char.x-char.speed*dt
-    elseif char.direction=="upleft" then 
-      char.x=char.x-char.speed*dt
-      char.y=char.y-char.speed*dt
-    elseif char.direction=="upright" then
-      char.x=char.x+char.speed*dt
-      char.y=char.y-char.speed*dt
-    elseif char.direction=="downright" then
-      char.x=char.x+char.speed*dt
-      char.y=char.y+char.speed*dt
-    elseif char.direction=="downleft" then
-      char.x=char.x-char.speed*dt
-      char.y=char.y+char.speed*dt
+  if players[currentPlayer].keypressed == true then
+    if players[currentPlayer].direction=="up" then 
+      players[currentPlayer].y=players[currentPlayer].y-players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="down" then
+      players[currentPlayer].y=players[currentPlayer].y+players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="right" then
+      players[currentPlayer].x=players[currentPlayer].x+players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="left" then
+      players[currentPlayer].x=players[currentPlayer].x-players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="upleft" then 
+      players[currentPlayer].x=players[currentPlayer].x-players[currentPlayer].speed*dt
+      players[currentPlayer].y=players[currentPlayer].y-players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="upright" then
+      players[currentPlayer].x=players[currentPlayer].x+players[currentPlayer].speed*dt
+      players[currentPlayer].y=players[currentPlayer].y-players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="downright" then
+      players[currentPlayer].x=players[currentPlayer].x+players[currentPlayer].speed*dt
+      players[currentPlayer].y=players[currentPlayer].y+players[currentPlayer].speed*dt
+    elseif players[currentPlayer].direction=="downleft" then
+      players[currentPlayer].x=players[currentPlayer].x-players[currentPlayer].speed*dt
+      players[currentPlayer].y=players[currentPlayer].y+players[currentPlayer].speed*dt
     end
   end
   
@@ -441,12 +365,12 @@ function love.update(dt)
   local mw=map.width * map.tilewidth
   local mh=map.height * map.tileheight
   
-  if char.x-char.w/2 < 0 then char.x=char.w/2 end
-  if char.y-char.h/2 < 0 then char.y=char.h/2 end
-  if char.x+char.w/2 > mw then char.x=mw-char.w/2 end
-  if char.y+char.h/2 > mh then char.y=mh-char.h/2 end
+  if players[currentPlayer].x-players[currentPlayer].w/2 < 0 then players[currentPlayer].x=players[currentPlayer].w/2 end
+  if players[currentPlayer].y-players[currentPlayer].h/2 < 0 then players[currentPlayer].y=players[currentPlayer].h/2 end
+  if players[currentPlayer].x+players[currentPlayer].w/2 > mw then players[currentPlayer].x=mw-players[currentPlayer].w/2 end
+  if players[currentPlayer].y+players[currentPlayer].h/2 > mh then players[currentPlayer].y=mh-players[currentPlayer].h/2 end
   
-  cam:lookAt(char.x,char.y)
+  cam:lookAt(players[currentPlayer].x,players[currentPlayer].y)
   --keep entire map visible to camera
 --  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
 --  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
@@ -459,16 +383,16 @@ function love.update(dt)
   
   checkTriggers()
   
-  char.score=char.score+1   -- TODO remove when real score is ready
+  players[currentPlayer].score=players[currentPlayer].score+1   -- TODO remove when real score is ready
 end
 
 
 function checkTriggers()
-  char.color=gui.createColor(1,1,1)
+  players[currentPlayer].color=gui.createColor(1,1,1)
   for i,obj in pairs(map.layers["triggers"].objects) do
-    if checkRect(char.x-char.w/2,char.y-char.h/2,char.w,char.h,obj.x,obj.y,obj.width,obj.height) then
+    if checkRect(players[currentPlayer].x-players[currentPlayer].w/2,players[currentPlayer].y-players[currentPlayer].h/2,players[currentPlayer].w,players[currentPlayer].h,obj.x,obj.y,obj.width,obj.height) then
       if string.find(obj.name,"door") then
-        char.color=gui.createColor(0,1,0)
+        players[currentPlayer].color=gui.createColor(0,1,0)
         local doorNum = parseDoorNumber(obj.name)
         local tx,ty=map:convertPixelToTile(obj.x,obj.y)
         local tx,ty=map:convertPixelToTile(obj.x,obj.y)
@@ -476,7 +400,7 @@ function checkTriggers()
         map:setLayerTile("ground",tx,ty,13)
 --        openWalls(doorNum)
       else
-        char.color=gui.createColor(1,0,0)
+        players[currentPlayer].color=gui.createColor(1,0,0)
       end
     end
   end
@@ -573,11 +497,9 @@ function drawGame()
     map:drawLayer(map.layers["ground"])
     map:drawLayer(map.layers["coloring"])
     map:drawLayer(map.layers["decorations"])
-    love.graphics.setColor(1,1,1,1) -- no coloring of sprites
-    char.current:draw(char.sheet,char.x,char.y,nil,char.scale,char.scale,char.w/2,char.h/2)
-    monster.current:draw(monster.sheet,monster.x,monster.y,nil,monster.scale,monster.scale)
+    world:draw()
     if options.showCrosshairs then
-      gui.crosshair(char.x,char.y,char.color:components())
+      gui.crosshair(players[currentPlayer].x,players[currentPlayer].y,players[currentPlayer].color:components())
       drawTriggers()
     end
   cam:detach()
@@ -589,8 +511,7 @@ function drawTriggers()
   for i,obj in pairs(map.layers["triggers"].objects) do
     love.graphics.rectangle("line",obj.x,obj.y,obj.width,obj.height)
   end
-  love.graphics.rectangle("line",char.x-char.w/2,char.y-char.h/2,char.w,char.h)
-  
+  love.graphics.rectangle("line",players[currentPlayer].x-players[currentPlayer].w/2,players[currentPlayer].y-players[currentPlayer].h/2,players[currentPlayer].w,players[currentPlayer].h)
 end
 
 function drawCamera()
@@ -598,7 +519,7 @@ function drawCamera()
   love.graphics.setColor(1,1,1,1)
   love.graphics.print(string.format("camera %dx%d",cam.x,cam.y),10,screenHeight-love.graphics.getFont():getHeight())
   
-          local tx,ty=map:convertPixelToTile(char.x,char.y)
+  local tx,ty=map:convertPixelToTile(players[currentPlayer].x,players[currentPlayer].y)
   local props=map:getTileProperties("ground",1,1)
   for key,value in pairs(props) do print("key value",key,value) end
 --  love.graphics.print("tile id "..
@@ -638,8 +559,8 @@ function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
   w=w-offset*2
   h=h-offset*2
   
-  local score=char.score -- TODO use real player score
-  local health=char.score/4 -- TODO use real player health
+  local score=players[currentPlayer].score -- TODO use real player score
+  local health=players[currentPlayer].score/4 -- TODO use real player health
   local font=fontSheets.normal.font
   
   love.graphics.setColor(fontColor:components())

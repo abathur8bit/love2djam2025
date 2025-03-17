@@ -18,3 +18,6 @@ https://github.com/a327ex/windfield?tab=readme-ov-file#capture-collision-events
         box:applyLinearImpulse(1000, 0)
         box:applyAngularImpulse(5000)
     end
+
+
+

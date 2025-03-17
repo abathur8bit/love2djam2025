@@ -1,6 +1,6 @@
-shape=require "shape"
+require "player"
 
-player = shape.createPlayer(1,10,10,64,64,scale)
+player = createPlayer(1,10,10,64,64,0)
 
 print("foo")
 for key,value in pairs(player) do
