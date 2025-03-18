@@ -110,7 +110,8 @@ function updatePlayer(self,dt)
       self.angle=225*math.pi/180
     end
   end
-  
+
+  self.collider:moveTo(self.x,self.y) -- keep collision in sync
   self.current=self.anims[self.animType][self.direction]  -- set the correct animation
   self.current:update(dt) -- update anim8
 end
@@ -118,5 +119,3 @@ end
 function drawPlayer(self)
   self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w/2,self.h/2)
 end
-
-return player

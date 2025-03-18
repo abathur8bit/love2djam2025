@@ -1,9 +1,9 @@
 io.stdout:setvbuf("no")
 for a in pairs(arg) do print("a="..a) end
 
-
-local Camera=require 'lib.camera'
-local anim8=require 'lib.anim8'
+local HC=require "lib.HC"
+local Camera=require "lib.camera"
+local anim8=require "lib.anim8"
 local windfield=require "lib.windfield"
 local flux=require "lib.flux"
 local gui=require "lib.gui"
@@ -191,11 +191,17 @@ function love.load(args)
     px=screenWidth/2
     py=screenHeight/2
   end
-  world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(1,world.players[currentPlayer].x+070,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
-  world:addMonster(createMonster(1,world.players[currentPlayer].x+140,world.players[currentPlayer].y+000,64,64,"assets/helmet.png"))
-  world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+070,64,64,"assets/helmet.png"))
-  world:addMonster(createMonster(1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+140,64,64,"assets/helmet.png"))
+  local xoffset=50
+  local yoffset=8
+  local player=createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png")
+  local rect = HC.rectangle(player.x+xoffset,player.y+yoffset,player.w-xoffset,player.h-yoffset)
+  player.collider=rect
+
+  world:addPlayer (player)
+  world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png"))
+  world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png"))
+  world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png"))
+
 
   findWalls(world.map)
   findTriggers(world.map)
@@ -217,11 +223,8 @@ function findWalls(map)
   local xoff,yoff=0,0
   if map.layers["walls"].objects then
     for i,obj in pairs(map.layers["walls"].objects) do
-      -- print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
-      
-      -- TODO collison 
---      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
---      table.insert(walls,wall)
+      print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
+      table.insert(world.walls,HC.rectangle(obj.x,obj.y,obj.width,obj.height))
     end
   end
 end
@@ -364,21 +367,10 @@ function handlePlayerCameraMovement(map, dt)
 end
 
 function checkTriggers(map)
-  world.players[currentPlayer].color=gui.createColor(1,1,1)
-  for i,obj in pairs(map.layers["triggers"].objects) do
-    if checkRect(world.players[currentPlayer].x-world.players[currentPlayer].w/2,world.players[currentPlayer].y-world.players[currentPlayer].h/2,world.players[currentPlayer].w,world.players[currentPlayer].h,obj.x,obj.y,obj.width,obj.height) then
-      if string.find(obj.name,"door") then
-        world.players[currentPlayer].color=gui.createColor(0,1,0)
-        local doorNum = parseDoorNumber(obj.name)
-        local tx,ty=map:convertPixelToTile(obj.x,obj.y)
-        local tx,ty=map:convertPixelToTile(obj.x,obj.y)
-        print("found tile at ",tx,ty,obj.id)
-        map:setLayerTile("ground",tx,ty,13)
---        openWalls(doorNum)
-      else
-        world.players[currentPlayer].color=gui.createColor(1,0,0)
-      end
-    end
+  local player=world.players[currentPlayer]
+  player.color=gui.createColor(1,1,1)
+  for shape, delta in pairs(HC.collisions(player.collider)) do
+    player.color=gui.createColor(1,0,0)
   end
 end
 
@@ -518,7 +510,9 @@ function drawTriggers(map)
   for i,obj in pairs(map.layers["triggers"].objects) do
     love.graphics.rectangle("line",obj.x,obj.y,obj.width,obj.height)
   end
-  love.graphics.rectangle("line",world.players[currentPlayer].x-world.players[currentPlayer].w/2,world.players[currentPlayer].y-world.players[currentPlayer].h/2,world.players[currentPlayer].w,world.players[currentPlayer].h)
+  local p=world.players[currentPlayer]
+  local x1,y1, x2,y2 = p.collider:bbox()
+  love.graphics.rectangle('line', x1,y1, x2-x1,y2-y1)
 end
 
 function drawCamera(map)
@@ -612,4 +606,9 @@ function drawVersion()
   love.graphics.setColor(fontNormalColor:components())
   love.graphics.setFont(fontSheets.small.font)
   love.graphics.print("v"..version.text,version.x,version.y)
+end
+
+function dumpTable(t,name)
+  print("dumping table "..name)
+  for key,value in pairs(t) do print("key value",key,value) end
 end

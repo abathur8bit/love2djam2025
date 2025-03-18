@@ -1,4 +1,5 @@
 local sti=require "lib.sti"
+
 print("STI:", sti._VERSION)
 
 require "shape"
@@ -16,6 +17,7 @@ function createWorld(screenWidth,screenHeight)
   w.screenWidth=screenWidth
   w.screenHeight=screenHeight
   w.map={}
+  w.walls={}
   
   -- functions
   w.update=updateWorld
