@@ -79,8 +79,6 @@ function updatePlayer(self,dt)
     end
   end
 
-  local vx=0
-  local vy=0
   if self.keypressed == true then
     if self.direction=="up" then 
       self.y=self.y-self.speed*dt

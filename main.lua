@@ -364,8 +364,20 @@ function checkTriggers(map)
   local player=world.players[currentPlayer]
   player.color=gui.createColor(1,1,1)
   for shape, delta in pairs(HC.collisions(player.collider)) do
-    player.color=gui.createColor(1,0,0)
+    if isWall(shape) then
+      -- bump player back
+      player.x=player.x+delta.x
+      player.y=player.y+delta.y
+    end
   end
+end
+
+function isWall(shape)
+  for _,wall in pairs(world.walls) do
+    -- print("checking wall ",wall)
+    if wall==shape then return true end
+  end 
+  return false
 end
 
 function parseDoorNumber(door)
