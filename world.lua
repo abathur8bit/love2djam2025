@@ -12,8 +12,8 @@ function createWorld(screenWidth,screenHeight)
   w.players={}
   w.monsters={}
   w.shapes={}
-  w.width=width
-  w.height=height
+  w.width=0
+  w.height=0
   w.screenWidth=screenWidth
   w.screenHeight=screenHeight
   w.map={}
