@@ -81,6 +81,7 @@ function addPathfinder(self)
   -- Create a pathfinder object using Jump Point Search
   self.pathfinderMap = map
   self.pathfinder = Pathfinder(grid, 'JPS', 1)
+  self.pathfinderPaths = {}
 end
 
 function addPlayerShape(self,p)
