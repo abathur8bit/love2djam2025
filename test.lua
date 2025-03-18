@@ -7,4 +7,9 @@ s=(a==true and "yes" or "no")
 print(a,s)
 
 
-print(string.format("a is %s",(a==true "yes" or "no")))
+print("OPTIONS")
+local options={debug=true,showExtras=true,showCamera=true,collideWalls=true}
+for key,value in pairs(options) do print(key,value) end
+for i in pairs(options) do print(i) end
+
+print("debug=",options["debug"])

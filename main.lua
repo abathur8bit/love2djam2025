@@ -75,7 +75,7 @@ local playerPanelHeight=155
 local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
-local options={debug=true,showExtras=true,showCamera=true}
+local options={debug=true,showExtras=true,showCamera=true,collideWalls=true}
 local currentPlayer=1
 -- where players spawn
 local entery={x=-1,y=-1}
@@ -269,44 +269,38 @@ function handlemainMenu(menu)
   end
 end
 
-function updateOptionMenuItems() 
-  local crosshairOption="Show Extras: "
-  local cameraOption="Show Camera: "
-  if options.showExtras then 
-    crosshairOption=crosshairOption.."Yes"
-  else 
-    crosshairOption=crosshairOption.."No"
+function updateOptionMenuItems()
+  menuOptions.options={}
+  for key,value in pairs(options) do
+    local menuText=key..": "..(value==true and "yes" or "no")
+    table.insert(menuOptions.options,menuText)
   end
-  if options.showCamera then 
-    cameraOption=cameraOption.."Yes"
-  else 
-    cameraOption=cameraOption.."No"
-  end
-  menuOptions.options = {crosshairOption,cameraOption,"Back"}
+  table.insert(menuOptions.options,"Back")
 end
 
 function handleMenuOptions(menu)
   local index=menu.selectedIndex
   local text=menu.options[index]
-  if index==3 then 
-    activeMenu=mainMenu 
-  elseif index==1 then
-    if options.showExtras then 
-      options.showExtras=false
-    else
-      options.showExtras=true
-    end
-    updateOptionMenuItems()
-  elseif index==2 then
-    if options.showCamera then
-      options.showCamera=false
-    else
-      options.showCamera=true
-    end
-    updateOptionMenuItems()
-  else
-    activeMenu=nil 
-  end --close menu
+  if text=="Back" then
+    activeMenu=mainMenu
+    return
+  end
+
+  -- map the keys to an index so we can utilize the selected index
+  local keys={}
+  local i=1
+  for key in pairs(options) do
+    keys[i]=key
+    i=i+1
+  end
+  local selectedKey=keys[index]
+  if options[selectedKey]==true then
+    options[selectedKey]=false
+  else 
+    options[selectedKey]=true
+  end
+  updateOptionMenuItems()
+
 end
 
 function handleMenuOptionsBack(menu) 
@@ -350,10 +344,10 @@ function handlePlayerCameraMovement(map, dt)
   
   cam:lookAt(world.players[currentPlayer].x,world.players[currentPlayer].y)
   --keep entire map visible to camera
---  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
---  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
---  if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
---  if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
+  if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
+  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
+  if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
+  if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
   if cam.x<sidePanelWidth then cam.x=sidePanelWidth end
   if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
   if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
@@ -361,13 +355,15 @@ function handlePlayerCameraMovement(map, dt)
 end
 
 function checkTriggers(map)
-  local player=world.players[currentPlayer]
-  player.color=gui.createColor(1,1,1)
-  for shape, delta in pairs(HC.collisions(player.collider)) do
-    if isWall(shape) then
-      -- bump player back
-      player.x=player.x+delta.x
-      player.y=player.y+delta.y
+  if options.collideWalls then
+    local player=world.players[currentPlayer]
+    player.color=gui.createColor(1,1,1)
+    for shape, delta in pairs(HC.collisions(player.collider)) do
+      if isWall(shape) then
+        -- bump player back as they hit a wall
+        player.x=player.x+delta.x
+        player.y=player.y+delta.y
+      end
     end
   end
 end
