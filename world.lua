@@ -79,6 +79,7 @@ function addPathfinder(self)
   local grid = Grid(map)
   
   -- Create a pathfinder object using Jump Point Search
+  self.pathfinderMap = map
   self.pathfinder = Pathfinder(grid, 'JPS', 1)
 end
 
