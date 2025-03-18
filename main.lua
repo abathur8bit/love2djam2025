@@ -191,13 +191,7 @@ function love.load(args)
     px=screenWidth/2
     py=screenHeight/2
   end
-  local xoffset=50
-  local yoffset=8
-  local player=createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png")
-  local rect = HC.rectangle(player.x+xoffset,player.y+yoffset,player.w-xoffset,player.h-yoffset)
-  player.collider=rect
-
-  world:addPlayer (player)
+  world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
   world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png"))
   world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png"))

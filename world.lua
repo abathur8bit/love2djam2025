@@ -17,7 +17,7 @@ function createWorld(screenWidth,screenHeight)
   w.screenWidth=screenWidth
   w.screenHeight=screenHeight
   w.map={}
-  w.walls={}
+  w.walls={}  -- rectangle shapes from HC.rectangle()
   
   -- functions
   w.update=updateWorld

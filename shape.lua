@@ -17,7 +17,13 @@ function shape.createShape(x,y,w,h,angle,color)
   s.scale=1
   s.update=function() print("update shape") end
   s.draw=function() print("draw shape") end
+  s.adjustRect=shape.adjustRect
   return s
+end
+
+-- Returns a x,y,w,h of the shapes rectangle shrunk by x,y on the left, right, top and bottom
+function shape.adjustRect(self,x,y)
+  return self.x+x,self.y+y,self.w-x,self.h-y
 end
 
 return shape

@@ -1,4 +1,5 @@
-local anim8=require 'lib.anim8'
+local HC=require "lib.HC"
+local anim8=require "lib.anim8"
 local shape = require "shape"
 local gui=require "lib.gui"
 
@@ -8,7 +9,7 @@ function createPlayer(id,x,y,w,h,filename)
   if id==3 then color=gui.createColor(221,229,235,1) end
   if id==4 then color=gui.createColor(243,214,18,1) end
 
-  s=shape.createShape(x,y,w,h,0,color)
+  local s=shape.createShape(x,y,w,h,0,color)
   s.type="player"
   s.id=id
   s.score=0
@@ -28,6 +29,7 @@ function createPlayer(id,x,y,w,h,filename)
   s.speed=300
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
+  s.collider=HC.rectangle(s:adjustRect(50,8))
   s.anims={}
   s.anims.idle={}
   s.anims.idle.up        = anim8.newAnimation(s.grid(21,1),0.15)
