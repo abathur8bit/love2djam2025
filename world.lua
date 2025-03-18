@@ -19,7 +19,7 @@ function createWorld(screenWidth,screenHeight)
   w.height=0
   w.screenWidth=screenWidth
   w.screenHeight=screenHeight
-  w.walls={}  -- rectangle shapes from HC.rectangle()
+  w.collider = HC.new(128)
   
   -- functions
   w.update=updateWorld
@@ -46,10 +46,10 @@ end
 -- Creates a walkable map using the collider from HC
 function addPathfinder(self)
 
-  -- Create a test shape for the collisions
+  -- Create a test shape for the collisions (test shape is slightly smaller than a tile)
   local tw, th = 32, 32
   local collider = self.collider
-  local shape = collider:rectangle(0, 0, tw, th)
+  local shape = collider:rectangle(0, 0, tw - 2, th - 2)
 
   -- Create grid
   local map = {}
@@ -71,6 +71,9 @@ function addPathfinder(self)
       ::continue::
     end
   end
+
+  -- Remove shape from the collider
+  collider:remove(shape)
 
   -- Create jumper grid object
   local grid = Grid(map)
