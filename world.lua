@@ -38,6 +38,9 @@ function loadMap(self, filename)
   print("Map:", self.map.tiledversion)
   self.width=self.map.width*self.map.tilewidth
   self.height=self.map.height*self.map.tileheight
+
+  -- Add pathfinder
+  self:addPathfinder()
 end
 
 -- Creates a walkable map using the collider from HC
@@ -73,10 +76,7 @@ function addPathfinder(self)
   local grid = Grid(map)
   
   -- Create a pathfinder object using Jump Point Search
-  local myFinder = Pathfinder(grid, 'JPS', 1)
-
-  -- Set new pathfinder
-  self.pathfinder = myFinder
+  self.pathfinder = Pathfinder(grid, 'JPS', 1)
 end
 
 function addPlayerShape(self,p)
