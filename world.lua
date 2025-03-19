@@ -95,9 +95,10 @@ function addPathfinder(self)
   -- -- Create jumper grid object
   -- local grid = Grid(map)
   
-  -- -- Create a pathfinder object using Jump Point Search
+  -- Create a pathfinder object using Jump Point Search
   -- self.pathfinderMap = map
   -- self.pathfinder = Pathfinder(grid, 'JPS', 1)
+  -- self.pathfinderPaths = {}
 end
 
 function addPlayerShape(self,p)
