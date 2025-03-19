@@ -1,6 +1,6 @@
 local sti=require "lib.sti"
--- local Grid=require("lib.jumper.grid")
--- local Pathfinder=require("lib.jumper.pathfinder")
+local Grid=require("lib.jumper.grid")
+local Pathfinder=require("lib.jumper.pathfinder")
 local HC=require "lib.HC"
 
 print("STI:", sti._VERSION)

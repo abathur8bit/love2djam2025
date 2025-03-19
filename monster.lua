@@ -24,6 +24,7 @@ function createMonster(id,x,y,w,h,filename,world,behaviour)
   s.draw=drawMonster
   s.getPath=getPath
   s.checkPositionVisible=checkPositionVisible
+  s.destroy=destroy
   s.idleTimer=0.0
   s.idleTimerDelay=5
   s.sheet=love.graphics.newImage(filename)
@@ -86,6 +87,12 @@ function getPath(self, x, y)
     -- Check to see if the end position is the same
     if path[1].x == x and path[1].y == y then
       
+      -- Iterate the path to see if any nodes are visible
+      for _, node in ipairs(path) do
+        if checkPositionVisible(map, self.x, self.y, node.x, node.y) then
+          
+        end
+      end
     end
   end
 
@@ -195,4 +202,11 @@ function raytraceGrid(x0, y0, x1, y1)
       n = n - 1
   end
   return tiles
+end
+
+-- Destroy monster
+function destroy(self)
+
+  -- Destroy hitbox
+  self.world.collider:remove(self.hitbox)
 end
