@@ -4,6 +4,7 @@ local gui=require "lib.gui"
 
 behaviours={"dumb","smart"}
 function createMonster(id,x,y,w,h,filename,world,behaviour)
+  local s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
   s.type="monster"
   s.behaviour=behaviour
   s.world=world
@@ -68,11 +69,11 @@ end
 -- Check if a position is visible or not
 function checkPositionVisible(self, x, y)
 
-  -- Get monster position and convert to pathfinding position
-  local mx, my = math.floor(self.x / 32), math.floor(self.y / 32)
+  -- -- Get monster position and convert to pathfinding position
+  -- local mx, my = math.floor(self.x / 32), math.floor(self.y / 32)
 
-  -- Get x/y and convert to pathfinding position
-  local px, py = math.floor(x / 32), math.floor(y / 32)
+  -- -- Get x/y and convert to pathfinding position
+  -- local px, py = math.floor(x / 32), math.floor(y / 32)
 
-  for x1
+  -- for x1
 end

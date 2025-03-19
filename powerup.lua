@@ -8,6 +8,7 @@ powerupType={"earth","fire","water"}
 function createPowerup(powerupType,x,y,w,h)
   s=shape.createShape(x,y,16,16,0,gui.createColor(1,1,1,1))
   s.type="powerup"
+  s.z=9 -- put
   s.scaleMin=4
   s.scaleMax=6
   s.scaleDir=1
@@ -20,7 +21,6 @@ function createPowerup(powerupType,x,y,w,h)
   assert(s,"powerup image not available")
   s.grid=anim8.newGrid(s.w,s.h,s.sheet:getWidth(),s.sheet:getHeight())
   s.anim=anim8.newAnimation(s.grid("1-8",1),0.15)
-
   s.anim:gotoFrame(math.random(4))  -- select a random frame so all powerups are not rotating in sync
   return s
 end

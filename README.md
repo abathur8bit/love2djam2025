@@ -8,38 +8,63 @@ To run, execute the EXE file, or you need to have love installed and type
 love .
 ```
 
-# Credits:
-Programming: [Coder8Bit](https://coder8bit.itch.io/)
-Programming: Vince#6486
-Sound: [Dr. Tune](https://drtune.itch.io/)
-UI: [Erferro](https://www.behance.net/alessioferracu3)
-
-Font: Wolfenstein
-Tweening: [Flux](https://github.com/rxi/flux)
+# Notes
+- Need to be able to find the object based on the collision from HC.collisions()
+- Need to be able to know what the object is, a wall, trigger, key, powerup, monster, monster bullet, player bullet 
+- ablity to remove the hitbox from HC, and world
 
 
-# Flux
-Copyright (c) 2016 rxi
+# Collisions
+## Player hit something
+- Player with wall: not allow to pass through
+- Player with door: act like a wall
+- Player with key: Opens doors of the same number
+- Player with powerup: Allows the player to add to inventory
+- Monster: takes damage, remove monster from HC & world
+- Bullet: if bullit is not the players, take damage
+- Player bullet: ignore, bullet just goes through
+
+## Bullet
+- Hits a player (will probably already be processed)
+  - player takes damage
+  - bullet is removed from HC and world
+- Hits a wall
+  - bullet is removed from HC and world
+  - hits another monster, ignored, keeps going
+
+## Monster
+- Hits a player (already processed by player check)
+  - player takes damage
+  - monster is destroyed, removed from HC and world
 
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
+# todo
+- refactor hitbox creation
+- renamed door-01 to key-01 and wall-01 to door-01
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+# hitbox
+.name
+.type "trigger" "wall" "bullet" "sprite"
+.collider 
+.object 
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+- key
+  - type: trigger
+  - object name: key-01
+    - name key
+    - number 01
+- door
+  - type: trigger
+  - object name: door-01
+  - name: door
+  - number: 01
+- wall
+  - type: wall
+- trigger
 
-# Wolfenstein 3D font
-<https://github.com/id-Software/wolf3d> 
 
+shape
+ player
+ monster
+ powerup
+ door

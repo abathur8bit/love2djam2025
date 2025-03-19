@@ -117,5 +117,6 @@ function updatePlayer(self,dt)
 end
 
 function drawPlayer(self)
+  love.graphics.setColor(1,1,1,1)
   self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w/2,self.h/2)
 end

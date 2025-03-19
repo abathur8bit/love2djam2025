@@ -13,6 +13,7 @@ require "player"
 require "bullet"
 require "monster"
 require "powerup"
+require "door"
 require "conf"
 
 version={x=0,y=-100,text="a.b"}
@@ -192,46 +193,56 @@ function love.load(args)
     py=screenHeight/2
   end
   world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png"))
-  world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png"))
-  world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png"))
+  world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png",world,"dumb"))
+  world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png",world,"dumb"))
+  world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png",world,"dumb"))
 
+  createObjects(world.map)
+end
 
-  findWalls(world.map)
-  findTriggers(world.map)
-  createPowerups(world.map)
+function createObjects(map)
+  createWalls(map)
+  createTriggers(map)
+  createPowerups(map)
 end
 
 function createPowerups(map)
-  if map.layers["powerups"].objects then
-    print("found powerups")
+  if map.layers["powerups"] then
+    local count=0
     for _,powerup in pairs(map.layers["powerups"].objects) do
+      count=count+1
+      print("trigger at x,y,w,h,name",powerup.id,powerup.x,powerup.y,powerup.width,powerup.height,powerup.name)
       if powerup.name=="bean" then
         world:addShape(createPowerup("earth",powerup.x,powerup.y,powerup.width,powerup.height))
       end
     end
+    print(string.format("created %d powerups",count))
   end
 end
 
-function findWalls(map)
-  local xoff,yoff=0,0
+function createWalls(map)
   if map.layers["walls"].objects then
     for i,obj in pairs(map.layers["walls"].objects) do
-      print("wall at ",obj.id,obj.x,obj.y,obj.width,obj.height)
-      table.insert(world.walls,HC.rectangle(obj.x,obj.y,obj.width,obj.height))
+      print("wall at x,y,w,h",obj.id,obj.x,obj.y,obj.width,obj.height)
+      world:createHitbox(obj.x,obj.y,obj.width,obj.height,"wall",obj.id,obj.name,obj)
     end
   end
 end
 
-function findTriggers(map)
-  local xoff,yoff=0,0
-  if map.layers["triggers"].objects then
-    for i,obj in pairs(map.layers["triggers"].objects) do
-      -- print("trigger at ",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
-      
---      local wall=world:newRectangleCollider(obj.x+xoff,obj.y+yoff,obj.width,obj.height)
---      wall:setType("kinematic")
---      table.insert(walls,wall)
+function createTriggers(map)
+  if map.layers["triggers"] then
+    for _,obj in pairs(map.layers["triggers"].objects) do
+      local type="trigger"
+      local name,number=parseNameNumber(obj.name)
+      if name~=nil and name=="door" then
+        print("door at    id,x,y,w,h,name",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
+        local door=createDoor(obj.x,obj.y,obj.width,obj.height,"assets/door.png")
+        world:addShape(door)
+        world:createHitbox(obj.x,obj.y,obj.width,obj.height,"door",obj.id,obj.name,door)
+      else
+        print("trigger at id,x,y,w,h,name",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
+        world:createHitbox(obj.x,obj.y,obj.width,obj.height,type,obj.id,obj.name,obj)
+      end
     end
   end
 end
@@ -322,9 +333,9 @@ end
 function love.update(dt)
   flux.update(dt)
   processInput()
+  checkCollisions(world.map)
   world:update(dt)
   handlePlayerCameraMovement(world.map, dt)
-  checkTriggers(world.map)
   if world.players[currentPlayer].firing then
     fireBullet(world.players[currentPlayer],dt)
   end
@@ -354,26 +365,55 @@ function handlePlayerCameraMovement(map, dt)
   if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
 end
 
-function checkTriggers(map)
-  if options.collideWalls then
-    local player=world.players[currentPlayer]
-    player.color=gui.createColor(1,1,1)
-    for shape, delta in pairs(HC.collisions(player.collider)) do
-      if isWall(shape) then
-        -- bump player back as they hit a wall
-        player.x=player.x+delta.x
-        player.y=player.y+delta.y
+function checkCollisions(map)
+  local player=world.players[currentPlayer]
+  player.color=gui.createColor(1,1,1)
+  for shape, delta in pairs(HC.collisions(player.collider)) do
+    local hitbox=world.hitboxes[shape]
+    -- print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
+    if hitbox.active==true then
+      local hitboxName,hitboxNumber=parseNameNumber(hitbox.name)
+      local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
+      if hitbox.type=="wall" or hitbox.type=="door" then
+        -- print("collision with wall or door hitbox id,name,active,type,name,number",hitbox.id,hitbox.name,hitbox.active,hitbox.type,hitboxName,number)
+        if options.collideWalls then
+          -- bump player back as they hit a wall
+          player.x=player.x+delta.x
+          player.y=player.y+delta.y
+        end
+      elseif hitbox.type=="trigger" then
+        -- print("collision with trigger",hitbox.name)
+        if hitboxName~=nil and hitboxName=="key" then
+          -- print("collision with key ",hitboxNumber)
+          hitbox.active=false
+          dumpTable(hitbox,"hitbox")
+          for _,door in pairs(world.hitboxes) do
+            local doorName,doorNumber=parseNameNumber(door.name)
+            -- print("inspecting hitbox id,name,active,doorname,doornumber",door.id,door.name,door.active,doorName,doorNumber)
+            if doorName~=nil and doorName=="door" and doorNumber==number then
+              print("opening door id,name",door.id,door.name)
+              door.active=false
+              -- world:removeHitbox(door)
+              world:removeShape(door.object)
+            end
+          end
+        end
       end
     end
   end
 end
 
-function isWall(shape)
-  for _,wall in pairs(world.walls) do
-    -- print("checking wall ",wall)
-    if wall==shape then return true end
-  end 
-  return false
+-- parse the name and number from fullName in the form "door-01"
+-- name is "door" and number is "01"
+-- if there is no number, the fullName is returned.
+function parseNameNumber(fullName)
+  local i=string.find(fullName,"-")
+  if i~=nil then
+    name=string.sub(fullName,1,i-1)
+    number=string.sub(fullName,i+1)
+    return name,number
+  end
+  return fullName
 end
 
 function parseDoorNumber(door)
@@ -504,14 +544,18 @@ function drawGame()
       drawTriggers(world.map)
     end
   cam:detach()
-  drawSidePanel(sidePanelWidth,screenHeight)
+  -- TODO put back in drawSidePanel(sidePanelWidth,screenHeight)
   if options.showCamera then drawCamera(world.map) end
 end
 
-function drawTriggers(map) 
-  for i,obj in pairs(map.layers["triggers"].objects) do
-    love.graphics.rectangle("line",obj.x,obj.y,obj.width,obj.height)
+function drawTriggers(map)
+  for _,hitbox in pairs(world.hitboxes) do
+    if hitbox.active then
+      local x1,y1, x2,y2 = hitbox.collider:bbox()
+      love.graphics.rectangle('line', x1,y1, x2-x1,y2-y1)
+    end
   end
+  -- collision box around player
   local p=world.players[currentPlayer]
   local x1,y1, x2,y2 = p.collider:bbox()
   love.graphics.rectangle('line', x1,y1, x2-x1,y2-y1)

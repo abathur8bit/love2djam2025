@@ -15,8 +15,8 @@ function shape.createShape(x,y,w,h,angle,color)
   s.vy=0
   s.color=color
   s.scale=1
-  s.update=function() print("update shape") end
-  s.draw=function() print("draw shape") end
+  s.update=function() end
+  s.draw=function() end
   s.adjustRect=shape.adjustRect
   return s
 end
