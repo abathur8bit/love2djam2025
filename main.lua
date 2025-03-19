@@ -61,6 +61,7 @@ sfx={
   shoot={filename="assets/shoot.wav",sfx=nil},
   hit={filename="assets/explode.wav",sfx=nil},
   kill={filename="assets/playerexplode.wav",sfx=nil},
+  doorOpen={filename="assets/Door Open.ogg",sfx=nil},
   footsteps={filename="assets/Footsteps.ogg",sfx=nil}
 }
 
@@ -76,7 +77,7 @@ local playerPanelHeight=155
 local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
-local options={debug=true,showExtras=true,showCamera=true,collideWalls=true}
+local options={debug=true,showExtras=false,showCamera=true,collideWalls=true}
 local currentPlayer=1
 -- where players spawn
 local entery={x=-1,y=-1}
@@ -97,10 +98,8 @@ end
 
 function fireBullet(player,dt) 
   if (player.fireRateTimer>player.fireRate or player.fireRateTimer==-1) then
-    if inbrowser==false then
-      sfx.shoot.sfx:stop()
-      sfx.shoot.sfx:play()
-    end
+    stopSfx(sfx.shoot)
+    playSfx(sfx.shoot)
     
     player.fireRateTimer=0
     local distance=96/2-5 -- a little away from the edge of the player
@@ -129,7 +128,7 @@ function love.load(args)
       musicInfo.music=love.audio.newSource(musicInfo.filename,"static")
       musicInfo.music:setLooping(true)
     end
-    music.title.music:play()
+    playMusic(music.title)
   end
   
   -- load fonts listed in fontsheets
@@ -273,10 +272,8 @@ function handlemainMenu(menu)
   elseif index==1 then
     activeMenu=nil  --close menu
     currentMode=gameModes.playing
-    if inbrowser==false then
-      music.title.music:stop()
-      music.ingame.music:play()
-    end
+      stopMusic(music.title)
+      playMusic(music.ingame)
   end
 end
 
@@ -392,6 +389,7 @@ function checkCollisions(map)
             -- print("inspecting hitbox id,name,active,doorname,doornumber",door.id,door.name,door.active,doorName,doorNumber)
             if doorName~=nil and doorName=="door" and doorNumber==number then
               print("opening door id,name",door.id,door.name)
+              playSfx(sfx.doorOpen)
               door.active=false
               -- world:removeHitbox(door)
               world:removeShape(door.object)
@@ -658,3 +656,28 @@ function dumpTable(t,name)
   print("dumping table "..name)
   for key,value in pairs(t) do print("key value",key,value) end
 end
+
+function stopSfx(media)
+  if inbrowser==false then
+    media.sfx:stop()
+  end
+end
+
+function playSfx(media)
+  if inbrowser==false then
+    media.sfx:play()
+  end
+end
+
+function stopMusic(media)
+  if inbrowser==false then
+    media.music:stop()
+  end
+end
+
+function playMusic(media)
+  if inbrowser==false then
+    media.music:play()
+  end
+end
+
