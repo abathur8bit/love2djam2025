@@ -56,7 +56,7 @@ echo buildVersion=%VERSION%>conf.lua
 echo inbrowser=%INBROWSER%>>conf.lua
 echo resolution=%RESOLUTION%>>conf.lua
 echo fullscreen=%FULLSCREEN%>>conf.lua
-echo function love.conf(t) >>conf.lua
+echo function love.conf(t)>>conf.lua
 echo  t.console=true>>conf.lua
 echo end>>conf.lua
 zip -9 -r %LOVE_GAME% *.lua assets\* README.txt lib\* maps\*.png maps\*.lua 
