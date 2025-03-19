@@ -192,11 +192,12 @@ function love.load(args)
     px=screenWidth/2
     py=screenHeight/2
   end
-  world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png",world,"dumb"))
-  world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png",world,"dumb"))
-  world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png",world,"dumb"))
 
+  
+  world:addPlayer (createPlayer(world, 1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+  world:addMonster(createMonster(world, 1,px+070,py+000,64,64,"assets/helmet.png","mon1","dumb"))
+  world:addMonster(createMonster(world, 1,px+140,py+000,64,64,"assets/helmet.png","mon2","dumb"))
+  world:addMonster(createMonster(world, 1,px+000,py+070,64,64,"assets/helmet.png","mon3","dumb"))
   createObjects(world.map)
 end
 
@@ -205,6 +206,7 @@ function createObjects(map)
   createTriggers(map)
   createPowerups(map)
   createExits(map)
+  world:addPathfinder()
 end
 
 function createPowerups(map)
@@ -225,7 +227,7 @@ function createWalls(map)
   if map.layers["walls"].objects then
     for i,obj in pairs(map.layers["walls"].objects) do
       print("wall at x,y,w,h",obj.id,obj.x,obj.y,obj.width,obj.height)
-      world:createHitbox(obj.x,obj.y,obj.width,obj.height,"wall",obj.id,obj.name,obj)
+      world:createHitbox(obj.x,obj.y,obj.width,obj.height,"wall",obj.id,obj.id,obj)
     end
   end
 end
@@ -382,7 +384,7 @@ end
 function checkCollisions(map)
   local player=world.players[currentPlayer]
   player.color=gui.createColor(1,1,1)
-  for shape, delta in pairs(HC.collisions(player.collider)) do
+  for shape, delta in pairs(world.collider:collisions(player.hitbox.collider)) do
     local hitbox=world.hitboxes[shape]
     -- print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
     if hitbox~=nil and hitbox.active==true then
@@ -588,7 +590,7 @@ function drawTriggers(map)
   end
   -- collision box around player
   local p=world.players[currentPlayer]
-  local x1,y1, x2,y2 = p.collider:bbox()
+  local x1,y1, x2,y2 = p.hitbox.collider:bbox()
   love.graphics.rectangle('line', x1,y1, x2-x1,y2-y1)
 end
 

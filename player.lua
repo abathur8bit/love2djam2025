@@ -3,7 +3,7 @@ local anim8=require "lib.anim8"
 local shape = require "shape"
 local gui=require "lib.gui"
 
-function createPlayer(id,x,y,w,h,filename) 
+function createPlayer(world,id,x,y,w,h,filename)
   local color=gui.createColor(153,229,80,1)
   if id==2 then color=gui.createColor(102,225,243,1) end
   if id==3 then color=gui.createColor(221,229,235,1) end
@@ -12,6 +12,8 @@ function createPlayer(id,x,y,w,h,filename)
   local s=shape.createShape(x,y,w,h,0,color)
   s.type="player"
   s.id=id
+  s.world=world
+  s.hitbox=world:createHitbox(x,y,w,h,s.type,id,s.type,self)
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH
   s.animType="idle"
@@ -29,7 +31,6 @@ function createPlayer(id,x,y,w,h,filename)
   s.speed=300
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
-  s.collider=HC.rectangle(s:adjustRect(50,8))
   s.anims={}
   s.anims.idle={}
   s.anims.idle.up        = anim8.newAnimation(s.grid(21,1),0.15)
@@ -111,7 +112,7 @@ function updatePlayer(self,dt)
     end
   end
 
-  self.collider:moveTo(self.x,self.y) -- keep collision in sync
+  self.hitbox.collider:moveTo(self.x,self.y) -- keep collision in sync
   self.current=self.anims[self.animType][self.direction]  -- set the correct animation
   self.current:update(dt) -- update anim8
 end

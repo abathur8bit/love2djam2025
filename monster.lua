@@ -4,12 +4,12 @@ local gui=require "lib.gui"
 local math = math
 
 behaviours={"dumb","smart"}
-function createMonster(id,x,y,w,h,filename,world,behaviour)
+function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   local s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
   s.type="monster"
+  s.name=name
   s.behaviour=behaviour
   s.world=world
-  s.hitbox=world.collider:rectangle(x,y,w,h)
   s.id=id
   s.z=9 -- make sure it's under the player
   s.score=0
@@ -35,6 +35,7 @@ function createMonster(id,x,y,w,h,filename,world,behaviour)
   s.speed=300
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
+  s.hitbox=world:createHitbox(x,y,w,h,s.type,s.id,s.name,self)
   s.anims={
     idle={
       up        = anim8.newAnimation(s.grid(1,1),0.15),
@@ -90,7 +91,7 @@ function getPath(self, x, y)
       -- Iterate the path to see if any nodes are visible
       for _, node in ipairs(path) do
         if checkPositionVisible(map, self.x, self.y, node.x, node.y) then
-          
+
         end
       end
     end

@@ -29,6 +29,7 @@ function createWorld(screenWidth,screenHeight)
   w.addPlayer=addPlayerShape
   w.addMonster=addMonsterShape
   w.loadMap=loadMap
+  w.adjustPathfinder=adjustPathfinder
   w.addPathfinder=addPathfinder
   w.createHitbox=createHitbox
   w.removeHitbox=removeHitbox
@@ -38,7 +39,8 @@ end
 
 -- hitbox: type,id,name,object,collider,active
 function createHitbox(self,x,y,w,h,type,id,name,object)
-  local collider=HC.rectangle(x,y,w,h)
+  if not (type and id and name) then error('Insufficent Hitbox Info') end
+  local collider=self.collider:rectangle(x,y,w,h)
   local hitbox={id=id,type=type,name=name,object=object,collider=collider,active=true}
   self.hitboxes[collider]=hitbox
   return hitbox
@@ -47,67 +49,63 @@ end
 function removeHitbox(self,hitbox)
   self.collider:remove(hitbox.collider)
   hitbox.active=false
+  self.hitboxes[hitbox]=nil
 end
 
 -- Loads in a map using a filename and the STI library
 function loadMap(self, filename)
-  w.players={}
-  w.monsters={}
-  w.shapes={}
-  w.width=0
-  w.height=0
-  w.collider = HC.new(128)
-  w.hitboxes={}
+  self.players={}
+  self.monsters={}
+  self.shapes={}
+  self.width=0
+  self.height=0
+  self.collider = HC.new(128)
+  self.hitboxes={}
 
   self.map=sti("maps/"..filename..".lua")
   print("Map:", self.map.tiledversion)
   self.width=self.map.width*self.map.tilewidth
   self.height=self.map.height*self.map.tileheight
 
-
-  -- Add pathfinder
-  self:addPathfinder()
+  -- Create pathfinder map
+  local map = {}
+  for y = 1, self.height do
+    map[y] = {}
+    for x = 1, self.width do
+      map[y][x] = 1
+    end
+  end
+  self.pathfinderMap=map
 end
 
 -- Creates a walkable map using the collider from HC
 function addPathfinder(self)
 
-  -- -- Create a test shape for the collisions (test shape is slightly smaller than a tile)
-  -- local tw, th = 32, 32
-  -- local collider = self.collider
-  -- local shape = collider:rectangle(0, 0, tw - 2, th - 2)
+  -- Iterate all hitboxes
+  for collider, hitbox in pairs(self.hitboxes) do
+    if hitbox.type=='wall' or (hitbox.type=='door' and hitbox.active) then
+      local x1, y1, x2, y2 = collider:bbox()
+      self:adjustPathfinder(x1, y1, math.abs(x2-x1), math.abs(y2-y1), 0)
+    end
+  end
 
-  -- -- Create grid
-  -- local map = {}
-  -- for y = 1, self.height do
-  --   map[y] = {}
-  --   for x = 1, self.width do
-  --     map[y][x] = 1
-
-  --     -- Move shape and check collisions
-  --     shape:moveTo((x-1)*tw + tw*0.5, (y-1)*th + th*0.5)
-  --     for otherShape, delta in pairs(collider:collisions(shape)) do
-
-  --       -- If collision is a wall, set it to value 0
-  --       if otherShape.type == 'wall' then
-  --         map[y][x] = 0
-  --         goto continue
-  --       end
-  --     end
-  --     ::continue::
-  --   end
-  -- end
-
-  -- -- Remove shape from the collider
-  -- collider:remove(shape)
-
-  -- -- Create jumper grid object
-  -- local grid = Grid(map)
+  -- Create jumper grid object
+  local grid = Grid(self.pathfinderMap)
   
   -- Create a pathfinder object using Jump Point Search
-  -- self.pathfinderMap = map
-  -- self.pathfinder = Pathfinder(grid, 'JPS', 1)
-  -- self.pathfinderPaths = {}
+  self.pathfinder = Pathfinder(grid, 'JPS', 1)
+  self.pathfinderPaths = {}
+end
+
+-- Adjust a pathfinder
+function adjustPathfinder(self, x, y, width, height, value)
+  for iy = math.floor(y/32), math.ceil(y/32+height/32) do
+    for ix = math.floor(x/32), math.ceil(x/32+width/32) do
+      if self.pathfinderMap[iy] and self.pathfinderMap[iy][ix] then
+        self.pathfinderMap[iy][ix]=value
+      end
+    end
+  end
 end
 
 function addPlayerShape(self,p)
