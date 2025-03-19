@@ -51,10 +51,19 @@ end
 
 -- Loads in a map using a filename and the STI library
 function loadMap(self, filename)
-  self.map=sti(filename)
+  w.players={}
+  w.monsters={}
+  w.shapes={}
+  w.width=0
+  w.height=0
+  w.collider = HC.new(128)
+  w.hitboxes={}
+
+  self.map=sti("maps/"..filename..".lua")
   print("Map:", self.map.tiledversion)
   self.width=self.map.width*self.map.tilewidth
   self.height=self.map.height*self.map.tileheight
+
 
   -- Add pathfinder
   self:addPathfinder()

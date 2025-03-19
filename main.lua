@@ -20,6 +20,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
+startMap="map-67"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -185,7 +186,7 @@ function love.load(args)
   print("Window Height: " .. love.graphics.getHeight())
 
   world=createWorld(screenWidth,screenHeight)
-  world:loadMap("maps/map-67.lua")
+  world:loadMap(startMap)
   local px,py=findPlayerSpawnPoint(world.map)
   if px==nil then
     px=screenWidth/2
@@ -203,6 +204,7 @@ function createObjects(map)
   createWalls(map)
   createTriggers(map)
   createPowerups(map)
+  createExits(map)
 end
 
 function createPowerups(map)
@@ -240,6 +242,21 @@ function createTriggers(map)
         world:createHitbox(obj.x,obj.y,obj.width,obj.height,"door",obj.id,obj.name,door)
       else
         print("trigger at id,x,y,w,h,name",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
+        world:createHitbox(obj.x,obj.y,obj.width,obj.height,type,obj.id,obj.name,obj)
+      end
+    end
+  end
+end
+
+-- while there is usually one exit, there is the posibility of multiple exits;
+-- For example an exit to level 2 and an exit to level 5.
+function createExits(map)
+  if map.layers["enter_exit"] then 
+    for _,obj in pairs(map.layers["enter_exit"].objects) do
+      local type="exit"
+      local name,number=parseNameNumber(obj.name)
+      if name~=nil and name=="exit" then
+        print("exit at id,x,y,w,h,name",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
         world:createHitbox(obj.x,obj.y,obj.width,obj.height,type,obj.id,obj.name,obj)
       end
     end
@@ -368,7 +385,7 @@ function checkCollisions(map)
   for shape, delta in pairs(HC.collisions(player.collider)) do
     local hitbox=world.hitboxes[shape]
     -- print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
-    if hitbox.active==true then
+    if hitbox~=nil and hitbox.active==true then
       local hitboxName,hitboxNumber=parseNameNumber(hitbox.name)
       local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
       if hitbox.type=="wall" or hitbox.type=="door" then
@@ -378,6 +395,22 @@ function checkCollisions(map)
           player.x=player.x+delta.x
           player.y=player.y+delta.y
         end
+      elseif hitbox.type=="exit" then
+        local exit=hitbox.object
+        dumpTable(exit,"exit")
+        print("exit id,name,exit_to",exit.id,exit.name,exit.properties.exit_to)
+        world:loadMap(exit.properties.exit_to)
+        dumpTable(world.collider,"world collider")
+        local px,py=findPlayerSpawnPoint(world.map)
+        if px==nil then
+          px=screenWidth/2
+          py=screenHeight/2
+        end
+        world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+        world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png",world,"dumb"))
+        world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png",world,"dumb"))
+        world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png",world,"dumb"))
+        createObjects(world.map)
       elseif hitbox.type=="trigger" then
         -- print("collision with trigger",hitbox.name)
         if hitboxName~=nil and hitboxName=="key" then
