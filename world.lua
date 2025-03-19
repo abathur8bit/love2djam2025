@@ -69,9 +69,9 @@ function loadMap(self, filename)
 
   -- Create pathfinder map
   local map = {}
-  for y = 1, self.height do
+  for y = 1, self.map.height do
     map[y] = {}
-    for x = 1, self.width do
+    for x = 1, self.map.width do
       map[y][x] = 1
     end
   end
@@ -80,7 +80,7 @@ end
 
 -- Creates a walkable map using the collider from HC
 function addPathfinder(self)
-
+  
   -- Iterate all hitboxes
   for collider, hitbox in pairs(self.hitboxes) do
     if hitbox.type=='wall' or (hitbox.type=='door' and hitbox.active) then
