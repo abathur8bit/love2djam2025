@@ -6,7 +6,6 @@ local gui=require "lib.gui"
 function createDoor(x,y,w,h,filename)
   local s=shape.createShape(x,y,w,h,0)
   s.type="door"
-  s.image=love.graphics.newImage(filename)
   s.draw=drawDoor
   s.color={
     light=gui.createColor255(255,0,0),
@@ -18,21 +17,23 @@ function createDoor(x,y,w,h,filename)
 end
 
 function drawDoor(self)
-  -- love.graphics.draw(self.image,self.x,self.y,self.angle,self.scale,self.scale)
   love.graphics.setColor(self.color.medium:components())
   love.graphics.rectangle("fill",self.x,self.y,self.w,self.h)
+  local offset=16
+  if self.w<=32 or self.h<=32 then offset=8 end
+
   if self.w>self.h then
     -- door is horizontal
-    local offset=16
     love.graphics.setColor(self.color.light:components())
     love.graphics.rectangle("fill",self.x-offset,self.y+offset,self.w+offset*2,self.h-offset*2)
   elseif self.h>self.w then
     -- door is verticle
-    local offset=16
     love.graphics.setColor(self.color.light:components())
     love.graphics.rectangle("fill",self.x+offset,self.y-offset,self.w-offset*2,self.h+offset*2)
   else
     -- door is square
+    love.graphics.setColor(self.color.light:components())
+    love.graphics.rectangle("fill",self.x+offset,self.y+offset,self.w-offset*2,self.h-offset*2)
   end
 
 end
