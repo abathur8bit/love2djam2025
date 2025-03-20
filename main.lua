@@ -21,7 +21,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-67"
+startMap="map-01"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -31,7 +31,7 @@ flags.borderless=false
 if fullscreen then flags.borderless=true end
 if fullscreen then flags.borderless=true end
 flags.fullscreentype="desktop"
-flags.display=2
+flags.display=1
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
@@ -197,10 +197,10 @@ function love.load(args)
   end
 
   
-  world:addPlayer (createPlayer(world, 1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(world, 1,px+070,py+000,64,64,"assets/helmet.png","mon1","dumb"))
-  world:addMonster(createMonster(world, 1,px+140,py+000,64,64,"assets/helmet.png","mon2","dumb"))
-  world:addMonster(createMonster(world, 1,px+000,py+070,64,64,"assets/helmet.png","mon3","dumb"))
+  world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+  world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster","dumb"))
+  world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster","dumb"))
+  world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster","dumb"))
   createObjects(world.map)
 end
 
@@ -396,7 +396,7 @@ function checkCollisions(map)
   player.color=gui.createColor(1,1,1)
   for shape, delta in pairs(world.collider:collisions(player.hitbox.collider)) do
     local hitbox=world.hitboxes[shape]
-    -- print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
+    print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
     if hitbox~=nil and hitbox.active==true then
       local hitboxName,hitboxNumber=parseNameNumber(hitbox.name)
       local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
@@ -418,10 +418,10 @@ function checkCollisions(map)
           px=screenWidth/2
           py=screenHeight/2
         end
-        world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-        world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png",world,"dumb"))
-        world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png",world,"dumb"))
-        world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png",world,"dumb"))
+        world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+        world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster","dumb"))
+        world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster","dumb"))
+        world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster","dumb"))
         createObjects(world.map)
       elseif hitbox.type=="powerup" then 
         handlePowerup(hitbox)
