@@ -38,7 +38,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.fireRateTimer=s.fireRate
   s.targetAttack=nil
   s.targetMove=nil
-  s.hitbox=world:createHitbox(x,y,w,h,s.type,s.id,s.name,self)
+  s.hitbox=world:createHitbox(x,y,w,h,s.type,s.id,s.name,s)
   s.anims={
     idle={
       up        = anim8.newAnimation(s.grid(1,1),0.15),
