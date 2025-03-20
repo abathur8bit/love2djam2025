@@ -21,7 +21,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-01"
+startMap="map-67"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -544,35 +544,37 @@ end
 
 function processInput()
   readInput()
-  world.players[currentPlayer].keypressed=false
-  world.players[currentPlayer].firing=false
+  local player=world.players[currentPlayer]
+  player.keypressed=false
+  player.firing=false
 
   if keystate.up and keystate.left then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="upleft"
+    player.keypressed=true
+    player.direction="upleft"
   elseif keystate.up and keystate.right then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="upright"
+    player.keypressed=true
+    player.direction="upright"
   elseif keystate.down and keystate.left then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="downleft"
+    player.keypressed=true
+    player.direction="downleft"
   elseif keystate.down and keystate.right then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="downright"
+    player.keypressed=true
+    player.direction="downright"
   elseif keystate.up then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="up"
+    player.keypressed=true
+    player.direction="up"
   elseif keystate.down then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="down"
+    player.keypressed=true
+    player.direction="down"
   elseif keystate.left then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="left"
+    player.keypressed=true
+    player.direction="left"
   elseif keystate.right then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="right"
-  elseif keystate.buttonA then
-    world.players[currentPlayer].firing=true
+    player.keypressed=true
+    player.direction="right"
+  end
+  if keystate.buttonA then
+    player.firing=true
   end
 end
 
