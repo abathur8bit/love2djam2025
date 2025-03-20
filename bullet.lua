@@ -1,17 +1,22 @@
 local shape=require "shape"
 
-function createBullet(x,y,angle,color,rocket)
+function createBullet(player,x,y,angle,color,rocket)
   if rocket==nil then rocket=false end
   if color == nil then color = createColor(1,1,1) end
-  s=shape.createShape(x,y,1,1,angle,color)
+  local power=player.firePower+1
+  if power>3 then power=3 end
+  local growMins={3,6,10}
+  local growMaxs={10,16,25}
+  local speeds={500,600,800}
+  local s=shape.createShape(x,y,1,1,angle,color)
   s.z=11
   s.type="bullet"
-  s.growMin=3
-  s.growMax=10
+  s.growMin=growMins[power]
+  s.growMax=growMaxs[power]
   s.growSpeed=60
   s.radius=s.growMin
   s.maxspeed=200
-  s.thrust=500
+  s.thrust=speeds[power]
   s.update=updateBullet
   s.draw=drawBullet
   s.time=3.5
@@ -22,7 +27,7 @@ function createBullet(x,y,angle,color,rocket)
   ay = -math.cos(s.angle)*s.thrust  
   s.vx = s.vx + ax*s.thrust
   s.vy = s.vy + ay*s.thrust
-return s
+  return s
 end
 
 function updateBullet(self,dt)

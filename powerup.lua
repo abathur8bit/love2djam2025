@@ -5,9 +5,10 @@ local flux=require "lib.flux"
 
 powerupType={"earth","fire","water"}
 
-function createPowerup(powerupType,x,y,w,h)
-  s=shape.createShape(x,y,16,16,0,gui.createColor(1,1,1,1))
+function createPowerup(world,powerupType,x,y,w,h)
+  local s=shape.createShape(x,y,16,16,0,gui.createColor(1,1,1,1))
   s.type="powerup"
+  s.hitbox=world:createHitbox(x,y,w,h,s.type,powerupType,powerupType,s)
   s.z=9 -- put
   s.scaleMin=4
   s.scaleMax=6

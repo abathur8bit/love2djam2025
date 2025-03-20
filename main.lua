@@ -15,6 +15,7 @@ require "monster"
 require "powerup"
 require "door"
 require "conf"
+require "playerpanel"
 
 version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
@@ -41,7 +42,7 @@ screenHeight=love.graphics.getHeight()
 
 fontSheets={
   large={filename="assets/wolf-font-sheet-large.png",font=nil},
-  normal={filename="assets/wolf-font-sheet.png",font=nil},
+  medium={filename="assets/wolf-font-sheet.png",font=nil},
   small={filename="assets/wolf-font-sheet-small.png",font=nil}
 }
 fontCharacters= "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
@@ -63,7 +64,10 @@ sfx={
   hit={filename="assets/explode.wav",sfx=nil},
   kill={filename="assets/playerexplode.wav",sfx=nil},
   doorOpen={filename="assets/Door Open.ogg",sfx=nil},
-  footsteps={filename="assets/Footsteps.ogg",sfx=nil}
+  footsteps={filename="assets/Footsteps.ogg",sfx=nil},
+  pickupPowerup={filename="assets/Power-up Equip.ogg",sfx=nil},
+  usePowerupAsHealth={filename="assets/Item Equip.ogg",sfx=nil},
+  usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil}
 }
 
 
@@ -78,14 +82,13 @@ local playerPanelHeight=155
 local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
-local options={debug=true,showExtras=false,showCamera=true,collideWalls=true}
+local options={debug=true,showExtras=false,collideWalls=true}
 local currentPlayer=1
 -- where players spawn
 local entery={x=-1,y=-1}
 -- rectangle that if touched, will exit the level
 local exit={x=-1,y=-1,w=0,h=0}
--- when player steps on door, all walls of the same number are removed from the ground layer
--- TODO when a ground tile is removed, the wall has to be removed as well
+-- when player steps on door, all walls of the same number are removed from the world
 local doors={}
 -- what prevents a player from moving through a tile
 local walls={}
@@ -111,7 +114,7 @@ function fireBullet(player,dt)
     local dy=-math.cos(angle)*distance
 
     print("bullet ",x,y,dx,dy,angle)
-    world:addShape(createBullet(x+dx,y+dy,angle,player.color))
+    world:addShape(createBullet(world.players[currentPlayer],x+dx,y+dy,angle,player.color))
   end
 end
 
@@ -172,14 +175,14 @@ function love.load(args)
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
     handlemainMenu,nil,
-    fontSheets.normal.font)
+    fontSheets.medium.font)
   menuOptions=gui.createMenu(
     nil,
-    {"Show Extras","Show Camera","Back"},
+    {"Back"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
     handleMenuOptions,handleMenuOptionsBack,
-    fontSheets.normal.font)
+    fontSheets.medium.font)
 
 	-- Print version and other info
   print("Window Width : " .. love.graphics.getWidth())
@@ -206,7 +209,7 @@ function createObjects(map)
   createTriggers(map)
   createPowerups(map)
   createExits(map)
-  world:addPathfinder()
+  -- world:addPathfinder()
 end
 
 function createPowerups(map)
@@ -216,7 +219,7 @@ function createPowerups(map)
       count=count+1
       print("trigger at x,y,w,h,name",powerup.id,powerup.x,powerup.y,powerup.width,powerup.height,powerup.name)
       if powerup.name=="bean" then
-        world:addShape(createPowerup("earth",powerup.x,powerup.y,powerup.width,powerup.height))
+        world:addShape(createPowerup(world,"earth",powerup.x,powerup.y,powerup.width,powerup.height))
       end
     end
     print(string.format("created %d powerups",count))
@@ -344,6 +347,9 @@ function love.keypressed(key)
       activeMenu=nil  --close menu
     end
   end
+  if (key=="1" or key=="2") and currentMode==gameModes.playing then
+    world.players[currentPlayer]:usePowerup(key)
+  end
 end
 
 function love.update(dt)
@@ -356,7 +362,11 @@ function love.update(dt)
     fireBullet(world.players[currentPlayer],dt)
   end
 
-  world.players[currentPlayer].score=world.players[currentPlayer].score+1   -- TODO remove when real score is ready
+  -- TODO remove when real score is ready
+  world.players[currentPlayer].score=world.players[currentPlayer].score+0.2
+  world.players[currentPlayer].health=world.players[currentPlayer].health-0.1
+  if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
+  -- TODO remove when real score is ready
 end
 
 function handlePlayerCameraMovement(map, dt)
@@ -413,6 +423,8 @@ function checkCollisions(map)
         world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png",world,"dumb"))
         world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png",world,"dumb"))
         createObjects(world.map)
+      elseif hitbox.type=="powerup" then 
+        handlePowerup(hitbox)
       elseif hitbox.type=="trigger" then
         -- print("collision with trigger",hitbox.name)
         if hitboxName~=nil and hitboxName=="key" then
@@ -434,6 +446,18 @@ function checkCollisions(map)
       end
     end
   end
+end
+
+function handlePowerup(hitbox)
+  local player=world.players[currentPlayer]
+  if player.powerups<player.maxPowerups then
+    world:removeShape(hitbox.object)
+    world:removeHitbox(hitbox)
+    playSfx(sfx.pickupPowerup)
+    player:incPowerups()
+  end
+
+  -- TODO player gets the powerup
 end
 
 -- parse the name and number from fullName in the form "door-01"
@@ -578,7 +602,7 @@ function drawGame()
     end
   cam:detach()
   -- TODO put back in drawSidePanel(sidePanelWidth,screenHeight)
-  if options.showCamera then drawCamera(world.map) end
+  drawPlayerInfo(world.players[currentPlayer])
 end
 
 function drawTriggers(map)
@@ -600,11 +624,9 @@ function drawCamera(map)
   local firing="no"
   if world.players[currentPlayer].firing then firing="yes" end
   love.graphics.print(string.format("camera %dx%d player firing %s",cam.x,cam.y,firing),10,screenHeight-love.graphics.getFont():getHeight())
-  
   local tx,ty=map:convertPixelToTile(world.players[currentPlayer].x,world.players[currentPlayer].y)
   local props=map:getTileProperties("ground",1,1)
   for key,value in pairs(props) do print("key value",key,value) end
---  love.graphics.print("tile id "..
 end
 
 -- side panel contains the title, level number, player panels
@@ -619,7 +641,7 @@ function drawSidePanel(w,h)
   love.graphics.setFont(fontSheets.large.font)
   love.graphics.print(gameTitle,6,6)
   local y=fontSheets.large.font:getHeight()+offset
-  love.graphics.setFont(fontSheets.normal.font)
+  love.graphics.setFont(fontSheets.medium.font)
   gui.centerText(string.format("LEVEL %d",666),w/2,y,false)
   y=y+fontSheets.large.font:getHeight()+offset+offset
   drawPlayerPanel(1,0,y,w,playerPanelHeight,gui.createColor255(153,229,80),gui.createColor255(106,190,48,255))
@@ -643,7 +665,7 @@ function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
   
   local score=world.players[currentPlayer].score -- TODO use real player score
   local health=world.players[currentPlayer].score/4 -- TODO use real player health
-  local font=fontSheets.normal.font
+  local font=fontSheets.medium.font
   
   love.graphics.setColor(fontColor:components())
   love.graphics.setFont(font)
@@ -700,7 +722,8 @@ end
 
 function playSfx(media)
   if inbrowser==false then
-    media.sfx:play()
+    media.sfx:stop()  -- if it's already playing stop it
+    media.sfx:play()  -- play the sfx
   end
 end
 

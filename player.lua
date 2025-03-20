@@ -13,17 +13,23 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.type="player"
   s.id=id
   s.world=world
-  s.hitbox=world:createHitbox(x,y,w,h,s.type,id,s.type,self)
+  local xa,ya,wa,ha=s:adjustRect(50,8)
+  s.hitbox=world:createHitbox(xa,ya,wa,ha,s.type,id,s.type,s)
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH
   s.animType="idle"
   s.direction="downright"
   s.update=updatePlayer
   s.draw=drawPlayer
+  s.usePowerup=usePowerup
   s.idleTimer=0.0
   s.idleTimerDelay=5
   s.sheet=love.graphics.newImage(filename)
   s.grid=anim8.newGrid(s.w,s.h,s.sheet:getWidth(),s.sheet:getHeight())
+  s.powerupSheet=love.graphics.newImage("assets/powerups.png")
+  s.powerupGrid=anim8.newGrid(64,64,s.powerupSheet:getWidth(),s.powerupSheet:getHeight())
+  s.powerupAnim=anim8.newAnimation(s.powerupGrid("1-4",1),0.1)
+  s.powerupAnim:pause()
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
@@ -31,6 +37,12 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.speed=300
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
+  s.powerups=0
+  s.maxPowerups=3
+  s.firePower=0
+  s.firePowerMax=3
+  s.firePowerTimer=0
+  s.firePowerDelay={5,10,20}
   s.anims={}
   s.anims.idle={}
   s.anims.idle.up        = anim8.newAnimation(s.grid(21,1),0.15)
@@ -51,10 +63,26 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.anims.walk.downright = anim8.newAnimation(s.grid('1-4',1),0.15)
   s.anims.walk.downleft  = anim8.newAnimation(s.grid('5-8',1),0.15)
   s.current=s.anims[s.animType][s.direction]
+
+  s.incPowerups=incPowerups
+  s.decPowerups=decPowerups
   return s
 end
 
+function incPowerups(self)
+  if self.powerups<self.maxPowerups then
+    self.powerups=self.powerups+1
+  end
+end
+
+function decPowerups(self)
+  if self.powerups>0 then
+    self.powerups=self.powerups-1
+  end
+end
+
 function updatePlayer(self,dt)
+  self.powerupAnim:gotoFrame(self.powerups+1)
   self.fireRateTimer=self.fireRateTimer+dt
   if self.keypressed then 
     self.animType="walk" 
@@ -115,9 +143,39 @@ function updatePlayer(self,dt)
   self.hitbox.collider:moveTo(self.x,self.y) -- keep collision in sync
   self.current=self.anims[self.animType][self.direction]  -- set the correct animation
   self.current:update(dt) -- update anim8
+  self.powerupAnim:update(dt)
+
+  if self.firePowerTimer>0 then
+    self.firePowerTimer=self.firePowerTimer-dt
+    if self.firePowerTimer<=0 then
+      print("firepower time timed out")
+      self.firePowerTimer=0
+      self.firePower=0
+    end
+  end
 end
 
 function drawPlayer(self)
   love.graphics.setColor(1,1,1,1)
   self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w/2,self.h/2)
+end
+
+function usePowerup(self,type)
+  if self.powerups>0 then
+    if type=="1" then
+      print("using powerup type 1")
+      self.health=self.health+100
+      self:decPowerups()
+      playSfx(sfx.usePowerupAsHealth)
+    elseif type=="2" then
+      print("using powerup type 2")
+      if self.firePower<self.firePowerMax then
+        self.firePower=self.firePower+1
+        self.firePowerTimer=self.firePowerDelay[self.firePower]
+        self:decPowerups()
+        playSfx(sfx.usePowerupAsPower)
+      end
+    end
+  end
+  print("used powerup, remaining:",self.powerups)
 end
