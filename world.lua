@@ -220,6 +220,7 @@ function checkPositionVisible(self, ax, ay, bx, by, ts)
       return false 
     end
   end
+  return true
 end
 
 -- Raytrace function for grid

@@ -87,7 +87,7 @@ function updateMonster(self,dt)
 
   -- Follow path
   if self.targetMove then
-    self:followPath()
+    self:followPath(dt)
   end
 
   -- Animations
@@ -121,7 +121,7 @@ function followPath(self, dt)
   if self.targetMove[1] then
     local speed = self.speed*dt
     local r = math.atan2(self.targetMove[1].y*ts - self.y, self.targetMove[1].x*ts - self.x)
-    self.x, self.y = self.x+self.cos(r)*speed, self.y+math.sin(r)*speed
+    self.x, self.y = self.x+math.cos(r)*speed, self.y+math.sin(r)*speed
   end
 end
 
