@@ -31,7 +31,7 @@ flags.borderless=false
 if fullscreen then flags.borderless=true end
 if fullscreen then flags.borderless=true end
 flags.fullscreentype="desktop"
-flags.display=2
+flags.display=1
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
@@ -197,10 +197,10 @@ function love.load(args)
   end
 
   
-  world:addPlayer (createPlayer(world, 1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(world, 1,px+070,py+000,64,64,"assets/helmet.png","mon1","dumb"))
-  world:addMonster(createMonster(world, 1,px+140,py+000,64,64,"assets/helmet.png","mon2","dumb"))
-  world:addMonster(createMonster(world, 1,px+000,py+070,64,64,"assets/helmet.png","mon3","dumb"))
+  world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+  world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster","dumb"))
+  world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster","dumb"))
+  world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster","dumb"))
   createObjects(world.map)
 end
 
@@ -396,7 +396,7 @@ function checkCollisions(map)
   player.color=gui.createColor(1,1,1)
   for shape, delta in pairs(world.collider:collisions(player.hitbox.collider)) do
     local hitbox=world.hitboxes[shape]
-    -- print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
+    print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
     if hitbox~=nil and hitbox.active==true then
       local hitboxName,hitboxNumber=parseNameNumber(hitbox.name)
       local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
@@ -418,10 +418,10 @@ function checkCollisions(map)
           px=screenWidth/2
           py=screenHeight/2
         end
-        world:addPlayer (createPlayer (1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-        world:addMonster(createMonster(1,px+070,py+000,64,64,"assets/helmet.png",world,"dumb"))
-        world:addMonster(createMonster(1,px+140,py+000,64,64,"assets/helmet.png",world,"dumb"))
-        world:addMonster(createMonster(1,px+000,py+070,64,64,"assets/helmet.png",world,"dumb"))
+        world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+        world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster","dumb"))
+        world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster","dumb"))
+        world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster","dumb"))
         createObjects(world.map)
       elseif hitbox.type=="powerup" then 
         handlePowerup(hitbox)
@@ -544,35 +544,37 @@ end
 
 function processInput()
   readInput()
-  world.players[currentPlayer].keypressed=false
-  world.players[currentPlayer].firing=false
+  local player=world.players[currentPlayer]
+  player.keypressed=false
+  player.firing=false
 
   if keystate.up and keystate.left then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="upleft"
+    player.keypressed=true
+    player.direction="upleft"
   elseif keystate.up and keystate.right then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="upright"
+    player.keypressed=true
+    player.direction="upright"
   elseif keystate.down and keystate.left then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="downleft"
+    player.keypressed=true
+    player.direction="downleft"
   elseif keystate.down and keystate.right then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="downright"
+    player.keypressed=true
+    player.direction="downright"
   elseif keystate.up then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="up"
+    player.keypressed=true
+    player.direction="up"
   elseif keystate.down then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="down"
+    player.keypressed=true
+    player.direction="down"
   elseif keystate.left then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="left"
+    player.keypressed=true
+    player.direction="left"
   elseif keystate.right then
-    world.players[currentPlayer].keypressed=true
-    world.players[currentPlayer].direction="right"
-  elseif keystate.buttonA then
-    world.players[currentPlayer].firing=true
+    player.keypressed=true
+    player.direction="right"
+  end
+  if keystate.buttonA then
+    player.firing=true
   end
 end
 

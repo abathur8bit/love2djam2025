@@ -1,21 +1,29 @@
 local shape=require "shape"
+local gui=require "lib.gui"
 
 function createBullet(player,x,y,angle,color,rocket)
-  if rocket==nil then rocket=false end
-  if color == nil then color = createColor(1,1,1) end
-  local power=player.firePower+1
-  if power>3 then power=3 end
   local growMins={3,6,10}
   local growMaxs={10,16,25}
   local speeds={500,600,800}
+  local colors={
+    gui.createColor(1.0,1.0,1.0,1),
+    gui.createColor(1.0,1.0,0.0,1),
+    gui.createColor(1.0,0.5,0.5,1)
+  }
+
+  if rocket==nil then rocket=false end
+  local power=player.firePower+1
+  if power>3 then power=3 end
+
   local s=shape.createShape(x,y,1,1,angle,color)
+  s.color=colors[power]
   s.z=11
   s.type="bullet"
   s.growMin=growMins[power]
   s.growMax=growMaxs[power]
   s.growSpeed=60
   s.radius=s.growMin
-  s.maxspeed=200
+  s.maxspeed=500
   s.thrust=speeds[power]
   s.update=updateBullet
   s.draw=drawBullet
