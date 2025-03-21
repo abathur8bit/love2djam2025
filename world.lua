@@ -34,6 +34,7 @@ function createWorld(screenWidth,screenHeight)
   w.createHitbox=createHitbox
   w.removeHitbox=removeHitbox
   w.removeShape=removeWorldShape
+  w.removeShapeWithHitbox=removeShapeWithHitbox
   return w
 end
 
@@ -125,6 +126,15 @@ function addWorldShape(self,s)
     function(a,b) 
       return a.z<b.z 
     end)
+end
+
+function removeShapeWithHitbox(self,hitbox)
+  for i,s in ipairs(self.shapes) do
+    if s.hitbox==hitbox then
+      table.remove(self.shapes,i)
+      break
+    end
+  end
 end
 
 function removeWorldShape(self,shape)
