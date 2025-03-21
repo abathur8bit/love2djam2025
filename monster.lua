@@ -85,6 +85,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.fireRateTimer=s.fireRate
   s.targetAttack=nil
   s.targetMove=nil
+  s.targetMoveTimeout=0
   s.hitbox=world:createHitbox(x,y,w,h,s.type,s.id,s.name,s)
   s.anims={
     idle={
@@ -173,19 +174,35 @@ function followPath(self, dt)
   local ts = self.world.tileSize or 32
     
   -- Check for target and distance
-  local target = self.targetMove[1]
-  if target and checkDistance(self.x, self.y, target.x, target.y, ts*2) then
-    
-    -- Remove target and move to the next
-    for i = 1, #self.targetMove do
+  if self.targetMove then
+    local target = self.targetMove[1]
+    local target2 = self.targetMove[2]
+    if target and target2 then
       
-      -- Remove the first one from the list and replace the others
-      self.targetMove[i] = self.targetMove[i+1]
+      -- Check distance to the target and if the next target is visible
+      if checkDistance(self.x, self.y, target.x, target.y, ts*0.5) and self.world:checkPositionVisible(self.x, self.y, target2.x, target2.y) then
+
+        -- Reset target move timeout
+        self.targetMoveTimeout = 0
+      
+        -- Remove target and move to the next
+        for i = 1, #self.targetMove do
+          
+          -- Remove the first one from the list and replace the others
+          self.targetMove[i] = self.targetMove[i+1]
+        end
+      end
+    elseif target and checkDistance(self.x, self.y, target.x, target.y, ts*0.5) then
+      self.targetMove = nil
     end
   end
 
+  -- Timeout if the monster can't reach it's movement target
+  self.targetMoveTimeout = self.targetMoveTimeout + dt
+  if self.targetMoveTimeout > 15 then self.targetMove = nil end
+
   -- Move to the next goal
-  if self.targetMove[1] then
+  if self.targetMove and self.targetMove[1] then
     local speed = self.speed*dt
     local r = math.atan2(self.targetMove[1].y - self.y, self.targetMove[1].x - self.x)
     self.x, self.y = self.x+math.cos(r)*speed, self.y+math.sin(r)*speed

@@ -30,8 +30,8 @@ function createWorld(screenWidth,screenHeight)
   w.addPlayer=addPlayerShape
   w.addMonster=addMonsterShape
   w.loadMap=loadMap
-  w.adjustPathfinder=adjustPathfinder
   w.addPathfinder=addPathfinder
+  w.addVisibility=addVisibility
   w.getPath=getPath
   w.newPath=newPath
   w.checkPositionVisible=checkPositionVisible
@@ -73,8 +73,12 @@ function loadMap(self, filename)
   print("Map:", self.map.tiledversion)
   self.width=self.map.width*self.map.tilewidth
   self.height=self.map.height*self.map.tileheight
+end
 
-  -- Create pathfinder map
+-- Adjust visibility map
+function addVisibility(self)
+
+  -- Create visibility map
   local map = {}
   for y = 1, self.map.height do
     map[y] = {}
@@ -82,17 +86,59 @@ function loadMap(self, filename)
       map[y][x] = 1
     end
   end
-  self.pathfinder.map=map
+  self.visibilityMap = map
+
+  -- Local funder for adjusting the visibility map
+  local adjust = function(world, x, y, width, height, value, ts)
+    local ts = ts or world.tileSize or 32
+    for iy = math.floor(y/ts), math.floor(y/ts) + math.ceil(height/ts) do
+      for ix = math.floor(x/ts), math.floor(x/ts) + math.ceil(width/ts) do
+        if world.visibilityMap[iy] and world.visibilityMap[iy][ix] then
+          world.visibilityMap[iy][ix]=value
+        end
+      end
+    end
+  end
+
+  -- Iterate all hitboxes
+  for collider, hitbox in pairs(self.hitboxes) do
+    if hitbox.type=='wall' or (hitbox.type=='door' and hitbox.active) then
+      local x1, y1, x2, y2 = collider:bbox()
+      adjust(self, x1, y1, math.abs(x2-x1), math.abs(y2-y1), 0)
+    end
+  end
 end
 
 -- Creates a walkable map using the collider from HC
 function addPathfinder(self)
+
+  -- Create a pathfinder map that gives some clearance
+  local map = {}
+  for y = 1, self.map.height do
+    map[y] = {}
+    for x = 1, self.map.width do
+      map[y][x] = 1
+    end
+  end
+  self.pathfinder.map = map
+
+  -- Local function for adjusting the pathfinder map
+  local adjust = function(world, x, y, width, height, value, ts)
+    local ts = ts or world.tileSize or 32
+    for iy = math.floor(y/ts)-1, math.floor(y/ts) + math.ceil(height/ts)+1 do
+      for ix = math.floor(x/ts)-1, math.floor(x/ts) + math.ceil(width/ts)+1 do
+        if world.pathfinder.map[iy] and world.pathfinder.map[iy][ix] then
+          world.pathfinder.map[iy][ix]=value
+        end
+      end
+    end
+  end
   
   -- Iterate all hitboxes
   for collider, hitbox in pairs(self.hitboxes) do
     if hitbox.type=='wall' or (hitbox.type=='door' and hitbox.active) then
       local x1, y1, x2, y2 = collider:bbox()
-      self:adjustPathfinder(x1, y1, math.abs(x2-x1), math.abs(y2-y1), 0)
+      adjust(self, x1, y1, math.abs(x2-x1), math.abs(y2-y1), 0)
     end
   end
 
@@ -102,18 +148,6 @@ function addPathfinder(self)
   -- Create a pathfinder object using Jump Point Search
   self.pathfinder.finder = Pathfinder(grid, 'JPS', 1)
   self.pathfinder.paths = {}
-end
-
--- Adjust a pathfinder
-function adjustPathfinder(self, x, y, width, height, value, ts)
-  local ts = ts or self.tileSize or 32
-  for iy = math.floor(y/ts), math.ceil(y/ts+height/ts) do
-    for ix = math.floor(x/ts), math.ceil(x/ts+width/ts) do
-      if self.pathfinder.map[iy] and self.pathfinder.map[iy][ix] then
-        self.pathfinder.map[iy][ix]=value
-      end
-    end
-  end
 end
 
 -- Adds a new path to the world
@@ -190,12 +224,10 @@ end
 -- Creates a new path using the pathfinder
 function newPath(self, ax, ay, bx, by, ts)
   local ts = ts or self.tileSize or 32
-  print(math.floor(ax/ts), math.floor(ay/ts), math.floor(bx/ts), math.floor(by/ts))
   local newPath, length = self.pathfinder.finder:getPath(math.floor(ax/ts), math.floor(ay/ts), math.floor(bx/ts), math.floor(by/ts))
   if newPath then
     local path = {}
     for node, count in newPath:iter() do
-      dumpTable(node,'node')
       path[#path+1] = {
         x = node._x*ts+ts*0.5,
         y = node._y*ts+ts*0.5,
@@ -226,7 +258,7 @@ end
 -- Check if a position is visible or not
 function checkPositionVisible(self, ax, ay, bx, by, ts)
   local ts = ts or 32
-  local map = self.pathfinder.map
+  local map = self.visibilityMap
 
   -- Convert pixel coordinates into tile coordinates
   local ax, ay, bx, by = ax/ts, ay/ts, bx/ts, by/ts

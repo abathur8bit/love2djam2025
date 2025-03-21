@@ -210,6 +210,7 @@ function createObjects(map)
   createTriggers(map)
   createPowerups(map)
   createExits(map)
+  world:addVisibility()
   world:addPathfinder()
 end
 
