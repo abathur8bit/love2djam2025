@@ -87,9 +87,6 @@ end
 -- Creates a walkable map using the collider from HC
 function addPathfinder(self)
   
-  -- Refresh the path list
-  self.pathfinderPaths = {}
-  
   -- Iterate all hitboxes
   for collider, hitbox in pairs(self.hitboxes) do
     if hitbox.type=='wall' or (hitbox.type=='door' and hitbox.active) then
@@ -111,8 +108,8 @@ function adjustPathfinder(self, x, y, width, height, value, ts)
   local ts = ts or self.tileSize or 32
   for iy = math.floor(y/ts), math.ceil(y/ts+height/ts) do
     for ix = math.floor(x/ts), math.ceil(x/ts+width/ts) do
-      if self.pathfinderMap[iy] and self.pathfinderMap[iy][ix] then
-        self.pathfinderMap[iy][ix]=value
+      if self.pathfinder.map[iy] and self.pathfinder.map[iy][ix] then
+        self.pathfinder.map[iy][ix]=value
       end
     end
   end
@@ -272,7 +269,7 @@ function raytraceGrid(x0, y0, x1, y1)
   while n > 0 do
 
       -- Add to list of tiles
-      tiles[#tiles + 1] = {x, y}
+      tiles[#tiles+1] = {x=x, y=y}
 
       if error > 0 then
           y = y + y_inc
