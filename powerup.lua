@@ -10,10 +10,10 @@ function createPowerup(world,powerupType,x,y,w,h)
   s.type="powerup"
   s.hitbox=world:createHitbox(x,y,w,h,s.type,powerupType,powerupType,s)
   s.z=9 -- put
-  s.scaleMin=4
+  s.scaleMin=3
   s.scaleMax=6
-  s.scaleDir=1
-  s.scale=math.random(s.scaleMin,s.scaleMax)
+  s.scaleDir=0
+  s.scale=s.scaleMin  --math.random(s.scaleMin,s.scaleMax)
   s.powerupType=powerupType
   s.update=updatePowerup
   s.draw=drawPowerup

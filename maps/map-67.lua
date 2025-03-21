@@ -10,7 +10,7 @@ return {
   tilewidth = 32,
   tileheight = 32,
   nextlayerid = 12,
-  nextobjectid = 159,
+  nextobjectid = 160,
   properties = {},
   tilesets = {
     {
@@ -1020,13 +1020,15 @@ return {
           name = "",
           type = "",
           shape = "rectangle",
-          x = 768,
+          x = 704,
           y = 1728,
           width = 64,
           height = 1088,
           rotation = 0,
           visible = true,
-          properties = {}
+          properties = {
+            ["exit_to"] = "map-01"
+          }
         },
         {
           id = 146,

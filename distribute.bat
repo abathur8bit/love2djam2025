@@ -14,12 +14,14 @@ set RESOLUTION=1000
 set FULLSCREEN=false
 set LOVE_GAME=%GAME%-web.love
 call :build_love
+zip -9 -r %LOVE_GAME% *.lua assets\*.png README.txt lib\* maps\*.png maps\*.lua 
 
 set INBROWSER=false
 set RESOLUTION=1600
 set FULLSCREEN=true
 set LOVE_GAME=%GAME%.love
 call :build_love
+zip -9 -r %LOVE_GAME% *.lua assets\* README.txt lib\* maps\*.png maps\*.lua 
 
 :build_zip
 mkdir %DIST%
@@ -59,7 +61,6 @@ echo fullscreen=%FULLSCREEN%>>conf.lua
 echo function love.conf(t)>>conf.lua
 echo  t.console=true>>conf.lua
 echo end>>conf.lua
-zip -9 -r %LOVE_GAME% *.lua assets\* README.txt lib\* maps\*.png maps\*.lua 
 exit /b
 
 

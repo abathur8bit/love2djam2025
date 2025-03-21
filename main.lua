@@ -21,7 +21,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-67"
+startMap="map-01"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -61,15 +61,21 @@ music={
 }
 sfx={
   shoot={filename="assets/Weapon Swing.ogg",sfx=nil},
-  hit={filename="assets/Damaged.ogg",sfx=nil},
-  kill={filename="assets/Player Death.ogg",sfx=nil},
+  hitWall={filename="assets/HitWall.ogg",sfx=nil},
+  hitMonster={filename="assets/Player Death.ogg",sfx=nil},
+  monsterHitPlayer={filename="assets/EnemyDamaged.ogg",sfx=nil},
+  killPlayer={filename="assets/Player Death.ogg",sfx=nil},
+  killMonster={filename="assets/EnemyDamaged.ogg",sfx=nil},
   doorOpen={filename="assets/Door Open.ogg",sfx=nil},
   footsteps={filename="assets/Footsteps.ogg",sfx=nil},
   pickupPowerup={filename="assets/Power-up Equip.ogg",sfx=nil},
   usePowerupAsHealth={filename="assets/Item Equip.ogg",sfx=nil},
   usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil},
-  hitMonster={filename="assets/Player Death.ogg",sfx=nil},
-  monsterHitPlayer={filename="assets/Player Death.ogg",sfx=nil}
+
+  menuHighlightChange=   {filename="assets/MenuHighlightChange.ogg",sfx=nil},
+  menuSelectConfirm=     {filename="assets/MenuSelectConfirm.ogg",sfx=nil},
+  menuBack=              {filename="assets/MenuBack.ogg",sfx=nil},
+  menuOpen=              {filename="assets/MenuOpen.ogg",sfx=nil}
 }
 
 
@@ -84,7 +90,7 @@ local playerPanelHeight=155
 local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
-local options={debug=true,showExtras=false,collideWalls=true}
+local options={debug=true,showExtras=false,collideWalls=true,sound=true,music=true}
 local currentPlayer=1
 -- where players spawn
 local entery={x=-1,y=-1}
@@ -243,8 +249,8 @@ function createTriggers(map)
       local type="trigger"
       local name,number=parseNameNumber(obj.name)
       if name~=nil and name=="door" then
-        print("door at    id,x,y,w,h,name",obj.id,obj.x,obj.y,obj.width,obj.height,obj.name)
-        local door=createDoor(obj.x,obj.y,obj.width,obj.height,"assets/door.png")
+        local color=obj.properties.color  -- NOTE I think I was having some issues with the properties not showing up in the lua file, as the obj.properties was empty 
+        local door=createDoor(obj.x,obj.y,obj.width,obj.height,"assets/door.png",color)
         world:addShape(door)
         world:createHitbox(obj.x,obj.y,obj.width,obj.height,"door",obj.id,obj.name,door)
       else
@@ -344,9 +350,11 @@ end
 function love.keypressed(key)
   if key == "escape" then 
     if activeMenu==nil then
+      playSfx(sfx.menuOpen)
       activeMenu=mainMenu 
     else
       activeMenu=nil  --close menu
+      playSfx(sfx.menuBack)
     end
   end
   if (key=="1" or key=="2") and currentMode==gameModes.playing then
@@ -402,7 +410,7 @@ function checkPlayerCollisions(map)
   player.color=gui.createColor(1,1,1)
   for shape, delta in pairs(world.collider:collisions(player.hitbox.collider)) do
     local hitbox=world.hitboxes[shape]
-    print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
+    -- print("collision with hitbox id,name,active,type",hitbox.id,hitbox.name,hitbox.active,hitbox.type)
     if hitbox~=nil and hitbox.active==true then
       local hitboxName,hitboxNumber=parseNameNumber(hitbox.name)
       local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
@@ -415,10 +423,10 @@ function checkPlayerCollisions(map)
         end
       elseif hitbox.type=="exit" then
         local exit=hitbox.object
-        dumpTable(exit,"exit")
         print("exit id,name,exit_to",exit.id,exit.name,exit.properties.exit_to)
+        dumpTable(exit.properties,"exit properties")
         world:loadMap(exit.properties.exit_to)
-        dumpTable(world.collider,"world collider")
+        -- dumpTable(world.collider,"world collider")
         local px,py=findPlayerSpawnPoint(world.map)
         if px==nil then
           px=screenWidth/2
@@ -483,7 +491,7 @@ function handleBulletHitWall(sourceShape,targetHitbox)
   world:removeHitbox(sourceShape.hitbox)
   world:removeShape(sourceShape)
   print("bullet hit a wall sourceHitbox destHitbox",sourceShape.hitbox.type,targetHitbox.type)
-  playSfx(sfx.hit)
+  playSfx(sfx.hitWall)
 end
 
 
@@ -756,26 +764,26 @@ function dumpTable(t,name)
 end
 
 function stopSfx(media)
-  if inbrowser==false then
+  if inbrowser==false and options.sound==true then
     media.sfx:stop()
   end
 end
 
 function playSfx(media)
-  if inbrowser==false then
+  if inbrowser==false and options.sound==true then
     media.sfx:stop()  -- if it's already playing stop it
     media.sfx:play()  -- play the sfx
   end
 end
 
 function stopMusic(media)
-  if inbrowser==false then
+  if inbrowser==false and options.music==true then
     media.music:stop()
   end
 end
 
 function playMusic(media)
-  if inbrowser==false then
+  if inbrowser==false and options.music==true then
     media.music:play()
   end
 end
