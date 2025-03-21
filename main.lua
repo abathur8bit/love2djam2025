@@ -21,7 +21,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-01"
+startMap="map-03"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -90,7 +90,9 @@ local playerPanelHeight=155
 local currentMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
-local options={debug=true,showExtras=false,collideWalls=true,sound=true,music=true}
+if soundOkay==nil then soundOkay=true end
+if musicOkay==nil then musicOkay=true end
+local options={debug=true,showExtras=false,collideWalls=true,sound=soundOkay,music=musicOkay}
 local currentPlayer=1
 -- where players spawn
 local entery={x=-1,y=-1}
@@ -249,8 +251,7 @@ function createTriggers(map)
       local type="trigger"
       local name,number=parseNameNumber(obj.name)
       if name~=nil and name=="door" then
-        local color=obj.properties.color  -- NOTE I think I was having some issues with the properties not showing up in the lua file, as the obj.properties was empty 
-        local door=createDoor(obj.x,obj.y,obj.width,obj.height,"assets/door.png",color)
+        local door=createDoor(obj.x,obj.y,obj.width,obj.height,"assets/door.png")
         world:addShape(door)
         world:createHitbox(obj.x,obj.y,obj.width,obj.height,"door",obj.id,obj.name,door)
       else
