@@ -68,7 +68,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.animType="idle"
   s.direction="downright"
   s.update=updateMonster
-  s.checkCollisions=checkCollisions
+  s.checkCollisions=checkMonsterCollisions
   s.draw=drawMonster
   s.getPath=getPath
   s.checkPositionVisible=checkPositionVisible
@@ -137,8 +137,11 @@ function drawMonster(self)
 end
 
 -- Check collisions
-function checkCollisions(self, dt)
+function checkMonsterCollisions(self, dt)
   local world = self.world
+
+  -- Move collider
+  self.hitbox.collider:moveTo(self.x, self.y)
 
   -- Check collisions in the HC collider for the world
   for shape, delta in pairs(world.collider:collisions(self.hitbox.collider)) do
@@ -153,6 +156,9 @@ function checkCollisions(self, dt)
         -- Bump monster back as they hit a wall
         self.x=self.x+delta.x
         self.y=self.y+delta.y
+
+        -- Move collider
+        self.hitbox.collider:moveTo(self.x, self.y)
       
       -- Bullets
       elseif hitbox.type=='bullet' then
