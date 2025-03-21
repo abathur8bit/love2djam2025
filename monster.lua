@@ -15,7 +15,7 @@ local Behaviours = {
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
         
         -- Set new movement target for the player
-        monster.targetMove = {{x = math.floor(player.x/ts), y = math.floor(player.y/ts)}}
+        monster.targetMove = {{x = player.x, y = player.y}}
         goto continue
       end
     end
@@ -31,14 +31,15 @@ local Behaviours = {
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
         
         -- Set new movement target for the player
-        monster.targetMove = {{x = math.floor(player.x/ts), y = math.floor(player.y/ts)}}
+        monster.targetMove = {{x = player.x, y = player.y}}
         goto continue
+      end
       
-      -- Can't see the player, see if it can 'sense' them (up to 8 tiles away)
-      elseif checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
+      -- Can't see the player, has no target move, see if it can 'sense' them (up to 8 tiles away)
+      if not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
 
         -- Path to that position
-        monster.targetMove = self.world:getPath(monster.x, monster.y, player.x, player.y)
+        monster.targetMove = monster.world:getPath(monster.x, monster.y, player.x, player.y)
         goto continue
       end
     end
@@ -165,11 +166,9 @@ end
 function followPath(self, dt)
   local ts = self.world.tileSize or 32
     
-  -- Get target to move to
+  -- Check for target and distance
   local target = self.targetMove[1]
-
-  -- Check distance
-  if checkDistance(self.x/ts, self.y/ts, target.x, target.y, 2) then
+  if target and checkDistance(self.x, self.y, target.x, target.y, ts*2) then
     
     -- Remove target and move to the next
     for i = 1, #self.targetMove do
@@ -182,23 +181,19 @@ function followPath(self, dt)
   -- Move to the next goal
   if self.targetMove[1] then
     local speed = self.speed*dt
-    local r = math.atan2(self.targetMove[1].y*ts - self.y, self.targetMove[1].x*ts - self.x)
+    local r = math.atan2(self.targetMove[1].y - self.y, self.targetMove[1].x - self.x)
     self.x, self.y = self.x+math.cos(r)*speed, self.y+math.sin(r)*speed
-  end
+  else self.targetMove = nil end
 end
 
 -- Check distance
 function checkDistance(ax, ay, bx, by, distance)
-  local c = ax*ax + bx*bx
+  local a, b = ax-bx, ay-by
+  local c = a*a + b*b
   if c <= distance*distance then
     return true
   end
   return false
-end
-
--- Create a path to a location
-function getPath(self, x, y)
-  self.path = self.world:getPath(self.x, self.y, x, y)
 end
 
 -- Destroy monster

@@ -199,7 +199,7 @@ function love.load(args)
   
   world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
   world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster1","basic"))
-  world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","basic"))
+  world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","sense"))
   world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster3","basic"))
   createObjects(world.map)
 end
@@ -419,9 +419,9 @@ function checkCollisions(map)
           py=screenHeight/2
         end
         world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-        world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster","basic"))
-        world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster","basic"))
-        world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster","basic"))
+        world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster1","basic"))
+        world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","basic"))
+        world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster3","basic"))
         createObjects(world.map)
       elseif hitbox.type=="powerup" then 
         handlePowerup(hitbox)

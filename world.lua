@@ -132,23 +132,22 @@ function getPath(self, ax, ay, bx, by, ts)
     for _, worldPath in ipairs(paths) do
   
       -- Check to see if the first node is nearby
-      if checkDistance(ax/ts, ay/ts, worldPath[1].x, worldPath[1].y, 4) then
-
-        -- Check to see if the first node visible
-        if self:checkPositionVisible(worldPath[1].x*ts, worldPath[1].y*ts, bx, by, ts) then
+      if checkDistance(ax, ay, worldPath[1].x, worldPath[1].y, 4) then
           
-          -- Iterate the path to see if any other nodes are visible
-          for i = #worldPath, 1, -1 do
-            local node = worldPath[i]
-            if self:checkPositionVisible(ax, ay, node.x, node.y, ts) then
-    
-              -- Copy the node path
-              path = {}
-              for j = 1, #worldPath do
-                path[j] = worldPath[j-1+i]
-              end
-              goto pathCopied
+        -- Iterate the path to see if any of the nodes are visible
+        for i = #worldPath, 1, -1 do
+          local node = worldPath[i]
+          if self:checkPositionVisible(ax, ay, node.x, node.y, ts) then
+  
+            -- Copy the node path
+            path = {}
+            for j = 1, #worldPath do
+              path[j] = {
+                x = worldPath[j-1+i].x,
+                y = worldPath[j-1+i].y,
+              }
             end
+            goto pathCopied
           end
         end
       end
@@ -159,14 +158,28 @@ function getPath(self, ax, ay, bx, by, ts)
     
     -- Unable to copy an existing path, so create a new one
     if not path then
-      path = self:newPath(ax, ay, bx, by, ts)
+
+      -- Call to the pathfinder
+      local newPath = self:newPath(ax, ay, bx, by, ts)
+      if newPath then
+
+        -- Copy path
+        path = {}
+        for i, node in ipairs(newPath) do
+          path[i] = {
+            x = node.x,
+            y = node.y,
+          }
+        end
+      end
     end
     return path
 end
 
 -- Check distance
 function checkDistance(ax, ay, bx, by, distance)
-  local c = ax*ax + bx*bx
+  local a, b = ax-bx, ay-by
+  local c = a*a + b*b
   if c <= distance*distance then
     return true
   end
@@ -176,11 +189,20 @@ end
 -- Creates a new path using the pathfinder
 function newPath(self, ax, ay, bx, by, ts)
   local ts = ts or self.tileSize or 32
-  local path, length = self.pathfinder.finder:getPath(ax/ts, ay/ts, bx/ts, by/ts)
-  if path then 
+  print(math.floor(ax/ts), math.floor(ay/ts), math.floor(bx/ts), math.floor(by/ts))
+  local newPath, length = self.pathfinder.finder:getPath(math.floor(ax/ts), math.floor(ay/ts), math.floor(bx/ts), math.floor(by/ts))
+  if newPath then
+    local path = {}
+    for node, count in newPath:iter() do
+      dumpTable(node,'node')
+      path[#path+1] = {
+        x = node._x*ts+ts*0.5,
+        y = node._y*ts+ts*0.5,
+      }
+    end
     self.pathfinder.paths[#self.pathfinder.paths+1] = path
     return path
-    end
+  end
 end
 
 -- Draw pathfinder path
@@ -191,10 +213,10 @@ function drawPath(path, ts)
     local node = path[i]
     local pnode = path[i-1]
     love.graphics.line(
-      node.x * ts + ts*0.5,
-      node.y * ts + ts*0.5,
-      pnode.x * ts + ts*0.5,
-      pnode.y * ts + ts*0.5
+      node.x,
+      node.y,
+      pnode.x,
+      pnode.y
     )
   end
   love.graphics.setColor(1, 1, 1, 1)
@@ -319,7 +341,7 @@ function updateWorld(self,dt)
     if s:update(dt) == false then 
       table.remove(self.shapes,i) 
     else
-      -- wrap shap around to other side of the world
+      -- wrap shape around to other side of the world
       s.x = s.x % self.width
       s.y = s.y % self.height
     end
