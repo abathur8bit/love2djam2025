@@ -1,7 +1,7 @@
 local shape=require "shape"
 local gui=require "lib.gui"
 
-function createBullet(player,x,y,angle,color,rocket)
+function createBullet(world,player,x,y,angle,color,rocket)
   local growMins={3,6,10}
   local growMaxs={10,16,25}
   local speeds={500,600,800}
@@ -16,6 +16,8 @@ function createBullet(player,x,y,angle,color,rocket)
   if power>3 then power=3 end
 
   local s=shape.createShape(x,y,1,1,angle,color)
+  s.player=player
+  s.world=world
   s.color=colors[power]
   s.z=11
   s.type="bullet"
@@ -29,6 +31,7 @@ function createBullet(player,x,y,angle,color,rocket)
   s.draw=drawBullet
   s.time=3.5
   s.rocket=rocket
+  s.hitbox=world:createHitbox(x-s.growMax/2,y-s.growMax/2,s.growMax,s.growMax,"bullet","bullet","bullet",s)
 
   local ax,ay=0,0
   ax = math.sin(s.angle)*s.thrust
@@ -42,6 +45,8 @@ function updateBullet(self,dt)
   self.time=self.time-dt
   if self.time<=0 then 
     self.time=0 
+    self.world:removeHitbox(self.hitbox)
+    self.world:removeShape(self)
     return false 
   end
   
@@ -63,6 +68,7 @@ function updateBullet(self,dt)
     self.x = self.x + math.sin(self.angle)*self.maxspeed*dt
     self.y = self.y + -math.cos(self.angle)*self.maxspeed*dt
   end
+  self.hitbox.collider:moveTo(self.x,self.y)
   return true
 end
 

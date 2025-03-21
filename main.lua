@@ -60,14 +60,16 @@ music={
   combat={filename="assets/Room 1 Combat.mp3",music=nil},
 }
 sfx={
-  shoot={filename="assets/shoot.wav",sfx=nil},
-  hit={filename="assets/explode.wav",sfx=nil},
-  kill={filename="assets/playerexplode.wav",sfx=nil},
+  shoot={filename="assets/Weapon Swing.ogg",sfx=nil},
+  hit={filename="assets/Damaged.ogg",sfx=nil},
+  kill={filename="assets/Player Death.ogg",sfx=nil},
   doorOpen={filename="assets/Door Open.ogg",sfx=nil},
   footsteps={filename="assets/Footsteps.ogg",sfx=nil},
   pickupPowerup={filename="assets/Power-up Equip.ogg",sfx=nil},
   usePowerupAsHealth={filename="assets/Item Equip.ogg",sfx=nil},
-  usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil}
+  usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil},
+  hitMonster={filename="assets/Player Death.ogg",sfx=nil},
+  monsterHitPlayer={filename="assets/Player Death.ogg",sfx=nil}
 }
 
 
@@ -113,8 +115,7 @@ function fireBullet(player,dt)
     local dx=math.sin(angle)*distance
     local dy=-math.cos(angle)*distance
 
-    print("bullet ",x,y,dx,dy,angle)
-    world:addShape(createBullet(world.players[currentPlayer],x+dx,y+dy,angle,player.color))
+    world:addShape(createBullet(world,player,x+dx,y+dy,angle,player.color))
   end
 end
 
@@ -363,8 +364,7 @@ function love.update(dt)
   end
 
   -- TODO remove when real score is ready
-  world.players[currentPlayer].score=world.players[currentPlayer].score+0.2
-  world.players[currentPlayer].health=world.players[currentPlayer].health-0.1
+  world.players[currentPlayer].health=world.players[currentPlayer].health-0.01
   if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
   -- TODO remove when real score is ready
 end
@@ -392,6 +392,11 @@ function handlePlayerCameraMovement(map, dt)
 end
 
 function checkCollisions(map)
+  checkPlayerCollisions(map)
+  checkBulletCollisions(map)
+end
+
+function checkPlayerCollisions(map)
   local player=world.players[currentPlayer]
   player.color=gui.createColor(1,1,1)
   for shape, delta in pairs(world.collider:collisions(player.hitbox.collider)) do
@@ -447,6 +452,39 @@ function checkCollisions(map)
     end
   end
 end
+
+-- See if bullets are colliding with anything
+function checkBulletCollisions(map)
+  local player=world.players[currentPlayer]
+  for i,shape in ipairs(world.shapes) do
+    if shape.type=="bullet" then
+      for collider, delta in pairs(world.collider:collisions(shape.hitbox.collider)) do
+        local hitbox=world.hitboxes[collider]
+        if hitbox.type=="monster" then handleBulletHitMonster(shape,hitbox) 
+        elseif hitbox.type=="wall" or hitbox.type=="door" and hitbox.active then handleBulletHitWall(shape,hitbox)
+        end
+      end
+    end
+  end
+end
+
+function handleBulletHitMonster(sourceShape,targetHitbox)
+  print("bullet hit a monster sourceHitbox destHitbox",sourceShape.hitbox.type,targetHitbox.type)
+  world:removeHitbox(sourceShape.hitbox)
+  world:removeShape(sourceShape)
+  world:removeHitbox(targetHitbox)
+  world:removeShapeWithHitbox(targetHitbox)
+  playSfx(sfx.hitMonster)
+  world.players[currentPlayer].score=world.players[currentPlayer].score+10
+end
+
+function handleBulletHitWall(sourceShape,targetHitbox)
+  world:removeHitbox(sourceShape.hitbox)
+  world:removeShape(sourceShape)
+  print("bullet hit a wall sourceHitbox destHitbox",sourceShape.hitbox.type,targetHitbox.type)
+  playSfx(sfx.hit)
+end
+
 
 function handlePowerup(hitbox)
   local player=world.players[currentPlayer]
@@ -523,7 +561,7 @@ function readInput(dt)
       end
     end
   end
-  
+   
   if love.keyboard.isDown("a") or love.keyboard.isDown("left") then keystate.left=true end
   if love.keyboard.isDown("d") or love.keyboard.isDown("right") then keystate.right=true end
   if love.keyboard.isDown("w") or love.keyboard.isDown("up") then keystate.up=true end
