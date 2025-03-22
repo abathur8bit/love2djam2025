@@ -471,19 +471,6 @@ return {
           rotation = 0,
           visible = true,
           properties = {}
-        },
-        {
-          id = 156,
-          name = "door-10",
-          type = "",
-          shape = "rectangle",
-          x = 1280,
-          y = 1280,
-          width = 320,
-          height = 64,
-          rotation = 0,
-          visible = true,
-          properties = {}
         }
       }
     },

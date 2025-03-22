@@ -1,0 +1,50 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "map-01.tmx": {
+            "scale": 0.37406249999999996,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2515.6223893066,
+                "y": 1398.1620718462823
+            }
+        },
+        "map-01.tmx#tileset-03": {
+            "scaleInDock": 1
+        },
+        "map-02.tmx": {
+            "expandedObjectLayers": [
+                8
+            ],
+            "scale": 0.37406249999999996,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 1841.938178780284,
+                "y": 751.2113617376777
+            }
+        },
+        "map-02.tmx#tileset-03": {
+            "scaleInDock": 1
+        },
+        "map-03.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1792,
+                "y": 1281.3333333333333
+            }
+        },
+        "map-03.tmx#tileset-03": {
+            "scaleInDock": 1
+        }
+    },
+    "last.exportedFilePath": "D:/workspace/love2d/love2djam2025/maps",
+    "map.lastUsedExportFilter": "Lua files (*.lua)",
+    "openFiles": [
+    ],
+    "project": "badwardmaps.tiled-project",
+    "recentFiles": [
+    ]
+}

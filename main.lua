@@ -87,7 +87,7 @@ local world
 local cam=Camera()
 local sidePanelWidth=400
 local playerPanelHeight=155
-local currentMode=gameModes.title
+local currentGameMode=gameModes.title
 local waitForKeyUp=false
 local numPlayers=1
 if soundOkay==nil then soundOkay=true end
@@ -116,14 +116,24 @@ function fireBullet(player,dt)
     playSfx(sfx.shoot)
     
     player.fireRateTimer=0
-    local distance=96/2-5 -- a little away from the edge of the player
-    local x=player.x
-    local y=player.y
-    local angle=player.angle
-    local dx=math.sin(angle)*distance
-    local dy=-math.cos(angle)*distance
-
-    world:addShape(createBullet(world,player,x+dx,y+dy,angle,player.color))
+    if love.mouse.isDown(1) then
+      local distance=96/2-5 -- a little away from the edge of the player
+      local x=player.x
+      local y=player.y
+      local mx, my = cam:worldCoords(love.mouse.getPosition())
+      local angle = math.atan2(my - player.y, mx - player.x)+1.57080
+      local dx=math.sin(angle)*distance
+      local dy=-math.cos(angle)*distance
+      world:addShape(createBullet(world,player,x+dx,y+dy,angle,player.color))
+    else
+      local distance=96/2-5 -- a little away from the edge of the player
+      local x=player.x
+      local y=player.y
+      local angle=player.angle
+      local dx=math.sin(angle)*distance
+      local dy=-math.cos(angle)*distance
+      world:addShape(createBullet(world,player,x+dx,y+dy,angle,player.color))
+    end
   end
 end
 
@@ -183,14 +193,14 @@ function love.load(args)
     {"Play","Options","Quit"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
-    handlemainMenu,nil,
+    handleMainMenu,nil,
     fontSheets.medium.font)
   menuOptions=gui.createMenu(
     nil,
     {"Back"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
-    handleMenuOptions,handleMenuOptionsBack,
+    handleOptionsMenu,handleOptionsMenuBack,
     fontSheets.medium.font)
 
 	-- Print version and other info
@@ -291,7 +301,7 @@ function findPlayerSpawnPoint(map)
   return nil
 end
 
-function handlemainMenu(menu) 
+function handleMainMenu(menu) 
   local index=menu.selectedIndex
   local text=menu.options[index]
 --  print("handle menu called with menu",index,text)
@@ -302,7 +312,7 @@ function handlemainMenu(menu)
     activeMenu=menuOptions
   elseif index==1 then
     activeMenu=nil  --close menu
-    currentMode=gameModes.playing
+    currentGameMode=gameModes.playing
       stopMusic(music.title)
       playMusic(music.ingame)
   end
@@ -317,7 +327,7 @@ function updateOptionMenuItems()
   table.insert(menuOptions.options,"Back")
 end
 
-function handleMenuOptions(menu)
+function handleOptionsMenu(menu)
   local index=menu.selectedIndex
   local text=menu.options[index]
   if text=="Back" then
@@ -338,11 +348,17 @@ function handleMenuOptions(menu)
   else 
     options[selectedKey]=true
   end
+
+  if options.music==false then
+    for key,musicInfo in pairs(music) do
+      love.audio.stop(musicInfo.music)
+    end
+  end
   updateOptionMenuItems()
 
 end
 
-function handleMenuOptionsBack(menu) 
+function handleOptionsMenuBack(menu) 
   local index=menu.selectedIndex
   local text=menu.options[index]
   activeMenu=mainMenu
@@ -358,25 +374,28 @@ function love.keypressed(key)
       playSfx(sfx.menuBack)
     end
   end
-  if (key=="1" or key=="2") and currentMode==gameModes.playing then
+  if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
     world.players[currentPlayer]:usePowerup(key)
   end
+
 end
 
 function love.update(dt)
   flux.update(dt)
   processInput()
-  checkCollisions(world.map)
-  world:update(dt)
-  handlePlayerCameraMovement(world.map, dt)
-  if world.players[currentPlayer].firing then
-    fireBullet(world.players[currentPlayer],dt)
-  end
+  if currentGameMode==gameModes.playing and activeMenu==nil then
+    checkCollisions(world.map)
+    world:update(dt)
+    handlePlayerCameraMovement(world.map, dt)
+    if world.players[currentPlayer].firing then
+      fireBullet(world.players[currentPlayer],dt)
+    end
 
-  -- TODO remove when real score is ready
-  world.players[currentPlayer].health=world.players[currentPlayer].health-0.01
-  if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
-  -- TODO remove when real score is ready
+    -- TODO remove when real score is ready
+    world.players[currentPlayer].health=world.players[currentPlayer].health-0.01
+    if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
+    -- TODO remove when real score is ready
+  end
 end
 
 function handlePlayerCameraMovement(map, dt)
@@ -624,6 +643,9 @@ function processInput()
   if keystate.buttonA then
     player.firing=true
   end
+
+
+  if currentGameMode==gameModes.playing and love.mouse.isDown(1) then player.firing=true end
 end
 
 function love.draw()
@@ -631,7 +653,7 @@ function love.draw()
     local red,green,blue=22/255,103/255,194/255 -- a dark cyan
     love.graphics.clear(red,green,blue,1)
     activeMenu:draw()
-  elseif currentMode==gameModes.title then
+  elseif currentGameMode==gameModes.title then
     drawTitle()
   else
     drawGame()
@@ -643,16 +665,30 @@ end
 
 -- draw the game, like the player, monsters, map, etc
 function drawGame()
+  local player=world.players[currentPlayer]
   love.graphics.setColor(1, 1, 1)
   cam:attach()
     world:draw()
     if options.showExtras then
-      gui.crosshair(world.players[currentPlayer].x,world.players[currentPlayer].y,world.players[currentPlayer].color:components())
+      gui.crosshair(player.x,player.y,player.color:components())
       drawTriggers(world.map)
     end
+    drawTarget(player,cam:worldCoords(love.mouse.getPosition()))
   cam:detach()
-  -- TODO put back in drawSidePanel(sidePanelWidth,screenHeight)
-  drawPlayerInfo(world.players[currentPlayer])
+  drawPlayerInfo(player)
+end
+
+-- draw the mouse target
+function drawTarget(player,x,y)
+  local r=15
+  love.graphics.setColor(1,1,1,0.5)
+  if options.showExtras then 
+    love.graphics.line(player.x,player.y,cam:worldCoords(love.mouse.getPosition()))
+  end
+  love.graphics.setLineWidth(3)
+  love.graphics.circle("line",x,y,r)
+  love.graphics.line(x-r,y,x+r,y)
+  love.graphics.line(x,y-r,x,y+r)
 end
 
 function drawTriggers(map)

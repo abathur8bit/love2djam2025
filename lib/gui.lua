@@ -98,7 +98,7 @@ function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,sele
   if selectedColor==nil then selectedColor=gui.createColor(1,1,0) end
   if fontHeight==nil then fontHeight=27 end
 
-  w=gui.createWidget(x,y,width,height,"menu")
+  local w=gui.createWidget(x,y,width,height,"menu")
   w.title=title
   w.options=options
   w.selectedIndex=1 --select the first item

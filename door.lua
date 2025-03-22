@@ -51,6 +51,7 @@ function drawDoor2(self)
   local o=16
   if self.w<=32 or self.h<=32 then o=8 end
 
+  love.graphics.setLineWidth(3)
   if self.w>self.h then
     -- door is horizontal
     -- base with angled sides

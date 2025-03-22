@@ -46,7 +46,6 @@ function updateBullet(self,dt)
   if self.time<=0 then 
     self.time=0 
     self.world:removeHitbox(self.hitbox)
-    self.world:removeShape(self)
     return false 
   end
   
