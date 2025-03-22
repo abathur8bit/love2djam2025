@@ -215,7 +215,6 @@ function love.load(args)
     py=screenHeight/2
   end
 
-  
   world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
   world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster1","basic"))
   world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","sense"))
@@ -452,12 +451,14 @@ function checkPlayerCollisions(map)
           px=screenWidth/2
           py=screenHeight/2
         end
-        world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
+        player.x=px
+        player.y=py
+        world:addPlayer (player)
         world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster1","basic"))
         world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","basic"))
         world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster3","basic"))
         createObjects(world.map)
-      elseif hitbox.type=="powerup" then 
+      elseif hitbox.type=="powerup" then
         handlePowerup(hitbox)
       elseif hitbox.type=="trigger" then
         -- print("collision with trigger",hitbox.name)
