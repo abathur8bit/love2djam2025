@@ -124,15 +124,22 @@ local Behaviours = {
   boss = function(monster, dt)
     local ts = monster.world.tileSize
 
-    -- Phase timer
+    -- Phases
     monster.phaseTimer = monster.phaseTimer or 10
-    monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
     monster.phase = monster.phase or 1
-    monster.targetMoveTimeout=999
+    monster.targetMoveTimeout = 0
+
+    -- Reduce attack cooldown
+    monster.fireRateTimer = monster.fireRateTimer - dt
 
     -- Phase 1-- Chase the player and fire a burst of 3 shots
     if monster.phase == 1 then
-      print('boss on phase 1')
+
+      -- Set speed for this phase
+      monster.speed = 220
+
+      -- Increase phase timer
+      monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
     
       -- Check players to see if it can see one
       for key, player in pairs(monster.world.players) do
@@ -150,14 +157,15 @@ local Behaviours = {
           end
 
           -- Check distance in range
-          if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) then
+          if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) and monster.fireRateTimer <= 0 then
 
             -- Get angle of shot
-            local theta = math.atan2(player.y - monster.y, player.x - monster.x) + math.pi*0.5
+            local theta = math.atan2(player.y - monster.y, player.x - monster.x)
     
             -- Fire a barrage of bullets
-            local angle_space = 0.14
+            local angle_space = 0.24
             for i = 1, 3 do
+              monster.fireRateTimer = 0
               if i==1 then
                 monster:monsterFireBullet(player.x, player.y)
               elseif i%2==0 then
@@ -172,6 +180,7 @@ local Behaviours = {
                 )
               end
             end
+            monster.fireRateTimer = monster.fireRate
           end
           goto continue
         end
@@ -202,27 +211,30 @@ local Behaviours = {
 
     -- Phase 2
     elseif monster.phase == 2 then
-      print('boss on phase 2')
+
+      -- Set speed for this phase
+      monster.speed = 350
 
       -- Check for no movement
       if not monster.targetMove then
 
-        -- Fire Rate
-        monster.fireRateTimer = monster.fireRateTimer - dt
+        -- Increase phase timer
+        monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
 
         -- Check players to see if it can see one
         for key, player in pairs(monster.world.players) do
           if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
 
             -- Check distance in range
-            if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) then
+            if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) and monster.fireRateTimer <= 0 then
 
               -- Get angle of shot
-              local theta = math.atan2(player.y - monster.y, player.x - monster.x) + math.pi*0.5
+              local theta = math.atan2(player.y - monster.y, player.x - monster.x)
       
               -- Fire a barrage of bullets
-              local angle_space = 0.08
-              for i = 1, 17 do
+              local angle_space = 0.25
+              for i = 1, 13 do
+                monster.fireRateTimer = 0
                 if i==1 then
                   monster:monsterFireBullet(player.x, player.y)
                 elseif i%2==0 then
@@ -237,6 +249,7 @@ local Behaviours = {
                   )
                 end
               end
+              monster.fireRateTimer = monster.fireRate
             end
             goto continue
           end
