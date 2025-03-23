@@ -258,10 +258,78 @@ local Behaviours = {
 
         -- If it's the end of the phase, change to phase 1
         if monster.phaseTimer <= 0 then
-          monster.fireRate = 1.25
-          monster.phase = 1
+          monster.fireRate = 0.5
+          monster.phase = 3
           monster.phaseTimer = 10
+
+          -- Spawn in enemies
+          local world = monster.world
+          local map = world.map
+          local list = {}
+          if map.layers["generators"] then
+            for _,generator in pairs(map.layers["generators"].objects) do
+              if generator.name=="generator" then
+                list[#list + 1] = {x = generator.x, y = generator.y}
+              end
+            end
+          end
+
+          -- Spawn an enemy at each generator
+          for i = 1, #list do
+            local generator = list[i]
+            world:addMonster(createMonster(world,1,generator.x,generator.y,64,64,"assets/helmet.png","monster1","basic"))
+            world:addMonster(createMonster(world,1,generator.x,generator.y,64,64,"assets/helmet.png","monster1","basic"))
+            world:addMonster(createMonster(world,1,generator.x,generator.y,64,64,"assets/helmet.png","monster1","basic_ranger"))
+          end
         end
+      end
+
+    -- Phase 3
+    elseif monster.phase == 3 then
+
+      -- Set speed for this phase
+      monster.speed = 350
+
+      -- Increase phase timer
+      monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
+
+      -- Check for no movement
+      if not monster.targetMove then
+
+        -- Set a movement target
+        local world = monster.world
+        local map = world.map
+        local list = {}
+        if map.layers["generators"] then
+          for _,generator in pairs(map.layers["generators"].objects) do
+            if generator.name=="boss" then
+              list[#list + 1] = {x = generator.x, y = generator.y}
+            end
+          end
+        end
+
+        -- Set new movement target for the boss
+        monster.targetMove = {list[math.random(1, #list)]}
+      end
+
+      -- Check players to see if it can see one
+      for key, player in pairs(monster.world.players) do
+        if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
+
+          -- Check distance in range
+          if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) then
+            monster:monsterFireBullet(player.x, player.y)
+          end
+          goto continue
+        end
+      end
+      ::continue::
+
+      -- If it's the end of the phase, change to phase 1
+      if monster.phaseTimer <= 0 then
+        monster.fireRate = 1.25
+        monster.phase = 1
+        monster.phaseTimer = 10
       end
     end
   end,
