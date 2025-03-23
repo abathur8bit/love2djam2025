@@ -66,6 +66,7 @@
     "openFiles": [
     ],
     "project": "badwardmaps.tiled-project",
+    "property.type": "int",
     "recentFiles": [
     ]
 }

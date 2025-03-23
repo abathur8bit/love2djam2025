@@ -2,21 +2,21 @@ local shape=require "shape"
 local gui=require "lib.gui"
 
 function createBullet(world,shooter,x,y,angle,color)
-  local growMins={['1']=3,['2']=6,['3']=10,monster=3}
-  local growMaxs={['1']=10,['2']=16,['3']=25,monster=10}
-  local speeds={['1']=500,['2']=600,['3']=800,monster=500}
-  local damages={['1']=400,['2']=600,['3']=800, monster=100} -- the higher the level, the more damage it does
-  local times={['1']=10,['2']=7,['3']=4,monster=10} -- the higher the level the less time you get to use it
+  local growMins={[1]=3,[2]=6,[3]=10,monster=3}
+  local growMaxs={[1]=10,[2]=16,[3]=25,monster=10}
+  local speeds={[1]=500,[2]=600,[3]=800,monster=500}
+  local damages={[1]=400,[2]=600,[3]=800,monster=100} -- the higher the level, the more damage it does
+  local times={[1]=10,[2]=7,[3]=4,monster=10} -- the higher the level the less time you get to use it
   local colors={
-    ['1']=gui.createColor(1.0,1.0,1.0,1),
-    ['2']=gui.createColor(1.0,1.0,0.0,1),
-    ['3']=gui.createColor(1.0,0.5,0.5,1),
+    [1]=gui.createColor(1.0,1.0,1.0,1),
+    [2]=gui.createColor(1.0,1.0,0.0,1),
+    [3]=gui.createColor(1.0,0.5,0.5,1),
     monster=gui.createColor(1.0,1.0,1.0,1),
   }
 
   local power = shooter.firePower
   if type(power)=='number' then
-    if power > 3 then power = 3 end
+    power = math.min(power, 3)
   end
   
   local s=shape.createShape(x,y,1,1,angle,color)
@@ -34,15 +34,19 @@ function createBullet(world,shooter,x,y,angle,color)
   s.damage=damages[power]
   s.update=updateBullet
   s.draw=drawBullet
+  s.createHitbox=createBulletHitbox
   s.time=times[power]
-  s.hitbox=world:createHitbox(x-s.growMax/2,y-s.growMax/2,s.growMax,s.growMax,"bullet","bullet","bullet",s)
 
   local ax,ay=0,0
   ax = math.sin(s.angle)*s.thrust
-  ay = -math.cos(s.angle)*s.thrust  
+  ay = -math.cos(s.angle)*s.thrust
   s.vx = s.vx + ax*s.thrust
   s.vy = s.vy + ay*s.thrust
   return s
+end
+
+function createBulletHitbox(self)
+  self.hitbox=self.world:createHitbox(self.x-s.growMax/2,self.y-self.growMax/2,self.growMax,self.growMax,"bullet","bullet","bullet",self)
 end
 
 function updateBullet(self,dt)

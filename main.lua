@@ -98,6 +98,7 @@ if soundOkay==nil then soundOkay=true end
 if musicOkay==nil then musicOkay=true end
 local options={debug=true,showExtras=false,collideWalls=true,sound=soundOkay,music=musicOkay}
 local currentPlayer=1
+local thePlayer=createPlayer (nil,1,0,0,96,96,"assets/Player 1 Wizardsprites-sheet.png")
 -- where players spawn
 local entery={x=-1,y=-1}
 -- rectangle that if touched, will exit the level
@@ -211,17 +212,7 @@ function love.load(args)
   print("Window Width : " .. love.graphics.getWidth())
   print("Window Height: " .. love.graphics.getHeight())
 
-  world=createWorld(screenWidth,screenHeight)
-  world:loadMap(startMap)
-  local px,py=findPlayerSpawnPoint(world.map)
-  if px==nil then
-    px=screenWidth/2
-    py=screenHeight/2
-  end
-
-  world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(world,1,px+000,py+100,64,64,"assets/helmet.png","monster1","basic"))
-  createObjects(world.map)
+  loadLevel(startMap)
 end
 
 function createObjects(map)
@@ -583,17 +574,19 @@ function handlePowerup(hitbox)
 end
 
 function loadLevel(mapName)
-  local player=world.players[currentPlayer]
+  world=nil
+  world=createWorld(screenWidth,screenHeight)
+  thePlayer.world=world
   world:loadMap(mapName)
   local px,py=findPlayerSpawnPoint(world.map)
   if px==nil then
     px=screenWidth/2
     py=screenHeight/2
   end
-  player.x=px
-  player.y=py
-  world:addPlayer (player)
-  world:addMonster(createMonster(world,1,px+000,py+100,64,64,"assets/helmet.png","monster1","basic"))
+  thePlayer.x=px
+  thePlayer.y=py
+
+  world:addPlayer (thePlayer)
   createObjects(world.map)
 end
 

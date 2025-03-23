@@ -18,8 +18,10 @@ function shape.createShape(x,y,w,h,angle,color)
   s.update=function() end
   s.draw=function() end
   s.adjustRect=shape.adjustRect
+  s.createHitbox=function() end
   return s
 end
+
 
 -- Returns a x,y,w,h of the shapes rectangle shrunk by x,y on the left, right, top and bottom
 function shape.adjustRect(self,x,y)

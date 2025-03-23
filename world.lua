@@ -350,6 +350,7 @@ function addMonsterShape(self,m)
 end
 
 function addWorldShape(self,s)
+  s:createHitbox()
   if s==nil then error("shape is nil. Did you forget to return in your create function?") end
   table.insert(self.shapes,s)
   table.sort(self.shapes,

@@ -57,7 +57,7 @@ local Behaviours = {
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
 
         -- Check distance
-        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 5) then
+        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
           
           -- Set new movement target for the player
           monster.targetMove = {{x = player.x, y = player.y}}
@@ -91,7 +91,7 @@ local Behaviours = {
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
 
         -- Check distance
-        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 5) then
+        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
           
           -- Set new movement target for the player
           monster.targetMove = {{x = player.x, y = player.y}}
@@ -132,11 +132,15 @@ local Behaviours = {
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
 
         -- Fire a barrage
-
+        
       end
     end
   end,
 }
+
+function createMonsterHitbox(self)
+  self.hitbox=self.world:createHitbox(self.x,self.y,self.w,self.h,self.type,self.id,self.name,self)
+end
 
 function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   local behaviour = behaviour or 'basic'
@@ -161,6 +165,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.monsterFireBullet=monsterFireBullet
   s.destroy=destroy
   s.followPath=followPath
+  s.createHitbox=createMonsterHitbox
   s.idleTimer=0.0
   s.idleTimerDelay=5
   s.sheet=love.graphics.newImage(filename)
@@ -175,7 +180,6 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.targetAttack=nil
   s.targetMove=nil
   s.targetMoveTimeout=0
-  s.hitbox=world:createHitbox(x,y,w,h,s.type,s.id,s.name,s)
   s.anims={
     idle={
       up        = anim8.newAnimation(s.grid(1,1),0.15),

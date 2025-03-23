@@ -13,8 +13,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.type="player"
   s.id=id
   s.world=world
-  local xa,ya,wa,ha=s:adjustRect(50,8)
-  s.hitbox=world:createHitbox(xa,ya,wa,ha,s.type,id,s.type,s)
+  -- s.hitbox=world:createHitbox(xa,ya,wa,ha,s.type,id,s.type,s)
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH
   s.animType="idle"
@@ -22,6 +21,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.update=updatePlayer
   s.draw=drawPlayer
   s.usePowerup=usePowerup
+  s.createHitbox=createPlayerHitbox
   s.idleTimer=0.0
   s.idleTimerDelay=5
   s.sheet=love.graphics.newImage(filename)
@@ -39,7 +39,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.fireRateTimer=s.fireRate
   s.powerups=0
   s.maxPowerups=3
-  s.firePower=0
+  s.firePower=1
   s.firePowerMax=3
   s.firePowerTimer=0
   s.firePowerDelay={5,10,20}
@@ -67,6 +67,11 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.incPowerups=incPowerups
   s.decPowerups=decPowerups
   return s
+end
+
+function createPlayerHitbox(self)
+  local xa,ya,wa,ha=self:adjustRect(50,8)
+  self.hitbox=self.world:createHitbox(xa,ya,wa,ha,self.type,self.id,self.type,self)
 end
 
 function incPowerups(self)
@@ -134,7 +139,7 @@ function updatePlayer(self,dt)
     if self.firePowerTimer<=0 then
       print("firepower time timed out")
       self.firePowerTimer=0
-      self.firePower=0
+      self.firePower=1
     end
   end
 end
