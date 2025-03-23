@@ -33,10 +33,9 @@ local Behaviours = {
         -- Set new movement target for the player
         monster.targetMove = {{x = player.x, y = player.y}}
         goto continue
-      end
       
       -- Can't see the player, has no target move, see if it can 'sense' them (up to 8 tiles away)
-      if not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
+      elseif not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
 
         -- Path to that position
         monster.targetMove = monster.world:getPath(monster.x, monster.y, player.x, player.y)
@@ -46,8 +45,97 @@ local Behaviours = {
     ::continue::
   end,
 
-  -- Follow behaviour, the monster will follow a nearby monster
+  -- Basic ranger
+  basic_ranger = function(monster, dt)
+    local ts = monster.world.tileSize
 
+    -- Reduce attack cooldown
+    monster.fireRateTimer = monster.fireRateTimer - dt
+
+    -- Check players to see if it can see one
+    for key, player in pairs(monster.world.players) do
+      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
+
+        -- Check distance
+        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 5) then
+          
+          -- Set new movement target for the player
+          monster.targetMove = {{x = player.x, y = player.y}}
+        else
+
+          -- Remove targetMove
+          monster.targetMove = nil
+        end
+
+        -- Check distance in range
+        if checkDistance(monster.x, monster.y, player.x, player.y, ts * monster.fireRange) then
+          
+          -- Fire a bullet
+          monster:monsterFireBullet(player.x, player.y, dt)
+        end
+        goto continue
+      end
+    end
+    ::continue::
+  end,
+
+  -- Sense ranger
+  sense_ranger = function(monster, dt)
+    local ts = monster.world.tileSize
+
+    -- Reduce attack cooldown
+    monster.fireRateTimer = monster.fireRateTimer - dt
+
+    -- Check players to see if it can see one
+    for key, player in pairs(monster.world.players) do
+      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
+
+        -- Check distance
+        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 5) then
+          
+          -- Set new movement target for the player
+          monster.targetMove = {{x = player.x, y = player.y}}
+        else
+
+          -- Remove targetMove
+          monster.targetMove = nil
+        end
+
+        -- Check distance in range
+        if checkDistance(monster.x, monster.y, player.x, player.y, ts * monster.fireRange) then
+          
+          -- Fire a bullet
+          monster:monsterFireBullet(player.x, player.y, dt)
+        end
+        goto continue
+
+      -- Can't see the player, has no target move, see if it can 'sense' them (up to 8 tiles away)
+      elseif not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
+
+        -- Path to that position
+        monster.targetMove = monster.world:getPath(monster.x, monster.y, player.x, player.y)
+        goto continue
+      end
+    end
+    ::continue::
+  end,
+
+  -- Boss
+  boss = function(monster, dt)
+    local ts = monster.world.tileSize
+
+    -- Reduce attack cooldown
+    monster.fireRateTimer = monster.fireRateTimer - dt
+
+    -- Check players to see if it can see one
+    for key, player in pairs(monster.world.players) do
+      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
+
+        -- Fire a barrage
+
+      end
+    end
+  end,
 }
 
 function createMonster(world,id,x,y,w,h,filename,name,behaviour)
@@ -61,8 +149,6 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.z=9 -- make sure it's under the player
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH
-  s.fireRate=0.2
-  s.fireRateTimer=s.fireRate
   s.keyPressed=false
   s.speed=100
   s.animType="idle"
@@ -72,6 +158,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.draw=drawMonster
   s.getPath=getPath
   s.checkPositionVisible=checkPositionVisible
+  s.monsterFireBullet=monsterFireBullet
   s.destroy=destroy
   s.followPath=followPath
   s.idleTimer=0.0
@@ -81,7 +168,9 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
-  s.fireRate=0.2
+  s.fireRate=2
+  s.fireRange=14
+  s.firePower='monster'
   s.fireRateTimer=s.fireRate
   s.targetAttack=nil
   s.targetMove=nil
@@ -156,7 +245,7 @@ function checkMonsterCollisions(self, dt)
       local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
 
       -- Walls and doors
-      if hitbox.type=="wall" or hitbox.type=="door" then
+      if hitbox.type=="wall" or (hitbox.type=="door" and hitbox.active) then
 
         -- Bump monster back as they hit a wall
         self.x=self.x+delta.x
@@ -203,7 +292,7 @@ function followPath(self, dt)
 
   -- Timeout if the monster can't reach it's movement target
   self.targetMoveTimeout = self.targetMoveTimeout + dt
-  if self.targetMoveTimeout > 15 then self.targetMove = nil end
+  if self.targetMoveTimeout > 8 then self.targetMove = nil end
 
   -- Move to the next goal
   if self.targetMove and self.targetMove[1] then
@@ -211,6 +300,18 @@ function followPath(self, dt)
     local r = math.atan2(self.targetMove[1].y - self.y, self.targetMove[1].x - self.x)
     self.x, self.y = self.x+math.cos(r)*speed, self.y+math.sin(r)*speed
   else self.targetMove = nil end
+end
+
+-- Fire bullet
+function monsterFireBullet(self, mx, my, dt)
+
+  -- Attack
+  if self.fireRateTimer <= 0 then
+    local x, y = self.x, self.y
+    local theta = math.atan2(my - y, mx - x)
+    self.world:addShape(createBullet(self.world, self, x, y, theta + math.pi*0.5))
+    self.fireRateTimer = self.fireRate
+  end
 end
 
 -- Check distance

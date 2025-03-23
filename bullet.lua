@@ -1,24 +1,26 @@
 local shape=require "shape"
 local gui=require "lib.gui"
 
-function createBullet(world,player,x,y,angle,color,rocket)
-  local growMins={3,6,10}
-  local growMaxs={10,16,25}
-  local speeds={500,600,800}
-  local damages={400,600,800} -- the higher the level, the more damage it does
-  local times={10,7,4} -- the higher the level the less time you get to use it
+function createBullet(world,shooter,x,y,angle,color)
+  local growMins={['1']=3,['2']=6,['3']=10,monster=3}
+  local growMaxs={['1']=10,['2']=16,['3']=25,monster=10}
+  local speeds={['1']=500,['2']=600,['3']=800,monster=500}
+  local damages={['1']=400,['2']=600,['3']=800, monster=100} -- the higher the level, the more damage it does
+  local times={['1']=10,['2']=7,['3']=4,monster=10} -- the higher the level the less time you get to use it
   local colors={
-    gui.createColor(1.0,1.0,1.0,1),
-    gui.createColor(1.0,1.0,0.0,1),
-    gui.createColor(1.0,0.5,0.5,1)
+    ['1']=gui.createColor(1.0,1.0,1.0,1),
+    ['2']=gui.createColor(1.0,1.0,0.0,1),
+    ['3']=gui.createColor(1.0,0.5,0.5,1),
+    monster=gui.createColor(1.0,1.0,1.0,1),
   }
 
-  if rocket==nil then rocket=false end
-  local power=player.firePower+1
-  if power>3 then power=3 end
-
+  local power = shooter.firePower
+  if type(power)=='number' then
+    if power > 3 then power = 3 end
+  end
+  
   local s=shape.createShape(x,y,1,1,angle,color)
-  s.player=player
+  s.shooter=shooter
   s.world=world
   s.color=colors[power]
   s.z=11
@@ -33,7 +35,6 @@ function createBullet(world,player,x,y,angle,color,rocket)
   s.update=updateBullet
   s.draw=drawBullet
   s.time=times[power]
-  s.rocket=rocket
   s.hitbox=world:createHitbox(x-s.growMax/2,y-s.growMax/2,s.growMax,s.growMax,"bullet","bullet","bullet",s)
 
   local ax,ay=0,0
@@ -55,21 +56,9 @@ function updateBullet(self,dt)
   self.radius=self.radius+self.growSpeed*dt
   if self.radius>self.growMax then self.radius=self.growMin end
 
-  if self.rocket then
-    --bullet will speed up over time
-    local ax,ay=0,0
-    ax = math.sin(self.angle)*self.thrust
-    ay = -math.cos(self.angle)*self.thrust
-
-    self.vx = self.vx + ax*dt
-    self.vy = self.vy + ay*dt
-    self.x = self.x + self.vx*dt
-    self.y = self.y + self.vy*dt
-  else
-    -- bullet travels at a constant speed
-    self.x = self.x + math.sin(self.angle)*self.maxspeed*dt
-    self.y = self.y + -math.cos(self.angle)*self.maxspeed*dt
-  end
+  -- bullet travels at a constant speed
+  self.x = self.x + math.sin(self.angle)*self.maxspeed*dt
+  self.y = self.y + -math.cos(self.angle)*self.maxspeed*dt
   self.hitbox.collider:moveTo(self.x,self.y)
   return true
 end

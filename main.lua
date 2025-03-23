@@ -51,7 +51,7 @@ fontSelectedColor=gui.createColor(1,1,0)
 logoImage=love.graphics.newImage("assets/coder8bit.png")
 logo={x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
 
-gameModes={title=1,playing=2,dead=3,winner=4}
+gameModes={title=1,playing=2,dead=3,betweenLevels=4,winner=5}
 
 -- music and sound
 music={
@@ -71,6 +71,7 @@ sfx={
   pickupPowerup={filename="assets/Power-up Equip.ogg",sfx=nil},
   usePowerupAsHealth={filename="assets/Item Equip.ogg",sfx=nil},
   usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil},
+  exitFloor={filename="assets/ExitFloor.ogg",sfx=nil},
 
   menuHighlightChange=   {filename="assets/MenuHighlightChange.ogg",sfx=nil},
   menuSelectConfirm=     {filename="assets/MenuSelectConfirm.ogg",sfx=nil},
@@ -88,6 +89,9 @@ local cam=Camera()
 local sidePanelWidth=400
 local playerPanelHeight=155
 local currentGameMode=gameModes.title
+local transitionTimer=0
+local mapToLoad=nil
+local nextLevelNumber=1
 local waitForKeyUp=false
 local numPlayers=1
 if soundOkay==nil then soundOkay=true end
@@ -374,27 +378,36 @@ function love.keypressed(key)
   if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
     world.players[currentPlayer]:usePowerup(key)
   end
+  -- TODO lee remove after testing
   if key=="m" then
-    world:addMonster(createMonster(world,1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+100,64,64,"assets/helmet.png","monster1","basic"))
+    world:addMonster(createMonster(world,1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+100,64,64,"assets/helmet.png","monster1","basic_ranger"))
   end
 
 end
 
 function love.update(dt)
   flux.update(dt)
-  processInput()
-  if currentGameMode==gameModes.playing and activeMenu==nil then
-    checkCollisions(world.map)
-    world:update(dt)
-    handlePlayerCameraMovement(world.map, dt)
-    if world.players[currentPlayer].firing then
-      fireBullet(world.players[currentPlayer],dt)
+  if currentGameMode==gameModes.betweenLevels then
+    transitionTimer=transitionTimer-dt
+    if transitionTimer<=0 then
+      loadLevel(mapToLoad)
+      currentGameMode=gameModes.playing
     end
+  else
+    processInput()
+    if currentGameMode==gameModes.playing and activeMenu==nil then
+      checkCollisions(world.map)
+      world:update(dt)
+      handlePlayerCameraMovement(world.map, dt)
+      if world.players[currentPlayer].firing then
+        fireBullet(world.players[currentPlayer],dt)
+      end
 
-    -- TODO remove when real score is ready
-    world.players[currentPlayer].health=world.players[currentPlayer].health-0.01
-    if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
-    -- TODO remove when real score is ready
+      -- TODO remove when real score is ready
+      world.players[currentPlayer].health=world.players[currentPlayer].health-0.01
+      if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
+      -- TODO remove when real score is ready
+    end
   end
 end
 
@@ -445,18 +458,7 @@ function checkPlayerCollisions(map)
         local exit=hitbox.object
         print("exit id,name,exit_to",exit.id,exit.name,exit.properties.exit_to)
         dumpTable(exit.properties,"exit properties")
-        world:loadMap(exit.properties.exit_to)
-        -- dumpTable(world.collider,"world collider")
-        local px,py=findPlayerSpawnPoint(world.map)
-        if px==nil then
-          px=screenWidth/2
-          py=screenHeight/2
-        end
-        player.x=px
-        player.y=py
-        world:addPlayer (player)
-        world:addMonster(createMonster(world,1,px+000,py+100,64,64,"assets/helmet.png","monster1","basic"))
-        createObjects(world.map)
+        setTransition(exit.properties.exit_to)
       elseif hitbox.type=="powerup" then
         handlePowerup(hitbox)
       elseif hitbox.type=="trigger" then
@@ -474,6 +476,10 @@ function checkPlayerCollisions(map)
               door.active=false
               -- world:removeHitbox(door)
               world:removeShape(door.object)
+
+              -- Redo the visibility and pathfinding maps because door is open
+              world:addPathfinder()
+              world:addVisibility()
             end
           end
         end
@@ -482,19 +488,38 @@ function checkPlayerCollisions(map)
   end
 end
 
+-- set transition mode and what level to load once the transition timer runs out
+function setTransition(map)
+  nextLevelNumber=nextLevelNumber+1
+  playSfx(sfx.exitFloor)
+  currentGameMode=gameModes.betweenLevels
+  mapToLoad=map
+  transitionTimer=3
+end
+
 -- See if bullets are colliding with anything
 function checkBulletCollisions(map)
-  local player=world.players[currentPlayer]
   for i,shape in ipairs(world.shapes) do
     if shape.type=="bullet" then
       for collider, delta in pairs(world.collider:collisions(shape.hitbox.collider)) do
         local hitbox=world.hitboxes[collider]
-        if hitbox.type=="monster" then handleBulletHitMonster(shape,hitbox) 
+        local shooter = shape.hitbox.object.shooter
+        if hitbox.type=="monster" and shooter.type=='player' then handleBulletHitMonster(shape,hitbox) 
+        elseif hitbox.type=='player' and shooter.type=='monster' then handleBulletHitPlayer(shape, hitbox)
         elseif hitbox.type=="wall" or hitbox.type=="door" and hitbox.active then handleBulletHitWall(shape,hitbox)
         end
       end
     end
   end
+end
+
+function handleBulletHitPlayer(bullet,targetHitbox)
+  local player=targetHitbox.object
+  print("bullet hit a player damage health", bullet.damage,player.health)
+  player.health=player.health-bullet.damage
+  world:removeHitbox(bullet.hitbox)
+  world:removeShape(bullet)
+  playSfx(sfx.monsterHitPlayer)
 end
 
 function handleBulletHitMonster(bullet,targetHitbox)
@@ -529,6 +554,21 @@ function handlePowerup(hitbox)
   end
 
   -- TODO player gets the powerup
+end
+
+function loadLevel(mapName)
+  local player=world.players[currentPlayer]
+  world:loadMap(mapName)
+  local px,py=findPlayerSpawnPoint(world.map)
+  if px==nil then
+    px=screenWidth/2
+    py=screenHeight/2
+  end
+  player.x=px
+  player.y=py
+  world:addPlayer (player)
+  world:addMonster(createMonster(world,1,px+000,py+100,64,64,"assets/helmet.png","monster1","basic"))
+  createObjects(world.map)
 end
 
 -- parse the name and number from fullName in the form "door-01"
@@ -659,12 +699,22 @@ function love.draw()
     activeMenu:draw()
   elseif currentGameMode==gameModes.title then
     drawTitle()
+  elseif currentGameMode==gameModes.betweenLevels then
+    drawTransition()
   else
     drawGame()
   end
   if options.showExtras then
     gui.crosshair(screenWidth/2,screenHeight/2,1,0,0,1,true)
   end
+end
+
+function drawTransition()
+  local red,green,blue=22/255,103/255,194/255 -- a dark cyan
+  love.graphics.clear(red,green,blue,1)
+  love.graphics.setColor(fontSelectedColor:components())
+  love.graphics.setFont(fontSheets.large.font)
+  gui.centerText("LEVEL "..nextLevelNumber,screenWidth/2,screenHeight/2)
 end
 
 -- draw the game, like the player, monsters, map, etc
