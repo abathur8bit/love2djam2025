@@ -21,7 +21,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-03"
+startMap="map-01"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -822,7 +822,9 @@ end
 
 function playMusic(media)
   if inbrowser==false and options.music==true then
+    media.music:stop()
     media.music:play()
+    media.music:setVolume(0.5)
   end
 end
 

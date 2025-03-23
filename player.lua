@@ -86,26 +86,10 @@ function updatePlayer(self,dt)
   self.fireRateTimer=self.fireRateTimer+dt
   if self.keypressed then 
     self.animType="walk" 
-    if inbrowser==false then
-      sfx.footsteps.sfx:play()
-      if music.ingame.music:isPlaying() then
-        local musicPos=music.ingame.music:tell("seconds")
-        music.ingame.music:stop()
-        music.combat.music:seek(musicPos)
-        music.combat.music:play()
-      end
-    end
+    playSfx(sfx.footsteps)
   else 
     self.animType="idle"
-    if inbrowser==false then
-      sfx.footsteps.sfx:stop()
-      if music.combat.music:isPlaying() then
-        local musicPos=music.combat.music:tell("seconds")
-        music.combat.music:stop()
-        music.ingame.music:seek(musicPos,"seconds")
-        music.ingame.music:play()
-      end
-    end
+    stopSfx(sfx.footsteps)
   end
 
   if self.keypressed == true then
