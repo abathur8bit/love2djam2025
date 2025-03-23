@@ -84,7 +84,7 @@ menuOptions=nil
 activeMenu=nil
 mainMenu={}
 
-local world 
+local world
 local cam=Camera()
 local sidePanelWidth=400
 local playerPanelHeight=155
@@ -366,47 +366,61 @@ function handleOptionsMenuBack(menu)
 end
 
 function love.keypressed(key)
-  if key == "escape" then 
-    if activeMenu==nil then
-      playSfx(sfx.menuOpen)
-      activeMenu=mainMenu 
-    else
-      activeMenu=nil  --close menu
-      playSfx(sfx.menuBack)
+  local player=world.players[currentPlayer]
+  if currentGameMode==gameModes.dead then
+    if key == "escape" then
+      nextLevelNumber=1
+      player.score=0
+      player.health=INITIAL_PLAYER_HEALTH
+      currentGameMode=gameModes.playing
+      loadLevel(startMap)
+    end
+  else
+    if key == "escape" then 
+      if activeMenu==nil then
+        playSfx(sfx.menuOpen)
+        activeMenu=mainMenu 
+      else
+        activeMenu=nil  --close menu
+        playSfx(sfx.menuBack)
+      end
+    end
+    if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
+      player:usePowerup(key)
+    end
+    -- TODO lee remove after testing
+    if key=="m" then
+      world:addMonster(createMonster(world,1,player.x+000,player.y+100,64,64,"assets/helmet.png","monster1","basic_ranger"))
+    end
+    if key=="k" then
+      player.health=5
     end
   end
-  if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
-    world.players[currentPlayer]:usePowerup(key)
-  end
-  -- TODO lee remove after testing
-  if key=="m" then
-    world:addMonster(createMonster(world,1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+100,64,64,"assets/helmet.png","monster1","basic_ranger"))
-  end
-
 end
 
 function love.update(dt)
   flux.update(dt)
+  local player=world.players[currentPlayer]
   if currentGameMode==gameModes.betweenLevels then
     transitionTimer=transitionTimer-dt
     if transitionTimer<=0 then
       loadLevel(mapToLoad)
       currentGameMode=gameModes.playing
     end
+  elseif currentGameMode==gameModes.dead then
+    -- do nothing
   else
     processInput()
     if currentGameMode==gameModes.playing and activeMenu==nil then
       checkCollisions(world.map)
       world:update(dt)
       handlePlayerCameraMovement(world.map, dt)
-      if world.players[currentPlayer].firing then
-        fireBullet(world.players[currentPlayer],dt)
+      if player.firing then
+        fireBullet(player,dt)
       end
 
-      -- TODO remove when real score is ready
-      world.players[currentPlayer].health=world.players[currentPlayer].health-0.01
-      if world.players[currentPlayer].health<1 then world.players[currentPlayer].health=INITIAL_PLAYER_HEALTH end
-      -- TODO remove when real score is ready
+      player.health=player.health-0.01
+      if player.health<=0 then playerDeath() end
     end
   end
 end
@@ -519,7 +533,19 @@ function handleBulletHitPlayer(bullet,targetHitbox)
   player.health=player.health-bullet.damage
   world:removeHitbox(bullet.hitbox)
   world:removeShape(bullet)
-  playSfx(sfx.monsterHitPlayer)
+
+  --check if player has died
+  if player.health<=0 then
+    playerDeath()
+  else
+    playSfx(sfx.monsterHitPlayer)
+  end
+end
+
+function playerDeath()
+  playSfx(sfx.killPlayer)
+  --show game over, score, then wait for a key, load level 1 with player at normal health
+  currentGameMode=gameModes.dead
 end
 
 function handleBulletHitMonster(bullet,targetHitbox)
@@ -701,12 +727,29 @@ function love.draw()
     drawTitle()
   elseif currentGameMode==gameModes.betweenLevels then
     drawTransition()
+  elseif currentGameMode==gameModes.dead then
+    drawGameOver()
   else
     drawGame()
   end
   if options.showExtras then
     gui.crosshair(screenWidth/2,screenHeight/2,1,0,0,1,true)
   end
+end
+
+function drawGameOver()
+  local red,green,blue=22/255,103/255,194/255 -- a dark cyan
+  love.graphics.clear(red,green,blue,1)
+  love.graphics.setColor(fontSelectedColor:components())
+  love.graphics.setFont(fontSheets.large.font)
+  local player=world.players[currentPlayer]
+  local height=love.graphics.getFont():getHeight()
+  local x=screenWidth/2
+  local y=screenHeight/2-height
+  gui.centerText("GAME OVER",x,y-height)
+  gui.centerText("SCORE: "..player.score,x,y)
+  love.graphics.setFont(fontSheets.small.font)
+  gui.centerText("Press Escape to try again",x,y+height)
 end
 
 function drawTransition()
