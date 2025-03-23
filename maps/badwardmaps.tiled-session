@@ -10,11 +10,11 @@
                 8,
                 5
             ],
-            "scale": 0.75,
+            "scale": 0.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2748,
-                "y": 1582.6666666666665
+                "x": 3340,
+                "y": 1432
             }
         },
         "boss.tmx#tileset-03": {
@@ -24,13 +24,14 @@
             "expandedObjectLayers": [
                 6,
                 4,
+                8,
                 5
             ],
-            "scale": 0.33,
+            "scale": 0.5,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1851.5151515151517,
-                "y": 1478.7878787878788
+                "x": 2252,
+                "y": 838
             }
         },
         "map-01.tmx#tileset-03": {
@@ -40,11 +41,11 @@
             "expandedObjectLayers": [
                 8
             ],
-            "scale": 0.33,
-            "selectedLayer": 7,
+            "scale": 1,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 3833.3333333333335,
-                "y": 1736.3636363636363
+                "x": 1992,
+                "y": 596
             }
         },
         "map-02.tmx#tileset-03": {
@@ -53,14 +54,15 @@
         "map-03.tmx": {
             "expandedObjectLayers": [
                 6,
+                7,
                 8,
                 5
             ],
-            "scale": 1.5,
+            "scale": 0.5,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 1276,
-                "y": 1030
+                "x": 1440,
+                "y": 922
             }
         },
         "map-03.tmx#tileset-03": {

@@ -10,11 +10,15 @@ local Behaviours = {
   basic = function(monster, dt)
     local ts = monster.world.tileSize
 
+    -- Reduce melee timer
+    monster.meleeTimer = monster.meleeTimer - dt
+
     -- Check players to see if it can see one
     for key, player in pairs(monster.world.players) do
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
         
         -- Set new movement target for the player
+        monster.targetMoveTimeout = 0
         monster.targetMove = {{x = player.x, y = player.y}}
         goto continue
       end
@@ -26,11 +30,15 @@ local Behaviours = {
   sense = function(monster, dt)
     local ts = monster.world.tileSize
 
+    -- Reduce melee timer
+    monster.meleeTimer = monster.meleeTimer - dt
+
     -- Check players to see if it can see one
     for key, player in pairs(monster.world.players) do
       if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
         
         -- Set new movement target for the player
+        monster.targetMoveTimeout = 0
         monster.targetMove = {{x = player.x, y = player.y}}
         goto continue
       
@@ -38,6 +46,7 @@ local Behaviours = {
       elseif not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
 
         -- Path to that position
+        monster.targetMoveTimeout = 0
         monster.targetMove = monster.world:getPath(monster.x, monster.y, player.x, player.y)
         goto continue
       end
@@ -60,6 +69,7 @@ local Behaviours = {
         if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
           
           -- Set new movement target for the player
+          monster.targetMoveTimeout = 0
           monster.targetMove = {{x = player.x, y = player.y}}
         else
 
@@ -94,6 +104,7 @@ local Behaviours = {
         if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
           
           -- Set new movement target for the player
+          monster.targetMoveTimeout = 0
           monster.targetMove = {{x = player.x, y = player.y}}
         else
 
@@ -136,7 +147,7 @@ local Behaviours = {
     if monster.phase == 1 then
 
       -- Set speed for this phase
-      monster.speed = 220
+      monster.speed = 175
 
       -- Increase phase timer
       monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
@@ -192,6 +203,7 @@ local Behaviours = {
         monster.phase = 2
         monster.phaseTimer = 10
         monster.fireRate = 2.5
+        monster.meleeTimer = 1
 
         -- Set a movement target
         local world = monster.world
@@ -260,7 +272,8 @@ local Behaviours = {
         if monster.phaseTimer <= 0 then
           monster.fireRate = 0.5
           monster.phase = 3
-          monster.phaseTimer = 10
+          monster.phaseTimer = 12
+          monster.meleeTimer = 1
 
           -- Spawn in enemies
           local world = monster.world
@@ -344,6 +357,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   local s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
   s.type="monster"
   s.name=name
+  s.behaviour=behaviour
   s.behaviourUpdate=Behaviours[behaviour]
   s.world=world
   s.id=id
@@ -370,6 +384,8 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
+  s.meleeDamage=200
+  s.meleeTimer=1
   s.fireRate=2
   s.fireRange=14
   s.firePower='monster'
@@ -458,6 +474,13 @@ function checkMonsterCollisions(self, dt)
       -- Bullets
       elseif hitbox.type=='bullet' then
         -- Take damage
+
+      -- Player
+      elseif hitbox.type=='player' and self.meleeTimer <= 0 then
+        local player = hitbox.object
+        player.health = player.health - self.meleeDamage
+        self.meleeTimer = 1
+        self:destroy()
       end
     end
   end
@@ -493,14 +516,20 @@ function followPath(self, dt)
 
   -- Timeout if the monster can't reach it's movement target
   self.targetMoveTimeout = self.targetMoveTimeout + dt
-  if self.targetMoveTimeout > 8 then self.targetMove = nil end
+  if self.targetMoveTimeout > 8 then
+    self.targetMove = nil
+    self.targetMoveTimeout = 0
+  end
 
   -- Move to the next goal
   if self.targetMove and self.targetMove[1] then
     local speed = self.speed*dt
     local r = math.atan2(self.targetMove[1].y - self.y, self.targetMove[1].x - self.x)
     self.x, self.y = self.x+math.cos(r)*speed, self.y+math.sin(r)*speed
-  else self.targetMove = nil end
+  else
+    self.targetMove = nil
+    self.targetMoveTimeout = 0
+  end
 end
 
 -- Fire bullet
@@ -530,7 +559,8 @@ function destroy(self)
   local world = self.world
 
   -- Destroy hitbox
-  world.collider:remove(self.hitbox)
+  world:removeHitbox(self.hitbox)
+  self.hitbox.active = false
 
   -- Iterate through world's monster table and remove self from the list
   for i = #world.monsters, 1, -1 do

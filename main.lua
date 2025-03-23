@@ -27,7 +27,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-03"
+startMap="map-02"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -237,7 +237,8 @@ function createGenerators(map)
     for _,generator in pairs(map.layers["generators"].objects) do
       if generator.name=="generator" then
         count=count+1
-        local spawnRate=generator.properties.spawnmin or 2
+        dumpTable(generator.properties,"generate props")
+        local spawnRate=generator.properties.spawnrate or 0
         print("generator at x,y,w,h,spawnRate",generator.id,generator.x,generator.y,generator.width,generator.height,spawnRate)
         world:addShape(createGenerator(world,generator.x,generator.y,generator.width,generator.height,spawnRate))
       end
