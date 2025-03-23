@@ -435,7 +435,7 @@ function love.update(dt)
       currentGameMode=gameModes.playing
       if mapToLoad=="boss" then
         local x,y=findBossSpawnPoint(world.map)
-        world:addMonster(createMonster(world,1,x,y,64,64,"assets/helmet.png","monster1","boss"))
+        world:addMonster(createMonster(world,1,x,y,192,192,"assets/kingsprites.png","monster1","boss"))
       end
     end
   elseif currentGameMode==gameModes.dead then
