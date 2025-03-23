@@ -27,7 +27,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-02"
+startMap="map-03"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)

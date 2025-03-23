@@ -355,6 +355,8 @@ end
 function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   local behaviour = behaviour or 'basic'
   local s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
+
+  -- Setting values
   s.type="monster"
   s.name=name
   s.behaviour=behaviour
@@ -416,6 +418,11 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
     },
   }
   s.current=s.anims[s.animType][s.direction]
+
+  -- Setting the King's health
+  if behaviour=='boss' then
+    s.health = 80000
+  end
   return s
 end
 
