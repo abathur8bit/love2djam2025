@@ -1041,7 +1041,7 @@ return {
           rotation = 0,
           visible = true,
           properties = {
-            ["exit_to"] = "map-67"
+            ["exit_to"] = "boss"
           }
         }
       }

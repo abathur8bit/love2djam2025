@@ -1,6 +1,8 @@
 io.stdout:setvbuf("no")
 for a in pairs(arg) do print("a="..a) end
 
+local math=math
+local love=love
 local HC=require "lib.HC"
 local Camera=require "lib.camera"
 local anim8=require "lib.anim8"
@@ -16,12 +18,16 @@ require "powerup"
 require "door"
 require "conf"
 require "playerpanel"
+require "generator"
+
+math.randomseed(os.time())
+math.random()math.random()math.random()
 
 version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-01"
+startMap="map-03"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -220,8 +226,24 @@ function createObjects(map)
   createTriggers(map)
   createPowerups(map)
   createExits(map)
+  createGenerators(map)
   world:addVisibility()
   world:addPathfinder()
+end
+
+function createGenerators(map)
+  -- if map.layers["generators"] then
+  --   local count=0
+  --   for _,generator in pairs(map.layers["generators"].objects) do
+  --     if generator.name=="generator" then
+  --       count=count+1
+  --       print("generator at x,y,w,h,name",generator.id,generator.x,generator.y,generator.width,generator.height,generator.name)
+  --       local spawnSpeed=0.5
+  --       world:addShape(createGenerator(world,generator.x,generator.y,generator.width,generator.height,spawnSpeed))
+  --     end
+  --   end
+  --   print(string.format("created %d generators",count))
+  -- end
 end
 
 function createPowerups(map)
@@ -285,6 +307,20 @@ function findPlayerSpawnPoint(map)
     for _,obj in pairs(map.layers["enter_exit"].objects) do
       if obj.name=="enter" then
         print("found enter point at ",obj.x,obj.y)
+        -- return the center of the spawn point
+        return obj.x+obj.width/2,obj.y+obj.height/2
+      end
+    end
+  end
+  return nil
+end
+
+function findBossSpawnPoint(map)
+  if map.layers["generators"] then
+    print("enter exit layer found")
+    for _,obj in pairs(map.layers["generators"].objects) do
+      if obj.name=="boss_spawn" then
+        print("found boss point at ",obj.x,obj.y)
         -- return the center of the spawn point
         return obj.x+obj.width/2,obj.y+obj.height/2
       end
@@ -397,6 +433,10 @@ function love.update(dt)
     if transitionTimer<=0 then
       loadLevel(mapToLoad)
       currentGameMode=gameModes.playing
+      if mapToLoad=="boss" then
+        local x,y=findBossSpawnPoint(world.map)
+        world:addMonster(createMonster(world,1,x,y,64,64,"assets/helmet.png","monster1","boss"))
+      end
     end
   elseif currentGameMode==gameModes.dead then
     -- do nothing

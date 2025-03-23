@@ -3,12 +3,33 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
-        "map-01.tmx": {
-            "scale": 0.37406249999999996,
+        "boss.tmx": {
+            "expandedObjectLayers": [
+                7,
+                8,
+                5
+            ],
+            "scale": 0.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2515.6223893066,
-                "y": 1398.1620718462823
+                "x": 3364,
+                "y": 1532
+            }
+        },
+        "boss.tmx#tileset-03": {
+            "scaleInDock": 1
+        },
+        "map-01.tmx": {
+            "expandedObjectLayers": [
+                6,
+                4,
+                5
+            ],
+            "scale": 1,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 2800,
+                "y": 545
             }
         },
         "map-01.tmx#tileset-03": {
@@ -35,7 +56,7 @@
                 5
             ],
             "scale": 0.5,
-            "selectedLayer": 5,
+            "selectedLayer": 7,
             "viewCenter": {
                 "x": 1664,
                 "y": 1136
