@@ -564,11 +564,18 @@ function destroy(self)
 
   -- Iterate through world's monster table and remove self from the list
   for i = #world.monsters, 1, -1 do
-    if world.monsters[i]==self then
+    if world.monsters[i] == self then
       world.monsters[#world.monsters], world.monsters[i] = nil, world.monsters[#world.monsters]
-      goto continue
+      goto continue1
     end
   end
-  ::continue::
+  ::continue1::
+  for i = #world.shapes, 1, -1 do
+    if world.shapes[i] == self then
+      world.shapes[#world.shapes], world.shapes[i] = nil, world.shapes[#world.shapes]
+      goto continue2
+    end
+  end
+  ::continue2::
   return true
 end

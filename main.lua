@@ -585,8 +585,7 @@ function handleBulletHitMonster(bullet,targetHitbox)
   print("bullet hit a monster damage health",bullet.damage,monster.health)
   monster.health=monster.health-bullet.damage
   if monster.health<=0 then
-    world:removeHitbox(targetHitbox)
-    world:removeShapeWithHitbox(targetHitbox)
+    monster:destroy()
     world.players[currentPlayer].score=world.players[currentPlayer].score+10
   end
   world:removeHitbox(bullet.hitbox)
