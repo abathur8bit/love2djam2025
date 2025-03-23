@@ -5,6 +5,8 @@ function createBullet(world,player,x,y,angle,color,rocket)
   local growMins={3,6,10}
   local growMaxs={10,16,25}
   local speeds={500,600,800}
+  local damages={400,600,800} -- the higher the level, the more damage it does
+  local times={10,7,4} -- the higher the level the less time you get to use it
   local colors={
     gui.createColor(1.0,1.0,1.0,1),
     gui.createColor(1.0,1.0,0.0,1),
@@ -27,9 +29,10 @@ function createBullet(world,player,x,y,angle,color,rocket)
   s.radius=s.growMin
   s.maxspeed=500
   s.thrust=speeds[power]
+  s.damage=damages[power]
   s.update=updateBullet
   s.draw=drawBullet
-  s.time=3.5
+  s.time=times[power]
   s.rocket=rocket
   s.hitbox=world:createHitbox(x-s.growMax/2,y-s.growMax/2,s.growMax,s.growMax,"bullet","bullet","bullet",s)
 

@@ -216,9 +216,7 @@ function love.load(args)
   end
 
   world:addPlayer (createPlayer (world,1,px,py,96,96,"assets/Player 1 Wizardsprites-sheet.png"))
-  world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster1","basic"))
-  world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","sense"))
-  world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster3","basic"))
+  world:addMonster(createMonster(world,1,px+000,py+100,64,64,"assets/helmet.png","monster1","basic"))
   createObjects(world.map)
 end
 
@@ -376,6 +374,9 @@ function love.keypressed(key)
   if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
     world.players[currentPlayer]:usePowerup(key)
   end
+  if key=="m" then
+    world:addMonster(createMonster(world,1,world.players[currentPlayer].x+000,world.players[currentPlayer].y+100,64,64,"assets/helmet.png","monster1","basic"))
+  end
 
 end
 
@@ -454,9 +455,7 @@ function checkPlayerCollisions(map)
         player.x=px
         player.y=py
         world:addPlayer (player)
-        world:addMonster(createMonster(world,1,px+070,py+000,64,64,"assets/helmet.png","monster1","basic"))
-        world:addMonster(createMonster(world,1,px+140,py+000,64,64,"assets/helmet.png","monster2","basic"))
-        world:addMonster(createMonster(world,1,px+000,py+070,64,64,"assets/helmet.png","monster3","basic"))
+        world:addMonster(createMonster(world,1,px+000,py+100,64,64,"assets/helmet.png","monster1","basic"))
         createObjects(world.map)
       elseif hitbox.type=="powerup" then
         handlePowerup(hitbox)
@@ -498,14 +497,18 @@ function checkBulletCollisions(map)
   end
 end
 
-function handleBulletHitMonster(sourceShape,targetHitbox)
-  print("bullet hit a monster sourceHitbox destHitbox",sourceShape.hitbox.type,targetHitbox.type)
-  world:removeHitbox(sourceShape.hitbox)
-  world:removeShape(sourceShape)
-  world:removeHitbox(targetHitbox)
-  world:removeShapeWithHitbox(targetHitbox)
+function handleBulletHitMonster(bullet,targetHitbox)
+  local monster=targetHitbox.object
+  print("bullet hit a monster damage health",bullet.damage,monster.health)
+  monster.health=monster.health-bullet.damage
+  if monster.health<=0 then
+    world:removeHitbox(targetHitbox)
+    world:removeShapeWithHitbox(targetHitbox)
+    world.players[currentPlayer].score=world.players[currentPlayer].score+10
+  end
+  world:removeHitbox(bullet.hitbox)
+  world:removeShape(bullet)
   playSfx(sfx.hitMonster)
-  world.players[currentPlayer].score=world.players[currentPlayer].score+10
 end
 
 function handleBulletHitWall(sourceShape,targetHitbox)

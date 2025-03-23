@@ -134,7 +134,11 @@ end
 
 -- Draw function
 function drawMonster(self)
+  love.graphics.setFont(fontSheets.small.font)
+  love.graphics.setColor(1,1,1,1)
   self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w/2,self.h/2) -- draw anim8
+  love.graphics.setColor(1,0,0)
+  gui.centerText(self.health,self.x,self.y-self.h/2)
 end
 
 -- Check collisions
