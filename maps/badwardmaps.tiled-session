@@ -10,11 +10,11 @@
                 8,
                 5
             ],
-            "scale": 0.5,
-            "selectedLayer": 0,
+            "scale": 1,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 3340,
-                "y": 1432
+                "x": 3132,
+                "y": 1542
             }
         },
         "boss.tmx#tileset-03": {
@@ -27,11 +27,11 @@
                 8,
                 5
             ],
-            "scale": 0.5,
-            "selectedLayer": 4,
+            "scale": 1,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 2252,
-                "y": 838
+                "x": 2443,
+                "y": 1346
             }
         },
         "map-01.tmx#tileset-03": {

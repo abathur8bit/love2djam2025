@@ -69,6 +69,12 @@ function createPlayer(world,id,x,y,w,h,filename)
   return s
 end
 
+function reset(self)
+  self.score=0
+  self.health=INITIAL_PLAYER_HEALTH
+  self.firePower=1
+end
+
 function createPlayerHitbox(self)
   local xa,ya,wa,ha=self:adjustRect(50,8)
   self.hitbox=self.world:createHitbox(xa,ya,wa,ha,self.type,self.id,self.type,self)

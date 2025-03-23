@@ -398,8 +398,7 @@ function love.keypressed(key)
   if currentGameMode==gameModes.dead then
     if key == "escape" then
       nextLevelNumber=1
-      player.score=0
-      player.health=INITIAL_PLAYER_HEALTH
+      player:reset()
       currentGameMode=gameModes.playing
       loadLevel(startMap)
     end
