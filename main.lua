@@ -27,7 +27,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-03"
+startMap="map-01"
   
 aspect=0.5625
 love.window.setTitle(gameTitle)
@@ -60,10 +60,18 @@ logo={x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
 gameModes={title=1,playing=2,dead=3,betweenLevels=4,winner=5}
 
 -- music and sound
+musicLevels={
+  "assets/Room 1 (Alt Idle).mp3",
+  "assets/Room 3 (Alt Idle).mp3",
+  "assets/Room 5 (Alt Idle).mp3",
+  "assets/Room 7 (Alt Idle).mp3",
+  "assets/Room 9 (Alt Idle).mp3"
+}
+
 music={
   title={filename="assets/Intro.mp3",music=nil},
-  ingame={filename="assets/Room 1 Idle.mp3",music=nil},
-  combat={filename="assets/Room 1 Combat.mp3",music=nil},
+  ingame={filename="assets/Room 1 (Alt Idle).mp3",music=nil},
+  -- combat={filename="assets/Room 1 (Alt Idle).mp3",music=nil},
 }
 sfx={
   shoot={filename="assets/Weapon Swing.ogg",sfx=nil},
@@ -402,6 +410,13 @@ function love.keypressed(key)
       currentGameMode=gameModes.playing
       loadLevel(startMap)
     end
+  elseif currentGameMode==gameModes.winner then
+    if key == "escape" then
+      nextLevelNumber=1
+      player:reset()
+      currentGameMode=gameModes.playing
+      loadLevel(startMap)
+    end
   else
     if key == "escape" then 
       if activeMenu==nil then
@@ -439,6 +454,8 @@ function love.update(dt)
       end
     end
   elseif currentGameMode==gameModes.dead then
+    -- do nothing
+  elseif currentGameMode==gameModes.winner then
     -- do nothing
   else
     processInput()
@@ -573,6 +590,11 @@ function handleBulletHitPlayer(bullet,targetHitbox)
   end
 end
 
+function playerWin()
+  --playerSfx(sfx.winner)
+  currentGameMode=gameModes.winner
+end
+
 function playerDeath()
   playSfx(sfx.killPlayer)
   --show game over, score, then wait for a key, load level 1 with player at normal health
@@ -586,6 +608,12 @@ function handleBulletHitMonster(bullet,targetHitbox)
   if monster.health<=0 then
     monster:destroy()
     world.players[currentPlayer].score=world.players[currentPlayer].score+10
+
+    -- Boss
+    if monster.behaviour == 'boss' then
+      world.players[currentPlayer].score=world.players[currentPlayer].score+500
+      playerWin()
+    end
   end
   world:removeHitbox(bullet.hitbox)
   world:removeShape(bullet)
@@ -627,6 +655,13 @@ function loadLevel(mapName)
 
   world:addPlayer (thePlayer)
   createObjects(world.map)
+  if inbrowser==false and options.music==true then
+    stopMusic(music.ingame)
+    local filename=musicLevels[nextLevelNumber]
+    music.ingame.music=love.audio.newSource(filename,"static")
+    music.ingame.music:setLooping(true)
+    playMusic(music.ingame)
+  end
 end
 
 -- parse the name and number from fullName in the form "door-01"
@@ -761,6 +796,8 @@ function love.draw()
     drawTransition()
   elseif currentGameMode==gameModes.dead then
     drawGameOver()
+  elseif currentGameMode==gameModes.winner then
+    drawWinner()
   else
     drawGame()
   end
@@ -782,6 +819,21 @@ function drawGameOver()
   gui.centerText("SCORE: "..player.score,x,y)
   love.graphics.setFont(fontSheets.small.font)
   gui.centerText("Press Escape to try again",x,y+height)
+end
+
+function drawWinner()
+  local red,green,blue=22/255,103/255,194/255 -- a dark cyan
+  love.graphics.clear(red,green,blue,1)
+  love.graphics.setColor(fontSelectedColor:components())
+  love.graphics.setFont(fontSheets.large.font)
+  local player=world.players[currentPlayer]
+  local height=love.graphics.getFont():getHeight()
+  local x=screenWidth/2
+  local y=screenHeight/2-height
+  gui.centerText("YOU WIN",x,y-height)
+  gui.centerText("SCORE: "..player.score,x,y)
+  love.graphics.setFont(fontSheets.small.font)
+  gui.centerText("Press Escape to play again",x,y+height)
 end
 
 function drawTransition()

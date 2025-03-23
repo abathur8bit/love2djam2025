@@ -345,7 +345,7 @@
   <object id="234" name="bean" x="2336" y="1344" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="6" name="walls">
-  <object id="191" x="2656" y="1248" width="1888" height="32"/>
+  <object id="191" x="2656" y="1248" width="1216" height="32"/>
   <object id="192" x="3808" y="1280" width="64" height="1248"/>
   <object id="193" x="2592" y="1248" width="64" height="896"/>
   <object id="194" x="2240" y="640" width="320" height="32"/>
@@ -373,12 +373,12 @@
     <property name="spawnrate" type="float" value="0"/>
    </properties>
   </object>
-  <object id="211" name="generator" x="3776" y="1280" width="32" height="32">
+  <object id="211" name="generator" x="3744" y="1312" width="32" height="32">
    <properties>
     <property name="spawnrate" type="float" value="0"/>
    </properties>
   </object>
-  <object id="214" name="generator" x="2656" y="1280" width="32" height="32">
+  <object id="214" name="generator" x="2688" y="1312" width="32" height="32">
    <properties>
     <property name="spawnrate" type="float" value="0"/>
    </properties>

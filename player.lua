@@ -22,6 +22,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.draw=drawPlayer
   s.usePowerup=usePowerup
   s.createHitbox=createPlayerHitbox
+  s.reset=resetPlayer
   s.idleTimer=0.0
   s.idleTimerDelay=5
   s.sheet=love.graphics.newImage(filename)
@@ -69,7 +70,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   return s
 end
 
-function reset(self)
+function resetPlayer(self)
   self.score=0
   self.health=INITIAL_PLAYER_HEALTH
   self.firePower=1
