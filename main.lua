@@ -232,18 +232,18 @@ function createObjects(map)
 end
 
 function createGenerators(map)
-  -- if map.layers["generators"] then
-  --   local count=0
-  --   for _,generator in pairs(map.layers["generators"].objects) do
-  --     if generator.name=="generator" then
-  --       count=count+1
-  --       print("generator at x,y,w,h,name",generator.id,generator.x,generator.y,generator.width,generator.height,generator.name)
-  --       local spawnSpeed=0.5
-  --       world:addShape(createGenerator(world,generator.x,generator.y,generator.width,generator.height,spawnSpeed))
-  --     end
-  --   end
-  --   print(string.format("created %d generators",count))
-  -- end
+  if map.layers["generators"] then
+    local count=0
+    for _,generator in pairs(map.layers["generators"].objects) do
+      if generator.name=="generator" then
+        count=count+1
+        local spawnRate=generator.properties.spawnmin or 2
+        print("generator at x,y,w,h,spawnRate",generator.id,generator.x,generator.y,generator.width,generator.height,spawnRate)
+        world:addShape(createGenerator(world,generator.x,generator.y,generator.width,generator.height,spawnRate))
+      end
+    end
+    print(string.format("created %d generators",count))
+  end
 end
 
 function createPowerups(map)

@@ -10,7 +10,7 @@ return {
   tilewidth = 32,
   tileheight = 32,
   nextlayerid = 9,
-  nextobjectid = 40,
+  nextobjectid = 44,
   properties = {
     ["exit_to"] = "map-02"
   },
@@ -61,7 +61,9 @@ return {
       offsety = 0,
       parallaxx = 1,
       parallaxy = 1,
-      properties = {},
+      properties = {
+        ["spawnrate"] = 1
+      },
       encoding = "lua",
       data = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 8, 8, 8, 8, 8, 8, 8, 246, 247, 8, 8, 8, 8, 8, 8, 8, 8, 246, 247, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -620,17 +622,77 @@ return {
       objects = {
         {
           id = 39,
-          name = "",
+          name = "generator",
           type = "",
           shape = "rectangle",
-          x = 2976,
-          y = 384,
+          x = 2144,
+          y = 800,
+          width = 32,
+          height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["spawnrate"] = 1
+          }
+        },
+        {
+          id = 40,
+          name = "generator",
+          type = "",
+          shape = "rectangle",
+          x = 2016,
+          y = 800,
+          width = 32,
+          height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["speed"] = 2
+          }
+        },
+        {
+          id = 41,
+          name = "generator",
+          type = "",
+          shape = "rectangle",
+          x = 2080,
+          y = 864,
           width = 32,
           height = 32,
           rotation = 0,
           visible = true,
           properties = {
             ["speed"] = 0.5
+          }
+        },
+        {
+          id = 42,
+          name = "generator",
+          type = "",
+          shape = "rectangle",
+          x = 2176,
+          y = 960,
+          width = 32,
+          height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["speed"] = 0.5
+          }
+        },
+        {
+          id = 43,
+          name = "generator",
+          type = "",
+          shape = "rectangle",
+          x = 2016,
+          y = 960,
+          width = 32,
+          height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["speed"] = 1
           }
         }
       }

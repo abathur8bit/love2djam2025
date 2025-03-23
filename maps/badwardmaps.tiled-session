@@ -5,15 +5,16 @@
     "fileStates": {
         "boss.tmx": {
             "expandedObjectLayers": [
+                6,
                 7,
                 8,
                 5
             ],
-            "scale": 0.5,
+            "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 3364,
-                "y": 1532
+                "x": 2748,
+                "y": 1582.6666666666665
             }
         },
         "boss.tmx#tileset-03": {
@@ -25,11 +26,11 @@
                 4,
                 5
             ],
-            "scale": 1,
+            "scale": 0.33,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 2800,
-                "y": 545
+                "x": 1851.5151515151517,
+                "y": 1478.7878787878788
             }
         },
         "map-01.tmx#tileset-03": {
@@ -55,11 +56,11 @@
                 8,
                 5
             ],
-            "scale": 0.5,
-            "selectedLayer": 7,
+            "scale": 1.5,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 1664,
-                "y": 1136
+                "x": 1276,
+                "y": 1030
             }
         },
         "map-03.tmx#tileset-03": {
@@ -87,7 +88,7 @@
     "openFiles": [
     ],
     "project": "badwardmaps.tiled-project",
-    "property.type": "int",
+    "property.type": "float",
     "recentFiles": [
     ]
 }
