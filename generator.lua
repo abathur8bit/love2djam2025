@@ -2,8 +2,11 @@ local shape=require "shape"
 
 local monsters = {basic=6,sense=4,basic_ranger=3,sense_ranger=2}
 local monster_weightings = 0
+local monster_list = {}
 for key, value in pairs(monsters) do
-  monster_weightings = monster_weightings + value
+  for i = 1, value do
+    monster_list[#monster_list+1] = tostring(key)
+  end
 end
 
 function createGenerator(world,x,y,w,h,spawnRate)
@@ -27,10 +30,8 @@ function updateGenerator(self,dt)
         self.timer=self.spawnRate
 
         -- Choose a random monster to spawn
-        local n = math.random(1, monster_weightings)
-        
-
-        self.world:addMonster(createMonster(self.world,1,self.x,self.y,64,64,"assets/helmet.png","monster","basic"))
+        local behaviour = monster_list[math.random(1, #monster_list)]
+        self.world:addMonster(createMonster(self.world,1,self.x,self.y,64,64,"assets/helmet.png","monster",behaviour))
       end
     end
   end

@@ -76,16 +76,18 @@ music={
 sfx={
   shoot={filename="assets/Weapon Swing.ogg",sfx=nil},
   hitWall={filename="assets/HitWall.ogg",sfx=nil},
-  hitMonster={filename="assets/Player Death.ogg",sfx=nil},
+  hitMonster={filename="assets/EnemyDamaged.ogg",sfx=nil},
   monsterHitPlayer={filename="assets/EnemyDamaged.ogg",sfx=nil},
   killPlayer={filename="assets/Player Death.ogg",sfx=nil},
-  killMonster={filename="assets/EnemyDamaged.ogg",sfx=nil},
+  killMonster={filename="assets/EnemyKilled.ogg",sfx=nil},
   doorOpen={filename="assets/Door Open.ogg",sfx=nil},
   footsteps={filename="assets/Footsteps.ogg",sfx=nil},
   pickupPowerup={filename="assets/Power-up Equip.ogg",sfx=nil},
   usePowerupAsHealth={filename="assets/Item Equip.ogg",sfx=nil},
   usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil},
   exitFloor={filename="assets/ExitFloor.ogg",sfx=nil},
+  monsterMeleePlayer={filename="assets/Melee.ogg",sfx=nil},
+  endGame={filename="assets/Intro.mp3",sfx=nil},
 
   menuHighlightChange=   {filename="assets/MenuHighlightChange.ogg",sfx=nil},
   menuSelectConfirm=     {filename="assets/MenuSelectConfirm.ogg",sfx=nil},
@@ -591,7 +593,7 @@ function handleBulletHitPlayer(bullet,targetHitbox)
 end
 
 function playerWin()
-  --playerSfx(sfx.winner)
+  playSfx(sfx.endGame)
   currentGameMode=gameModes.winner
 end
 

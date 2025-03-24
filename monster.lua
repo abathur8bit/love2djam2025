@@ -58,6 +58,9 @@ local Behaviours = {
   basic_ranger = function(monster, dt)
     local ts = monster.world.tileSize
 
+    -- Reduce melee timer
+    monster.meleeTimer = monster.meleeTimer - dt
+
     -- Reduce attack cooldown
     monster.fireRateTimer = monster.fireRateTimer - dt
 
@@ -92,6 +95,9 @@ local Behaviours = {
   -- Sense ranger
   sense_ranger = function(monster, dt)
     local ts = monster.world.tileSize
+
+    -- Reduce melee timer
+    monster.meleeTimer = monster.meleeTimer - dt
 
     -- Reduce attack cooldown
     monster.fireRateTimer = monster.fireRateTimer - dt
@@ -386,7 +392,7 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
-  s.meleeDamage=200
+  s.meleeDamage=100
   s.meleeTimer=1
   s.fireRate=2
   s.fireRange=14
@@ -488,6 +494,7 @@ function checkMonsterCollisions(self, dt)
         player.health = player.health - self.meleeDamage
         self.meleeTimer = 1
         self:destroy()
+        playSfx(sfx.monsterMeleePlayer)
       end
     end
   end
