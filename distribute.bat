@@ -33,7 +33,7 @@ cd %DIST%
 
 mkdir %GAME%
 cd %GAME%
-copy /b %LOVE%\love.exe+..\..\%GAME%.love %GAME_BASE%.exe
+copy /b %LOVE%\love.exe+..\%GAME%.love %GAME_BASE%.exe
 copy %LOVE%\*.dll .
 copy %LOVE%\license.txt .
 copy ..\..\README.txt .

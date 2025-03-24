@@ -87,7 +87,7 @@ sfx={
   usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil},
   exitFloor={filename="assets/ExitFloor.ogg",sfx=nil},
   monsterMeleePlayer={filename="assets/Melee.ogg",sfx=nil},
-  endGame={filename="assets/Intro.mp3",sfx=nil},
+  endGame={filename="assets/Victory.ogg",sfx=nil},
 
   menuHighlightChange=   {filename="assets/MenuHighlightChange.ogg",sfx=nil},
   menuSelectConfirm=     {filename="assets/MenuSelectConfirm.ogg",sfx=nil},
@@ -247,9 +247,8 @@ function createGenerators(map)
     for _,generator in pairs(map.layers["generators"].objects) do
       if generator.name=="generator" then
         count=count+1
-        dumpTable(generator.properties,"generate props")
         local spawnRate=generator.properties.spawnrate or 3
-        print("generator at x,y,w,h,spawnRate",generator.id,generator.x,generator.y,generator.width,generator.height,spawnRate)
+        print(" generatorat x,y,w,h,spawnRate",generator.id,generator.x,generator.y,generator.width,generator.height,spawnRate)
         world:addShape(createGenerator(world,generator.x,generator.y,generator.width,generator.height,spawnRate))
       end
     end
@@ -593,6 +592,7 @@ function handleBulletHitPlayer(bullet,targetHitbox)
 end
 
 function playerWin()
+  stopMusic(music.ingame)
   playSfx(sfx.endGame)
   currentGameMode=gameModes.winner
 end

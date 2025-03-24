@@ -3,6 +3,9 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
         "boss.tmx": {
             "expandedObjectLayers": [
                 6,
@@ -11,11 +14,11 @@
                 5,
                 9
             ],
-            "scale": 0.33,
+            "scale": 0.75,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 3045.4545454545455,
-                "y": 2154.5454545454545
+                "x": 3197.333333333333,
+                "y": 1846.6666666666665
             }
         },
         "boss.tmx#tileset-03": {
@@ -30,10 +33,10 @@
                 5
             ],
             "scale": 0.75,
-            "selectedLayer": 0,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 2533.333333333333,
-                "y": 1273.3333333333333
+                "x": 2169.333333333333,
+                "y": 1513.3333333333333
             }
         },
         "map-01.tmx#tileset-03": {
@@ -57,17 +60,11 @@
             "scaleInDock": 1
         },
         "map-03.tmx": {
-            "expandedObjectLayers": [
-                6,
-                7,
-                8,
-                5
-            ],
             "scale": 0.5,
-            "selectedLayer": 6,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 1734,
-                "y": 898
+                "x": 1228,
+                "y": 1020
             }
         },
         "map-03.tmx#tileset-03": {
@@ -76,14 +73,16 @@
         "map-04.tmx": {
             "expandedObjectLayers": [
                 6,
+                7,
                 8,
-                5
+                5,
+                9
             ],
             "scale": 1.5,
-            "selectedLayer": 4,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 3966.666666666666,
-                "y": 2395.333333333333
+                "x": 2548.6666666666665,
+                "y": 2114.6666666666665
             }
         },
         "map-04.tmx#tileset-03": {
