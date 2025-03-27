@@ -1,6 +1,7 @@
 {
-    "activeFile": "",
+    "activeFile": "boss.tmx",
     "expandedProjectPaths": [
+        "."
     ],
     "fileStates": {
         "": {
@@ -8,11 +9,7 @@
         },
         "boss.tmx": {
             "expandedObjectLayers": [
-                6,
-                7,
-                8,
-                5,
-                9
+                7
             ],
             "scale": 0.75,
             "selectedLayer": 6,
@@ -95,11 +92,19 @@
     "map.lastUsedExportFilter": "Lua files (*.lua)",
     "map.lastUsedFormat": "tmx",
     "openFiles": [
+        "map-01.tmx",
+        "map-02.tmx",
+        "map-03.tmx",
+        "map-04.tmx",
+        "boss.tmx"
     ],
     "project": "badwardmaps.tiled-project",
     "property.type": "float",
     "recentFiles": [
+        "map-01.tmx",
+        "map-02.tmx",
+        "map-03.tmx",
         "map-04.tmx",
-        "map-01.tmx"
+        "boss.tmx"
     ]
 }
