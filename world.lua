@@ -177,10 +177,12 @@ function getPath(self, ax, ay, bx, by, ts)
             -- Copy the node path
             path = {}
             for j = 1, #worldPath do
-              path[j] = {
-                x = worldPath[j-1+i].x,
-                y = worldPath[j-1+i].y,
-              }
+              if worldPath[j-1+i] then
+                path[j] = {
+                  x = worldPath[j-1+i].x,
+                  y = worldPath[j-1+i].y,
+                }
+              else path = nil goto pathCopied end
             end
             goto pathCopied
           end
