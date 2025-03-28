@@ -7,7 +7,6 @@ local love=love
 local HC=require "lib.HC"
 local Camera=require "lib.camera"
 local anim8=require "lib.anim8"
-local windfield=require "lib.windfield"
 local flux=require "lib.flux"
 local gui=require "lib.gui"
 local axjoy=require "lib.axjoystick"
