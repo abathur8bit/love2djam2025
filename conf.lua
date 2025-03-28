@@ -3,7 +3,7 @@ inbrowser=false
 resolution=1600
 fullscreen=false
 release=true
-musicOkay=false
+-- musicOkay=false
 function love.conf(t)
  t.console=true
 end
