@@ -96,7 +96,6 @@ end
 function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,selectedColor,handleSelect,handleBack,font)
   if normalColor==nil then normalColor=gui.createColor255(3,251,255) end
   if selectedColor==nil then selectedColor=gui.createColor(1,1,0) end
-  if fontHeight==nil then fontHeight=27 end
 
   local w=gui.createWidget(x,y,width,height,"menu")
   w.title=title
@@ -114,35 +113,25 @@ function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,sele
   w.handle=gui.menuHandleChoice
   w.handleSelect=handleSelect
   w.handleBack=handleBack
-  w.keystate=gui.menuKeystate
   w.mousemoved=gui.menuMouseMoved
-  w.keys={buttonA=false,up=false,down=false,left=false,right=false,buttonB=false}
-  
+  w.keypressed=gui.keypressed         -- user calls
+  w.gamepadpressed=gui.gamepadpressed -- user calls
+  w.getOptions=gui.getOptions
   return w
 end
 
-function gui.menuKeystate(self,keystate)
-  for key,value in pairs(self.keys) do
-    if keystate[key] ~= self.keys[key] then
-      if keystate[key] then 
-        gui.keypressed(self,key)
-      else
-        gui.keyreleased(self,key)
-      end
-    end
-  end
-end
-
 function gui.keypressed(self,key)
-  self.keys[key]=true
+  if key=="up" then self.selectPrevious(self) end
+  if key=="down" then self.selectNext(self) end
+  if key=="return" then self.handle(self) end
+  if key=="escape" then self.handleBack() end
 end
 
-function gui.keyreleased(self,key)
-  self.keys[key]=false
-  if key=="buttonA" then gui.menuHandleChoice(self) end
-  if key=="up" then gui.menuSelectPrevious(self) end
-  if key=="down" then gui.menuSelectNext(self) end
-  if key=="buttonB" then gui.menuHandleBack(self) end
+function gui.gamepadpressed(self,joystick,button)
+  if button=="dpup" then self.selectPrevious(self) end
+  if button=="dpdown" then self.selectNext(self) end
+  if button=="a" then self.handle(self) end
+  if button=="start" or button=="b" then self:handleBack() end
 end
 
 -- Draws menu items one below the other. If menu has a window, 
@@ -168,7 +157,8 @@ function gui.menuDraw(self)
       love.graphics.print(self.title,x,y)
       y=y+self.fontHeight+self.fontHeight/2
     end
-    for k,v in pairs(self.options) do
+    local optionText=gui.getOptions(self)
+    for k,v in pairs(optionText) do
       color=self.normalColor
       if k==self.selectedIndex then color=self.selectedColor end
       love.graphics.setColor(color:components())
@@ -178,33 +168,47 @@ function gui.menuDraw(self)
   end
 end
 
+function gui.getOptions(self,index)
+  local optionText
+  if type(self.options)=="function" then
+    -- this is a function, so call the function to build the option text values
+    optionText=self:options()
+  else
+    optionText=self.options
+  end
+  if not index then return optionText end
+  return optionText[index]
+end
+
 function gui.menuSelectPrevious(self)
   self.selectedIndex=self.selectedIndex-1
-  if self.selectedIndex<1 then 
-    self.selectedIndex=#self.options
+  if self.selectedIndex<1 then
+    self.selectedIndex=#gui.getOptions(self)
   end
 end
 
 function gui.menuSelectNext(self)
   self.selectedIndex=self.selectedIndex+1
-  if self.selectedIndex>#self.options then 
+  if self.selectedIndex>#gui.getOptions(self) then
     self.selectedIndex=1
   end
 end
 
 function gui.menuHandleChoice(self)
-  if self.handleSelect~=nil then 
+  if self.handleSelect then
+    local optionsText=gui.getOptions(self)
     local index=self.selectedIndex
-    local text=self.options[index]
-    self:handleSelect() 
+    local text=optionsText[index]
+    self:handleSelect(index,text)
   end
 end
 
 function gui.menuHandleBack(self)
   if self.handleBack~=nil then 
+    local optionsText=gui.getOptions(self)
     local index=self.selectedIndex
-    local text=self.options[index]
-    self:handleBack() 
+    local text=optionsText[index]
+    self:handleBack(index,text)
   end
 end
   

@@ -58,6 +58,7 @@ echo buildVersion=%VERSION%>conf.lua
 echo inbrowser=%INBROWSER%>>conf.lua
 echo resolution=%RESOLUTION%>>conf.lua
 echo fullscreen=%FULLSCREEN%>>conf.lua
+echo release=true>>conf.lua
 echo function love.conf(t)>>conf.lua
 echo  t.console=true>>conf.lua
 echo end>>conf.lua
