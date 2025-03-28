@@ -40,7 +40,6 @@ local startWithKeyboard="Press Escape to start"
 local startWithJoystick="Press A on your controller to start\n"..
                         "or press Start to bring up the menu."
 
-
 aspect=0.5625
 love.window.setTitle(gameTitle)
 flags={}
@@ -495,7 +494,7 @@ function love.gamepadreleased(joystick,button)
 end
 
 function love.gamepadaxis(joystick, axis, value)
-  print("gamepadaxis axis,value",axis,value)
+  -- print("gamepadaxis axis,value",axis,value)
   joystate[joystick][axis]=value
   if axis=="leftx" or axis=="lefty" then
     joystate[joystick].leftAngle=getJoystickAngle(joystick:getGamepadAxis("leftx"),joystick:getGamepadAxis("lefty"))
@@ -507,7 +506,27 @@ function love.gamepadaxis(joystick, axis, value)
     joystate[joystick].vxright=joystick:getGamepadAxis("rightx")
     joystate[joystick].vyright=joystick:getGamepadAxis("righty")
   end
-  -- drawJoystickToCanvas(canvas)
+
+  -- adjust the direction the 8-direction player sprite faces
+  local player=world.players[currentPlayer]
+  local deg=math.deg(joystate[joystick].leftAngle)
+  if deg>=0 and deg<=20 or deg>=340 then
+    player.direction="up"
+  elseif deg>=25 and deg<=65 then
+    player.direction="upright"
+  elseif deg>=70 and deg<=110 then
+    player.direction="right"
+  elseif deg>=115 and deg<=155 then
+    player.direction="downright"
+  elseif deg>=160 and deg<=200 then
+    player.direction="down"
+  elseif deg>=205 and deg<=245 then
+    player.direction="downleft"
+  elseif deg>=250 and deg<=290 then
+    player.direction="left"
+  elseif deg>=295 and deg<=335 then
+    player.direction="upleft"
+  end
 end
 
 function getJoystickAngle(jx,jy)
