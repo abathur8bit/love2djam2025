@@ -1,4 +1,5 @@
 io.stdout:setvbuf("no")
+package.path=package.path..";../?.lua;../?/init.lua;../lib/?.lua;../lib/?/init.lua"
 for a in pairs(arg) do print("a="..a) end
 
 local math=math
@@ -9,6 +10,8 @@ local anim8=require "lib.anim8"
 local windfield=require "lib.windfield"
 local flux=require "lib.flux"
 local gui=require "lib.gui"
+local axjoy=require "lib.axjoystick"
+local axmath=require "lib.axmath"
 
 require "world"
 require "player"
@@ -21,14 +24,23 @@ require "playerpanel"
 require "generator"
 
 math.randomseed(os.time())
-math.random()math.random()math.random()
+math.random() math.random() math.random()
 
 version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
 startMap="map-01"
-  
+
+local instructions={
+  keyboard={start="Press Escape to start",playAgain="Press Escape to try again",filename="assets/instructionsKeyboard.png",image=nil},
+  joystick={start="Plress A to start",playAgain="Press A to try again",filename="assets/instructionsJoystick.png",image=nil}
+}
+local startWithKeyboard="Press Escape to start"
+local startWithJoystick="Press A on your controller to start\n"..
+                        "or press Start to bring up the menu."
+
+
 aspect=0.5625
 love.window.setTitle(gameTitle)
 flags={}
@@ -37,7 +49,7 @@ flags.borderless=false
 if fullscreen then flags.borderless=true end
 if fullscreen then flags.borderless=true end
 flags.fullscreentype="desktop"
-flags.display=1
+if not release then flags.display=2 end
 
 love.window.setMode(resolution,resolution*aspect,flags) 
 love.graphics.scale(2,2)
@@ -56,8 +68,9 @@ fontNormalColor=gui.createColor(1,0,0)
 fontSelectedColor=gui.createColor(1,1,0)
 logoImage=love.graphics.newImage("assets/coder8bit.png")
 logo={x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
+local degreeTable=axmath.degreeTable(5)
 
-gameModes={title=1,playing=2,dead=3,betweenLevels=4,winner=5}
+gameModes={title=1,playing=2,dead=3,betweenLevels=4,winner=5,help=6}
 
 -- music and sound
 musicLevels={
@@ -96,7 +109,7 @@ sfx={
 }
 
 
-menuOptions=nil
+optionsMenu=nil
 activeMenu=nil
 mainMenu={}
 
@@ -110,9 +123,16 @@ local mapToLoad=nil
 local nextLevelNumber=1
 local waitForKeyUp=false
 local numPlayers=1
-if soundOkay==nil then soundOkay=true end
-if musicOkay==nil then musicOkay=true end
-local options={debug=true,showExtras=false,collideWalls=true,sound=soundOkay,music=musicOkay}
+local currentJoystate=nil
+local joystate={}
+local options={
+  music={name="Music",visible=true,active=musicOkay},
+  sound={name="Sound",visible=true,active=true},
+  showExtras={name="Show Extras",visible=true,active=false},
+  collideWalls={name="Collide Walls",visible=true,active=true},
+  -- collision={name="Collision Detection",visible=true,active=false},
+}
+
 local currentPlayer=1
 local thePlayer=createPlayer (nil,1,0,0,96,96,"assets/Player 1 Wizardsprites-sheet.png")
 -- where players spawn
@@ -137,19 +157,20 @@ function fireBullet(player,dt)
     playSfx(sfx.shoot)
     
     player.fireRateTimer=0
-    if love.mouse.isDown(1) then
-      local distance=96/2-5 -- a little away from the edge of the player
-      local x=player.x
-      local y=player.y
+    local distance=96/2-5 -- a little away from the edge of the player
+    local x=player.x
+    local y=player.y
+    if player.joystate then
+      local dx=player.joystate.vxright*distance
+      local dy=player.joystate.vyright*distance
+      world:addShape(createBullet(world,player,x+dx,y+dy,player.joystate.rightAngle,player.color))
+    elseif love.mouse.isDown(1) then
       local mx, my = cam:worldCoords(love.mouse.getPosition())
       local angle = math.atan2(my - player.y, mx - player.x)+1.57080
       local dx=math.sin(angle)*distance
       local dy=-math.cos(angle)*distance
       world:addShape(createBullet(world,player,x+dx,y+dy,angle,player.color))
     else
-      local distance=96/2-5 -- a little away from the edge of the player
-      local x=player.x
-      local y=player.y
       local angle=player.angle
       local dx=math.sin(angle)*distance
       local dy=-math.cos(angle)*distance
@@ -180,10 +201,6 @@ function love.load(args)
     fontInfo.font=love.graphics.newImageFont(fontInfo.filename,fontCharacters)
   end
   
-  
-  local joysticks=love.joystick.getJoysticks()
-  joystick=joysticks[1]
-  
   love.graphics.setLineStyle("rough");
 
   local y1=screenHeight/2-fontSheets.small.font:getHeight()/2
@@ -196,9 +213,9 @@ function love.load(args)
       "Dr. Tune\n"..
       "Afterlite",
     font=fontSheets.small.font}
-  startText={x=-1000,y=y1,text="Press Escape to start",font=fontSheets.small.font}
-  instructionText={x=-1400,y=y2,text="Use your arrow keys",font=fontSheets.small.font}
-  
+  startText={x=-1000,y=y1,text=startWithKeyboard,font=fontSheets.small.font}
+  instructionText={x=-1400,y=y2,text="",font=fontSheets.small.font}
+
   flux.to(titleText,0.5,{x=10,y=10}):oncomplete(titleTweenComplete)
   flux.to(creditText,0.5,{x=10,y=titleText.y+titleText.font:getHeight()+offset})
   flux.to(version,0.5,{x=0,y=screenHeight-fontSheets.small.font:getHeight()})
@@ -211,15 +228,15 @@ function love.load(args)
   local menuWindowed=false
   mainMenu=gui.createMenu(
     nil,
-    {"Play","Options","Quit"},
+    {"Play","Help","Options","Quit"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
-    handleMainMenu,nil,
+    handleMainMenu,handleMainMenuBack,
     fontSheets.medium.font)
-  menuOptions=gui.createMenu(
-    nil,
-    {"Back"},
-    x,y,w,h,menuWindowed,
+  optionsMenu=gui.createMenu(
+    "OPTIONS",
+    buildOptionsMenu,
+    x,y,w,h,false,
     fontNormalColor,fontSelectedColor,
     handleOptionsMenu,handleOptionsMenuBack,
     fontSheets.medium.font)
@@ -345,100 +362,157 @@ function handleMainMenu(menu)
 --  print("handle menu called with menu",index,text)
   if text=="Quit" then
     love.event.quit() -- user selected quit
+  elseif index==3 then
+    activeMenu=optionsMenu
   elseif index==2 then
-    updateOptionMenuItems()
-    activeMenu=menuOptions
+    currentGameMode=gameModes.help
+    activeMenu=nil
   elseif index==1 then
     activeMenu=nil  --close menu
     currentGameMode=gameModes.playing
-      stopMusic(music.title)
-      playMusic(music.ingame)
+    stopMusic(music.title)
+    playMusic(music.ingame)
   end
 end
 
-function updateOptionMenuItems()
-  menuOptions.options={}
-  for key,value in pairs(options) do
-    local menuText=key..": "..(value==true and "yes" or "no")
-    table.insert(menuOptions.options,menuText)
-  end
-  table.insert(menuOptions.options,"Back")
+function handleMainMenuBack(menu)
+  activeMenu=nil
 end
 
 function handleOptionsMenu(menu)
   local index=menu.selectedIndex
-  local text=menu.options[index]
-  if text=="Back" then
-    activeMenu=mainMenu
-    return
-  end
-
-  -- map the keys to an index so we can utilize the selected index
-  local keys={}
-  local i=1
-  for key in pairs(options) do
-    keys[i]=key
-    i=i+1
-  end
-  local selectedKey=keys[index]
-  if options[selectedKey]==true then
-    options[selectedKey]=false
-  else 
-    options[selectedKey]=true
-  end
-
-  if options.music==false then
-    for key,musicInfo in pairs(music) do
-      love.audio.stop(musicInfo.music)
+  local text=menu:getOptions(index)
+  print("options menu text",text)
+  for key,value in pairs(options) do
+    if string.find(text,value.name) then
+      if value.active then 
+        value.active=false
+      else 
+        value.active=true
+      end
     end
   end
-  updateOptionMenuItems()
-
+  if options.music.active==false then stopAllMusic() end
 end
 
 function handleOptionsMenuBack(menu) 
-  local index=menu.selectedIndex
-  local text=menu.options[index]
   activeMenu=mainMenu
 end
 
 function love.keypressed(key)
   local player=world.players[currentPlayer]
-  if currentGameMode==gameModes.dead then
-    if key == "escape" then
-      nextLevelNumber=1
-      player:reset()
-      currentGameMode=gameModes.playing
-      loadLevel(startMap)
-    end
-  elseif currentGameMode==gameModes.winner then
-    if key == "escape" then
-      nextLevelNumber=1
-      player:reset()
-      currentGameMode=gameModes.playing
-      loadLevel(startMap)
-    end
+  if activeMenu then
+    activeMenu:keypressed(key)
   else
-    if key == "escape" then 
-      if activeMenu==nil then
-        playSfx(sfx.menuOpen)
-        activeMenu=mainMenu 
-      else
-        activeMenu=nil  --close menu
-        playSfx(sfx.menuBack)
+    if currentGameMode==gameModes.help then
+      currentGameMode=gameModes.playing
+      activeMenu=mainMenu
+    elseif currentGameMode==gameModes.dead or currentGameMode==gameModes.winner then
+      if key == "escape" then
+        nextLevelNumber=1
+        player:reset()
+        currentGameMode=gameModes.playing
+        loadLevel(startMap)
+      end
+    else
+      if key == "escape" then 
+        if activeMenu==nil then
+          playSfx(sfx.menuOpen)
+          activeMenu=mainMenu 
+        else
+          activeMenu=nil  --close menu
+          playSfx(sfx.menuBack)
+        end
+      end
+      if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
+        player:usePowerup(key)
+      end
+      -- TODO lee remove after testing
+      if key=="m" then
+        world:addMonster(createMonster(world,1,player.x+000,player.y+100,64,64,"assets/helmet.png","monster1","basic_ranger"))
+      end
+      if key=="k" then
+        player.health=5
       end
     end
-    if (key=="1" or key=="2") and currentGameMode==gameModes.playing then
-      player:usePowerup(key)
-    end
-    -- TODO lee remove after testing
-    if key=="m" then
-      world:addMonster(createMonster(world,1,player.x+000,player.y+100,64,64,"assets/helmet.png","monster1","basic_ranger"))
-    end
-    if key=="k" then
-      player.health=5
+  end
+end
+
+function love.joystickadded(joystick)
+  print("joystick added >",joystick:getName(),"< >",joystick:getID(),"<")
+  joystate[joystick]=axjoy.createJoystickState(joystick,joystick:getID())
+  thePlayer.joystate=joystate[joystick]
+  currentJoystate=joystate[joystick]
+  startText.text=startWithJoystick
+end
+
+function love.joystickremoved(joystick)
+  print("joystick removed >",joystick:getName(),"< >",joystick:getID(),"<")
+  currentJoystate=nil 
+  thePlayer.joystate=nil
+  startText.text=startWithKeyboard
+end
+
+function love.gamepadpressed(joystick,button)
+  print("press button joystick,button",joystick:getName(),button)
+  joystate[joystick][button]=true
+  if activeMenu then 
+    activeMenu:gamepadpressed(joystick,button)
+  else
+    local player=world.players[currentPlayer]
+    if currentGameMode==gameModes.help then
+      currentGameMode=gameModes.playing
+      activeMenu=mainMenu
+    elseif currentGameMode==gameModes.title then
+      if button=="start" then 
+        activeMenu=mainMenu 
+      elseif button=="a" then
+        currentGameMode=gameModes.playing
+        stopMusic(music.title)
+        playMusic(music.ingame)
+      end
+    elseif currentGameMode==gameModes.playing then
+      if button=="start" then 
+        activeMenu=mainMenu 
+      elseif button=="leftshoulder" then
+        player:usePowerup("1")
+      elseif button=="rightshoulder" then
+        player:usePowerup("2")
+      end
+    elseif currentGameMode==gameModes.winner or currentGameMode==gameModes.dead and button=="a" then
+      nextLevelNumber=1
+      player:reset()
+      currentGameMode=gameModes.playing
+      loadLevel(startMap)
     end
   end
+end
+
+function love.gamepadreleased(joystick,button)
+  joystate[joystick][button]=false
+  print("release button joystick,button",joystick:getName(),button)
+end
+
+function love.gamepadaxis(joystick, axis, value)
+  print("gamepadaxis axis,value",axis,value)
+  joystate[joystick][axis]=value
+  if axis=="leftx" or axis=="lefty" then
+    joystate[joystick].leftAngle=getJoystickAngle(joystick:getGamepadAxis("leftx"),joystick:getGamepadAxis("lefty"))
+    joystate[joystick].vxleft=joystick:getGamepadAxis("leftx")
+    joystate[joystick].vyleft=joystick:getGamepadAxis("lefty")
+    end
+  if axis=="rightx" or axis=="righty" then
+    joystate[joystick].rightAngle=getJoystickAngle(joystick:getGamepadAxis("rightx"),joystick:getGamepadAxis("righty"))
+    joystate[joystick].vxright=joystick:getGamepadAxis("rightx")
+    joystate[joystick].vyright=joystick:getGamepadAxis("righty")
+  end
+  -- drawJoystickToCanvas(canvas)
+end
+
+function getJoystickAngle(jx,jy)
+  local angle=(math.atan2(jy,jx)+1.57080) % (2 * math.pi) --adjust by 90 deg and ensure in range of 0 thru 2PI
+  local deg=math.deg(angle) --rad2deg
+  return math.rad(axmath.snapDegree(deg,degreeTable))
 end
 
 function love.update(dt)
@@ -464,7 +538,7 @@ function love.update(dt)
       checkCollisions(world.map)
       world:update(dt)
       handlePlayerCameraMovement(world.map, dt)
-      if player.firing then
+      if isPlayerFiring(player) then
         fireBullet(player,dt)
       end
 
@@ -472,6 +546,21 @@ function love.update(dt)
       if player.health<=0 then playerDeath() end
     end
   end
+end
+
+function isPlayerFiring(player)
+  if player.joystate then 
+    local vx=player.joystate.vxright
+    local vy=player.joystate.vyright
+    if math.abs(vx)<0.5 then vx=0 end
+    if math.abs(vy)<0.5 then vy=0 end
+    if vx~=0 or vy~=0 then
+      return true
+    end
+  elseif player.firing then
+    return true 
+  end
+  return false
 end
 
 function handlePlayerCameraMovement(map, dt)
@@ -512,7 +601,7 @@ function checkPlayerCollisions(map)
       local number=hitboxNumber --using hitboxNumber in for loop seems to go out of scope, or assigning to local var
       if hitbox.type=="wall" or hitbox.type=="door" then
         -- print("collision with wall or door hitbox id,name,active,type,name,number",hitbox.id,hitbox.name,hitbox.active,hitbox.type,hitboxName,number)
-        if options.collideWalls then
+        if options.collideWalls.active then
           -- bump player back as they hit a wall
           player.x=player.x+delta.x
           player.y=player.y+delta.y
@@ -657,7 +746,7 @@ function loadLevel(mapName)
 
   world:addPlayer (thePlayer)
   createObjects(world.map)
-  if inbrowser==false and options.music==true then
+  if inbrowser==false and options.music.active==true then
     stopMusic(music.ingame)
     local filename=musicLevels[nextLevelNumber]
     music.ingame.music=love.audio.newSource(filename,"static")
@@ -737,15 +826,6 @@ function readInput(dt)
   if love.keyboard.isDown("space") or love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") or love.keyboard.isDown("return") then 
     keystate.buttonA=true 
   end
-  
-  if activeMenu ~= nil then
---    activeMenu:update(dt)
-    activeMenu:keystate(keystate)
-  else 
---    if currentMode==gameModes.playing then 
---        -- some play logic
---    end
-  end
 end
 
 function processInput()
@@ -792,6 +872,8 @@ function love.draw()
     local red,green,blue=22/255,103/255,194/255 -- a dark cyan
     love.graphics.clear(red,green,blue,1)
     activeMenu:draw()
+  elseif currentGameMode==gameModes.help then
+    drawHelp()
   elseif currentGameMode==gameModes.title then
     drawTitle()
   elseif currentGameMode==gameModes.betweenLevels then
@@ -803,9 +885,19 @@ function love.draw()
   else
     drawGame()
   end
-  if options.showExtras then
+  if options.showExtras.active then
     gui.crosshair(screenWidth/2,screenHeight/2,1,0,0,1,true)
   end
+end
+
+function drawHelp()
+  love.graphics.setColor(1,0,0,1)
+  local player=world.players[currentPlayer]
+  local img=nil
+  local inst=instructions.keyboard
+  if player.joystate then inst=instructions.joystick end
+  if inst.image==nil then inst.image=love.graphics.newImage(inst.filename) end
+  love.graphics.draw(inst.image,screenWidth/2-inst.image:getWidth()/2,screenHeight/2-inst.image:getHeight()/2)
 end
 
 function drawGameOver()
@@ -820,7 +912,11 @@ function drawGameOver()
   gui.centerText("GAME OVER",x,y-height)
   gui.centerText("SCORE: "..player.score,x,y)
   love.graphics.setFont(fontSheets.small.font)
-  gui.centerText("Press Escape to try again",x,y+height)
+  local text=instructions.keyboard.playAgain
+  if currentJoystate then
+    text=instructions.joystick.playAgain
+  end
+  gui.centerText(text,x,y+height)
 end
 
 function drawWinner()
@@ -835,7 +931,11 @@ function drawWinner()
   gui.centerText("YOU WIN",x,y-height)
   gui.centerText("SCORE: "..player.score,x,y)
   love.graphics.setFont(fontSheets.small.font)
-  gui.centerText("Press Escape to play again",x,y+height)
+  local text=instructions.keyboard.playAgain
+  if currentJoystate then
+    text=instructions.joystick.playAgain
+  end
+  gui.centerText(text,x,y+height)
 end
 
 function drawTransition()
@@ -852,20 +952,27 @@ function drawGame()
   love.graphics.setColor(1, 1, 1)
   cam:attach()
     world:draw()
-    if options.showExtras then
+    if options.showExtras.active then
       gui.crosshair(player.x,player.y,player.color:components())
       drawTriggers(world.map)
     end
-    drawTarget(player,cam:worldCoords(love.mouse.getPosition()))
+    if not player.joystate then
+      drawMouseTarget(player,cam:worldCoords(love.mouse.getPosition()))
+    end
   cam:detach()
   drawPlayerInfo(player)
+  if currentJoystate and options.showExtras.active then
+    print("showing the joystate velocity")
+    love.graphics.setColor(1,1,0,1)
+    love.graphics.print(string.format("vx,vy=%f,%f",currentJoystate.vxleft,currentJoystate.vyleft),0,0)
+  end
 end
 
 -- draw the mouse target
-function drawTarget(player,x,y)
+function drawMouseTarget(player,x,y)
   local r=15
   love.graphics.setColor(1,1,1,0.5)
-  if options.showExtras then 
+  if options.showExtras.active then 
     love.graphics.line(player.x,player.y,cam:worldCoords(love.mouse.getPosition()))
   end
   love.graphics.setLineWidth(3)
@@ -984,29 +1091,52 @@ function dumpTable(t,name)
 end
 
 function stopSfx(media)
-  if inbrowser==false and options.sound==true then
+  if inbrowser==false and options.sound.active==true then
     media.sfx:stop()
   end
 end
 
+function stopAllSound()
+
+end
+
 function playSfx(media)
-  if inbrowser==false and options.sound==true then
+  if inbrowser==false and options.sound.active==true then
     media.sfx:stop()  -- if it's already playing stop it
     media.sfx:play()  -- play the sfx
   end
 end
 
 function stopMusic(media)
-  if inbrowser==false and options.music==true then
+  if inbrowser==false and options.music.active==true then
     media.music:stop()
   end
 end
 
 function playMusic(media)
-  if inbrowser==false and options.music==true then
+  if inbrowser==false and options.music.active==true then
     media.music:stop()
     media.music:play()
     media.music:setVolume(0.5)
   end
 end
 
+function stopAllMusic()
+  for k,v in pairs(music) do
+    v.music:stop()
+  end
+end
+
+
+function buildOptionsMenu()
+  local items={}
+  for key,value in pairs(options) do
+    if value.visible then
+      local menuText=value.name..": "..(value.active and "yes" or "no")
+      table.insert(items,menuText)
+    end
+  end
+  table.sort(items,function(a,b) return a<b end)
+  -- for _,name in pairs(items) do print("options menu name",name) end -- show the options
+  return items
+end

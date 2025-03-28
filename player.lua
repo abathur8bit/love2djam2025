@@ -34,6 +34,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
+  s.joystate=nil
   s.firing=false
   s.speed=300
   s.fireRate=0.2
@@ -104,35 +105,44 @@ function updatePlayer(self,dt)
     stopSfx(sfx.footsteps)
   end
 
-  if self.keypressed == true then
-    if self.direction=="up" then 
-      self.y=self.y-self.speed*dt
-      self.angle=0
-    elseif self.direction=="down" then
-      self.y=self.y+self.speed*dt
-      self.angle=180*math.pi/180
-    elseif self.direction=="right" then
-      self.x=self.x+self.speed*dt
-      self.angle=90*math.pi/180
-    elseif self.direction=="left" then
-      self.x=self.x-self.speed*dt
-      self.angle=270*math.pi/180
-    elseif self.direction=="upleft" then 
-      self.x=self.x-self.speed*dt
-      self.y=self.y-self.speed*dt
-      self.angle=315*math.pi/180
-    elseif self.direction=="upright" then
-      self.x=self.x+self.speed*dt
-      self.y=self.y-self.speed*dt
-      self.angle=45*math.pi/180
-    elseif self.direction=="downright" then
-      self.x=self.x+self.speed*dt
-      self.y=self.y+self.speed*dt
-      self.angle=135*math.pi/180
-    elseif self.direction=="downleft" then
-      self.x=self.x-self.speed*dt
-      self.y=self.y+self.speed*dt
-      self.angle=225*math.pi/180
+  if self.joystate~=nil then
+    local vx=self.joystate.vxleft
+    local vy=self.joystate.vyleft
+    if math.abs(vx)<0.15 then vx=0 end
+    if math.abs(vy)<0.15 then vy=0 end
+    self.x=self.x+vx*self.speed*dt
+    self.y=self.y+vy*self.speed*dt
+  else
+    if self.keypressed == true then
+      if self.direction=="up" then 
+        self.y=self.y-self.speed*dt
+        self.angle=0
+      elseif self.direction=="down" then
+        self.y=self.y+self.speed*dt
+        self.angle=180*math.pi/180
+      elseif self.direction=="right" then
+        self.x=self.x+self.speed*dt
+        self.angle=90*math.pi/180
+      elseif self.direction=="left" then
+        self.x=self.x-self.speed*dt
+        self.angle=270*math.pi/180
+      elseif self.direction=="upleft" then 
+        self.x=self.x-self.speed*dt
+        self.y=self.y-self.speed*dt
+        self.angle=315*math.pi/180
+      elseif self.direction=="upright" then
+        self.x=self.x+self.speed*dt
+        self.y=self.y-self.speed*dt
+        self.angle=45*math.pi/180
+      elseif self.direction=="downright" then
+        self.x=self.x+self.speed*dt
+        self.y=self.y+self.speed*dt
+        self.angle=135*math.pi/180
+      elseif self.direction=="downleft" then
+        self.x=self.x-self.speed*dt
+        self.y=self.y+self.speed*dt
+        self.angle=225*math.pi/180
+      end
     end
   end
 

@@ -1,7 +1,9 @@
-buildVersion="1.00"
+buildVersion="1.01"
 inbrowser=false
 resolution=1600
-fullscreen=true
+fullscreen=false
+release=true
+musicOkay=false
 function love.conf(t)
  t.console=true
 end
