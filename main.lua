@@ -130,7 +130,7 @@ local options={
   music={name="Music",visible=true,active=musicOkay},
   sound={name="Sound",visible=true,active=true},
   showExtras={name="Show Extras",visible=true,active=false},
-  collideWalls={name="Collide Walls",visible=true,active=true},
+  collideWalls={name="Wall Collision",visible=true,active=true},
   -- collision={name="Collision Detection",visible=true,active=false},
 }
 
