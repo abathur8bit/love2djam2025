@@ -125,6 +125,7 @@ local waitForKeyUp=false
 local numPlayers=1
 local currentJoystate=nil
 local joystate={}
+if musicOkay==nil then musicOkay=true end  -- optionally defined in conf
 local options={
   music={name="Music",visible=true,active=musicOkay},
   sound={name="Sound",visible=true,active=true},
