@@ -40,6 +40,7 @@ local startWithJoystick="Press A on your controller to start\n"..
                         "or press Start to bring up the menu."
 
 aspect=0.5625
+-- aspect=0.79365079365079365079365079365079  --aspect for itch.io screen shots
 love.window.setTitle(gameTitle)
 flags={}
 flags.fullscreen=fullscreen
