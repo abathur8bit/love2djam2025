@@ -29,6 +29,12 @@ function axmath.degree2radianTable(step)
   return radians
 end
 
+--[[
+Creates a table of values from 0 thru 359, optionally stepping every step values. 
+I use this to create a smaller set of degree values that a joystick can use, and
+use this table when I call snapDegree. Remember you can use math.rad(degree) to 
+convert from degrees to radians.
+]]--
 function axmath.degreeTable(step)
   local degrees={}
   local deg=0
