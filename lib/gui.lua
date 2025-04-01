@@ -43,6 +43,20 @@ function gui.createColor255(red,green,blue,alpha)
   return gui.createColor(red/255,green/255,blue/255,alpha/255)
 end
 
+-- Convert a hex color like "FFFFFF" to 255,255,255. Also treats "FFF" or "111" as "FFFFFF" or "111111".
+function gui.hex2decColor(hex)
+  assert(string.len(hex)==3 or string.len(hex)==6,"Hex value must be 3 or 6 characters long")  -- must be in format "FFF" or "FFFFFF"
+  if string.len(hex)==6 then
+    r=tonumber(string.sub(hex,1,2),16)
+    g=tonumber(string.sub(hex,3,4),16)
+    b=tonumber(string.sub(hex,5,6),16)
+  elseif string.len(hex)==3 then
+    r=tonumber(string.sub(hex,1,1)..string.sub(hex,1,1),16)
+    g=tonumber(string.sub(hex,2,2)..string.sub(hex,2,2),16)
+    b=tonumber(string.sub(hex,3,3)..string.sub(hex,3,3),16)
+  end
+  return r,g,b
+end
 
 -- Center text at the given point. 
 function gui.centerText(text,x,y,centerVertically)
