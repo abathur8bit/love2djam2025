@@ -410,7 +410,6 @@
   </object>
  </objectgroup>
  <objectgroup id="6" name="triggers">
-  <object id="4" name="door-01" x="2016" y="544" width="160" height="64"/>
   <object id="5" name="key-01" x="2080" y="352" width="32" height="32"/>
   <object id="15" name="door-01" x="1984" y="544" width="192" height="64"/>
   <object id="16" name="door-02" x="2304" y="544" width="192" height="64"/>

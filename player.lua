@@ -9,7 +9,8 @@ function createPlayer(world,id,x,y,w,h,filename)
   if id==3 then color=gui.createColor(221,229,235,1) end
   if id==4 then color=gui.createColor(243,214,18,1) end
 
-  local s=shape.createShape(x,y,w,h,0,color)
+  local s=shape.createShape(x,y,24,24,0,color)
+  s.scale=2
   s.type="player"
   s.id=id
   s.world=world
@@ -36,7 +37,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.keyPressed=false
   s.joystate=nil
   s.firing=false
-  s.speed=300
+  s.speed=150
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
   s.powerups=0
@@ -47,23 +48,23 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.firePowerDelay={5,10,20}
   s.anims={}
   s.anims.idle={}
-  s.anims.idle.up        = anim8.newAnimation(s.grid(21,1),0.15)
-  s.anims.idle.down      = anim8.newAnimation(s.grid(17,1),0.15)
-  s.anims.idle.right     = anim8.newAnimation(s.grid(29,1),0.15)
-  s.anims.idle.left      = anim8.newAnimation(s.grid(25,1),0.15)
-  s.anims.idle.upleft    = anim8.newAnimation(s.grid(13,1),0.15)
-  s.anims.idle.upright   = anim8.newAnimation(s.grid(9,1),0.15)
-  s.anims.idle.downright = anim8.newAnimation(s.grid(1,1),0.15)
-  s.anims.idle.downleft  = anim8.newAnimation(s.grid(5,1),0.15)
+  s.anims.idle.up        = anim8.newAnimation(s.grid(1,1),0.15)
+  s.anims.idle.down      = anim8.newAnimation(s.grid(1,5),0.15)
+  s.anims.idle.right     = anim8.newAnimation(s.grid(1,3),0.15)
+  s.anims.idle.left      = anim8.newAnimation(s.grid(1,1),0.15)
+  s.anims.idle.upleft    = anim8.newAnimation(s.grid(1,8),0.15)
+  s.anims.idle.upright   = anim8.newAnimation(s.grid(1,2),0.15)
+  s.anims.idle.downright = anim8.newAnimation(s.grid(1,4),0.15)
+  s.anims.idle.downleft  = anim8.newAnimation(s.grid(1,6),0.15)
   s.anims.walk={}
-  s.anims.walk.up        = anim8.newAnimation(s.grid('21-24',1),0.15)
-  s.anims.walk.down      = anim8.newAnimation(s.grid('17-20',1),0.15)
-  s.anims.walk.right     = anim8.newAnimation(s.grid('29-32',1),0.15)
-  s.anims.walk.left      = anim8.newAnimation(s.grid('25-28',1),0.15)
-  s.anims.walk.upleft    = anim8.newAnimation(s.grid('13-16',1),0.15)
-  s.anims.walk.upright   = anim8.newAnimation(s.grid('9-12',1),0.15)
-  s.anims.walk.downright = anim8.newAnimation(s.grid('1-4',1),0.15)
-  s.anims.walk.downleft  = anim8.newAnimation(s.grid('5-8',1),0.15)
+  s.anims.walk.up        = anim8.newAnimation(s.grid('1-3',1, 2,1),0.15)
+  s.anims.walk.down      = anim8.newAnimation(s.grid('1-3',5, 2,5),0.15)
+  s.anims.walk.right     = anim8.newAnimation(s.grid('1-3',3, 2,3),0.15)
+  s.anims.walk.left      = anim8.newAnimation(s.grid('1-3',7, 2,7),0.15)
+  s.anims.walk.upleft    = anim8.newAnimation(s.grid('1-3',8, 2,8),0.15)
+  s.anims.walk.upright   = anim8.newAnimation(s.grid('1-3',2, 2,2),0.15)
+  s.anims.walk.downright = anim8.newAnimation(s.grid('1-3',4, 2,4),0.15)
+  s.anims.walk.downleft  = anim8.newAnimation(s.grid('1-3',6, 2,6),0.15)
   s.current=s.anims[s.animType][s.direction]
 
   s.incPowerups=incPowerups
@@ -78,8 +79,11 @@ function resetPlayer(self)
 end
 
 function createPlayerHitbox(self)
-  local xa,ya,wa,ha=self:adjustRect(50,8)
-  self.hitbox=self.world:createHitbox(xa,ya,wa,ha,self.type,self.id,self.type,self)
+  -- local xa,ya,wa,ha=self:adjustRect(50,8)
+  -- self.hitbox=self.world:createHitbox(xa,ya,wa,ha,self.type,self.id,self.type,self)
+  local w=self.w*self.scale
+  local h=self.h*self.scale
+  self.hitbox=self.world:createHitbox(self.x-w-w,self.y-h,w,h,self.type,self.id,self.type,self)
 end
 
 function incPowerups(self)
@@ -170,7 +174,7 @@ end
 
 function drawPlayer(self)
   love.graphics.setColor(1,1,1,1)
-  self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w/2,self.h/2)
+  self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w*self.scale/2,self.h*self.scale/2)
 end
 
 function usePowerup(self,type)

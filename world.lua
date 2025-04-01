@@ -396,8 +396,8 @@ end
 function drawWorld(self)
   love.graphics.setColor(1, 1, 1)
   self.map:drawLayer(self.map.layers["ground"])
-  self.map:drawLayer(self.map.layers["coloring"])
-  self.map:drawLayer(self.map.layers["decorations"])
+  if self.map.layers["coloring"] then self.map:drawLayer(self.map.layers["coloring"]) end
+  if self.map.layers["decorations"] then self.map:drawLayer(self.map.layers["decorations"]) end
   love.graphics.setColor(1,1,1,1)
   for i,s in ipairs(self.shapes) do 
     s:draw() 

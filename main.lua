@@ -21,6 +21,7 @@ require "door"
 require "conf"
 require "playerpanel"
 require "generator"
+require "worm"
 
 math.randomseed(os.time())
 math.random() math.random() math.random()
@@ -29,7 +30,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="map-01"
+startMap="lee-map-32x32"
 
 local instructions={
   keyboard={start="Press Escape to start",playAgain="Press Escape to try again",filename="assets/instructionsKeyboard.png",image=nil},
@@ -134,7 +135,7 @@ local options={
 }
 
 local currentPlayer=1
-local thePlayer=createPlayer (nil,1,0,0,96,96,"assets/Player 1 Wizardsprites-sheet.png")
+local thePlayer=createPlayer (nil,1,0,0,96,96,"assets/redwizard.png")
 -- where players spawn
 local entery={x=-1,y=-1}
 -- rectangle that if touched, will exit the level
@@ -157,7 +158,7 @@ function fireBullet(player,dt)
     playSfx(sfx.shoot)
     
     player.fireRateTimer=0
-    local distance=96/2-5 -- a little away from the edge of the player
+    local distance=player.w*player.scale/2-5 -- a little away from the edge of the player
     local x=player.x
     local y=player.y
     if player.joystate then
@@ -256,6 +257,8 @@ function createObjects(map)
   createGenerators(map)
   world:addVisibility()
   world:addPathfinder()
+  local player=world.players[currentPlayer]
+  world:addShape(createWorm(world,player,player.x,player.y,0,gui.createColor(1,1,1,1)))
 end
 
 function createGenerators(map)

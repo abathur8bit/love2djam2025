@@ -808,19 +808,6 @@ return {
       properties = {},
       objects = {
         {
-          id = 4,
-          name = "door-01",
-          type = "",
-          shape = "rectangle",
-          x = 2016,
-          y = 544,
-          width = 160,
-          height = 64,
-          rotation = 0,
-          visible = true,
-          properties = {}
-        },
-        {
           id = 5,
           name = "key-01",
           type = "",
