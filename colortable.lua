@@ -30,10 +30,11 @@ local htmlHead=[[
 <head>
 <style>
 p {
-  background-color: #9f9f9f; 
+  background-color: rgba(200,200,200,0.3); 
   color: #000000;
-  border: 1px solid black;
+  border: 0px solid black;
   text-transform: uppercase;
+  padding: 2px;
 }
 table {
   border: 2px solid black;
@@ -58,7 +59,7 @@ while i<#colors do
   for td=1,maxCols do
     if i<=#colors then
       local r,g,b=hex2decColor(colors[i])
-      print(string.format("  <td bgcolor='#%s'><p>#%s<br/>%d,%d,%d</p></td>",colors[i],colors[i],r,g,b))
+      print(string.format("  <td bgcolor='#%s'><p>%s<br/>%d,%d,%d</p></td>",colors[i],colors[i],r,g,b))
       i=i+1
     end
   end
