@@ -112,13 +112,6 @@ function updatePlayer(self,dt)
     if math.abs(vy)<0.15 then vy=0 end
     self.x=self.x+vx*self.speed*dt
     self.y=self.y+vy*self.speed*dt
-    if vx==0 and vy==0 then 
-      self.animType="idle" 
-      stopSfx(sfx.footsteps)
-    else  
-      self.animType="walk" 
-      playSfx(sfx.footsteps)
-    end
   else
     if self.keypressed == true then
       if self.direction=="up" then 
