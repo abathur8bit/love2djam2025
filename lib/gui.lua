@@ -1,3 +1,4 @@
+local flux=require "lib.flux"
 local gui = {}
 
 -- Just a widget to hold x,y,w,h,color and have draw and update functions
@@ -107,10 +108,10 @@ end
 -- Call handle() when user hits *enter* or otherwise selects the menu item (ie joystick A, mouse clicked).
 -- Keep in mind that if windowed==true the window should be large enough to hold all menu items
 -- as this isn't calculated.
-function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,selectedColor,handleSelect,handleBack,font)
+function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,selectedColor,handleSelect,handleBack,font,fontLarge)
   if normalColor==nil then normalColor=gui.createColor255(3,251,255) end
   if selectedColor==nil then selectedColor=gui.createColor(1,1,0) end
-
+  if fontLarge==nil then fontLarge=font end
   local w=gui.createWidget(x,y,width,height,"menu")
   w.title=title
   w.options=options
@@ -120,6 +121,7 @@ function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,sele
   w.normalColor=normalColor
   w.selectedColor=selectedColor
   w.font=font
+  w.fontLarge=fontLarge
   w.fontHeight=font:getHeight()
   w.draw=gui.menuDraw
   w.selectNext=gui.menuSelectNext
@@ -131,7 +133,25 @@ function gui.createMenu(title,options,x,y,width,height,windowed,normalColor,sele
   w.keypressed=gui.keypressed         -- user calls
   w.gamepadpressed=gui.gamepadpressed -- user calls
   w.getOptions=gui.getOptions
+  w.activate=gui.activate
+  w.deactivate=gui.deactivate
+  w.update=gui.update
+  w.posStart=love.graphics.getWidth()+400
+  w.posStop=love.graphics.getWidth()/2+100
+  w.x=w.posStop
+  w.y=0
   return w
+end
+
+function gui.activate(self)
+  self.x=self.posStart
+  flux.to(self,0.5,{x=self.posStop,y=self.y}):ease("backinout")
+  return self
+end
+
+function gui.deactivate(self,finished)
+  print("deactivate")
+  flux.to(self,0.5,{x=self.posStart,y=self.y}):ease("backinout"):oncomplete(finished)
 end
 
 function gui.keypressed(self,key)
@@ -152,7 +172,56 @@ end
 -- the menu items will be offset by window.offset which defaults to 50.
 -- Keep that in mind when you specify the window size.
 function gui.menuDraw(self)
+  gui.drawMenu2(self)
+end
+
+function gui.drawMenu2(self)
+  local ydif=5
+  local xdif=-(1/5)
+  local sw=love.graphics.getWidth()
+  local sh=love.graphics.getHeight()
+  local w=sw/2
+  local h=sh
+  local x=self.x
+  local y=0
+  local offset=200
+  local padding=20
+  love.graphics.setColor(0,1,1,0.9)
+  love.graphics.polygon(
+    "fill",
+    x,y+h,
+    x+offset,0,
+    x+w,0,
+    x+w-offset,h
+    )
+
+    x=x+offset+padding
+    y=y+padding
+    if self.fontLarge~=nil then love.graphics.setFont(self.fontLarge) end
+    local color=self.normalColor
+    if self.title~=nil then
+      love.graphics.setColor(color:components())
+      love.graphics.print(self.title,x,y)
+      y=y+self.fontHeight*3
+      x=x+(self.fontHeight*3)*xdif
+    end
+    if self.font~=nil then love.graphics.setFont(self.font) end
+    local optionText=gui.getOptions(self)
+    x=x-padding
+    for k,v in pairs(optionText) do
+      color=self.normalColor
+      if k==self.selectedIndex then color=self.selectedColor end
+      love.graphics.setColor(color:components())
+      love.graphics.print(v,x+padding,y)
+      y=y+self.fontHeight*2
+      x=x+(self.fontHeight*2)*xdif
+    end
+end
+
+function gui.drawMenu1(self)
   if self.visible then
+    local red,green,blue=22/255,103/255,194/255 -- a dark cyan
+    love.graphics.clear(red,green,blue,1)
     local offset=0
     local x=self.x
     local y=self.y

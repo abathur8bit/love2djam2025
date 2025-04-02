@@ -228,19 +228,19 @@ function love.load(args)
   local h=300
   local menuWindowed=false
   mainMenu=gui.createMenu(
-    nil,
+    "MAIN",
     {"Play","Help","Options","Quit"},
     x,y,w,h,menuWindowed,
     fontNormalColor,fontSelectedColor,
     handleMainMenu,handleMainMenuBack,
-    fontSheets.medium.font)
+    fontSheets.medium.font,fontSheets.large.font)
   optionsMenu=gui.createMenu(
     "OPTIONS",
     buildOptionsMenu,
     x,y,w,h,false,
     fontNormalColor,fontSelectedColor,
     handleOptionsMenu,handleOptionsMenuBack,
-    fontSheets.medium.font)
+    fontSheets.medium.font,fontSheets.large.font)
 
 	-- Print version and other info
   print("Window Width : " .. love.graphics.getWidth())
@@ -379,7 +379,8 @@ function handleMainMenu(menu)
 end
 
 function handleMainMenuBack(menu)
-  activeMenu=nil
+  activeMenu:deactivate(function() activeMenu=nil end)  --close menu
+  -- activeMenu=nil
 end
 
 function handleOptionsMenu(menu)
@@ -409,7 +410,7 @@ function love.keypressed(key)
   else
     if currentGameMode==gameModes.help then
       currentGameMode=gameModes.playing
-      activeMenu=mainMenu
+      activeMenu=mainMenu:activate()
     elseif currentGameMode==gameModes.dead or currentGameMode==gameModes.winner then
       if key == "escape" then
         nextLevelNumber=1
@@ -421,7 +422,7 @@ function love.keypressed(key)
       if key == "escape" then 
         if activeMenu==nil then
           playSfx(sfx.menuOpen)
-          activeMenu=mainMenu 
+          activeMenu=mainMenu:activate()
         else
           activeMenu=nil  --close menu
           playSfx(sfx.menuBack)
@@ -891,11 +892,7 @@ function processInput()
 end
 
 function love.draw()
-  if activeMenu ~= nil then
-    local red,green,blue=22/255,103/255,194/255 -- a dark cyan
-    love.graphics.clear(red,green,blue,1)
-    activeMenu:draw()
-  elseif currentGameMode==gameModes.help then
+  if currentGameMode==gameModes.help then
     drawHelp()
   elseif currentGameMode==gameModes.title then
     drawTitle()
@@ -907,6 +904,9 @@ function love.draw()
     drawWinner()
   else
     drawGame()
+  end
+  if activeMenu ~= nil then
+    activeMenu:draw()
   end
   if options.showExtras.active then
     gui.crosshair(screenWidth/2,screenHeight/2,1,0,0,1,true)
