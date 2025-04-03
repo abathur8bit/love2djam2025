@@ -1,13 +1,15 @@
+-- Example Usage: lua colortable.lua > palette.html
+
 -- Create an HTML table with boxes showing the color and color value in hex and decimal
 local maxCols=7
 local colors={
   "000000","5F5F5F","7F7F7F","9F9F9F","BFBFBF","DFDFDF","FFFFFF",
   "3F0000","5F0000","7F0000","9F0000","BF0000","DF0000","FF0000",
   "003F00","005F00","007F00","009F00","00BF00","00DF00","00FF00",
-  "00003F","00005F","00007F","00009F","0000BF","0000DF","0000FF",
   "3F3F00","5F5F00","7F7F00","9F9F00","BFBF00","DFDF00","FFFF00",
   "3F003F","5F005F","7F007F","9F009F","BF00BF","DF00DF","FF00FF",
   "003F3F","005F5F","007F7F","009F9F","00BFBF","00DFDF","00FFFF",
+  "00003F","00005F","00007F","00009F","0000BF","0000DF","0000FF",
 }
 
 -- Convert a hex color like "FFFFFF" to 255,255,255. Also treats "FFF" or "111" as "FFFFFF" or "111111".
@@ -35,6 +37,7 @@ p {
   border: 0px solid black;
   text-transform: uppercase;
   padding: 2px;
+  font-size: small;
 }
 table {
   border: 2px solid black;
@@ -66,4 +69,16 @@ while i<#colors do
   print(" </tr>")
 end
 print("</table>")
+
+-- print gimp palette
+print("<pre>")
+print("GIMP Palette")
+print("Name: LeeRGB")
+print(string.format("Colors: %d",#colors))
+print("#")
+for i,c in pairs(colors) do
+  local r,g,b=hex2decColor(c)
+  print(string.format("%3d\t%3d\t%3d\t#%s",r,g,b,c))
+end
+print("</pre>")
 print(htmlFoot)
