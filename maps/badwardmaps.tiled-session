@@ -1,4 +1,8 @@
 {
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
     "activeFile": "boss.tmx",
     "expandedProjectPaths": [
         "."
@@ -6,6 +10,9 @@
     "fileStates": {
         "": {
             "scaleInDock": 1
+        },
+        "#tileset-04": {
+            "scaleInDock": 3
         },
         "boss.tmx": {
             "expandedObjectLayers": [
@@ -23,17 +30,17 @@
         },
         "map-01.tmx": {
             "expandedObjectLayers": [
-                6,
-                7,
                 4,
                 8,
-                5
+                7,
+                5,
+                6
             ],
             "scale": 0.75,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 2169.333333333333,
-                "y": 1513.3333333333333
+                "x": 2400.6666666666665,
+                "y": 1599.333333333333
             }
         },
         "map-01.tmx#tileset-03": {
@@ -42,15 +49,15 @@
         },
         "map-02.tmx": {
             "expandedObjectLayers": [
-                7,
                 8,
+                7,
                 5
             ],
             "scale": 0.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 1462,
-                "y": 992
+                "x": 2401,
+                "y": 1601
             }
         },
         "map-02.tmx#tileset-03": {
@@ -60,8 +67,8 @@
             "scale": 0.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 1228,
-                "y": 1020
+                "x": 2401,
+                "y": 1601
             }
         },
         "map-03.tmx#tileset-03": {
@@ -69,11 +76,11 @@
         },
         "map-04.tmx": {
             "expandedObjectLayers": [
-                6,
-                7,
+                9,
                 8,
+                7,
                 5,
-                9
+                6
             ],
             "scale": 1.5,
             "selectedLayer": 3,
@@ -89,8 +96,10 @@
     },
     "last.exportedFilePath": "D:/workspace/love2d/love2djam2025/maps",
     "last.imagePath": "D:/workspace/love2d/love2djam2025/maps",
+    "map.height": 100,
     "map.lastUsedExportFilter": "Lua files (*.lua)",
     "map.lastUsedFormat": "tmx",
+    "map.width": 100,
     "openFiles": [
         "map-01.tmx",
         "map-02.tmx",
@@ -106,5 +115,6 @@
         "map-03.tmx",
         "map-04.tmx",
         "boss.tmx"
-    ]
+    ],
+    "tileset.embedInMap": true
 }
