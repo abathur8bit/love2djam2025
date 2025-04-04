@@ -3,8 +3,6 @@ local Grid=require("lib.jumper.grid")
 local Pathfinder=require("lib.jumper.pathfinder")
 local HC=require "lib.HC"
 
-print("STI:", sti._VERSION)
-
 require "shape"
 
 -- create world of width x height pixels in size
@@ -342,6 +340,7 @@ function raytraceGrid(x0, y0, x1, y1)
 end
 
 function addPlayerShape(self,p)
+  print(string.format("adding player id=%d",p.id))
   table.insert(self.players,p)
   addWorldShape(self,p)
 end

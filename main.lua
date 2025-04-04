@@ -1,6 +1,5 @@
 io.stdout:setvbuf("no")
 package.path=package.path..";../?.lua;../?/init.lua;../lib/?.lua;../lib/?/init.lua"
-for a in pairs(arg) do print("a="..a) end
 
 local math=math
 local love=love
@@ -62,6 +61,12 @@ fontSheets={
   medium={filename="assets/wolf-font-sheet.png",font=nil},
   small={filename="assets/wolf-font-sheet-small.png",font=nil}
 }
+playerSheets={
+  {filename="assets/Player 1 Wizardsprites-sheet.png",width=96,height=96},
+  {filename="assets/Player 2 Wizardsprites-sheet.png",width=96,height=96},
+  {filename="assets/Player 3 Wizardsprites-sheet.png",width=96,height=96},
+  {filename="assets/Player 4 Wizardsprites-sheet.png",width=96,height=96},
+}
 fontCharacters= "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
 fontNormalColor=gui.createColor(1,0,0)
 fontSelectedColor=gui.createColor(1,1,0)
@@ -69,7 +74,7 @@ logoImage=love.graphics.newImage("assets/coder8bit.png")
 logo={x=screenWidth-logoImage:getWidth(),y=screenHeight,image=logoImage}
 local degreeTable=axmath.degreeTable(5)
 
-gameModes={title=1,playing=2,dead=3,betweenLevels=4,winner=5,help=6}
+gameModes={title=1,playing=2,dead=3,betweenLevels=4,winner=5,help=6,playerSelect=7}
 
 -- music and sound
 musicLevels={
@@ -81,8 +86,8 @@ musicLevels={
 }
 
 music={
-  title={filename="assets/Intro.mp3",music=nil},
-  ingame={filename="assets/Room 1 (Alt Idle).mp3",music=nil},
+  title={filename="assets/Intro.mp3",music=nil,loop=false},
+  ingame={filename="assets/Room 1 (Alt Idle).mp3",music=nil,loop=true},
   -- combat={filename="assets/Room 1 (Alt Idle).mp3",music=nil},
 }
 sfx={
@@ -122,7 +127,8 @@ local mapToLoad=nil
 local nextLevelNumber=1
 local waitForKeyUp=false
 local numPlayers=1
-local currentJoystate=nil
+local numReady=0
+local confirmedPlayers={false,false,false,false}
 local joystate={}
 if musicOkay==nil then musicOkay=true end  -- optionally defined in conf
 local options={
@@ -134,7 +140,13 @@ local options={
 }
 
 local currentPlayer=1
-local thePlayer=createPlayer (nil,1,0,0,96,96,"assets/Player 1 Wizardsprites-sheet.png")
+local players={
+  createPlayer(nil,1,0,0,playerSheets[1].width,playerSheets[1].height,playerSheets[1].filename),
+  createPlayer(nil,2,0,0,playerSheets[2].width,playerSheets[2].height,playerSheets[2].filename),
+  createPlayer(nil,3,0,0,playerSheets[3].width,playerSheets[3].height,playerSheets[3].filename),
+  createPlayer(nil,4,0,0,playerSheets[4].width,playerSheets[4].height,playerSheets[4].filename)
+}
+
 -- where players spawn
 local entery={x=-1,y=-1}
 -- rectangle that if touched, will exit the level
@@ -185,13 +197,13 @@ function love.load(args)
   -- only load sound and music if we are not in a browser
   if inbrowser==false then
     for key,sfxInfo in pairs(sfx) do
-      print("loading sound "..sfxInfo.filename)
+      -- print("loading sound "..sfxInfo.filename)
       sfxInfo.sfx=love.audio.newSource(sfxInfo.filename,"static")
     end
     for key,musicInfo in pairs(music) do
-      print("loading music "..musicInfo.filename)
+      -- print("loading music filename,loop"..musicInfo.filename,musicInfo.loop)
       musicInfo.music=love.audio.newSource(musicInfo.filename,"static")
-      musicInfo.music:setLooping(true)
+      musicInfo.music:setLooping(musicInfo.loop)
     end
     playMusic(music.title)
   end
@@ -240,12 +252,6 @@ function love.load(args)
     fontNormalColor,fontSelectedColor,
     handleOptionsMenu,handleOptionsMenuBack,
     fontSheets.medium.font,fontSheets.large.font)
-
-	-- Print version and other info
-  print("Window Width : " .. love.graphics.getWidth())
-  print("Window Height: " .. love.graphics.getHeight())
-
-  loadLevel(startMap)
 end
 
 function createObjects(map)
@@ -328,6 +334,7 @@ function createExits(map)
   end
 end
 
+-- return x,y that indicates the point players should spawn from
 function findPlayerSpawnPoint(map)
   if map.layers["enter_exit"].objects then
     print("enter exit layer found")
@@ -401,12 +408,13 @@ function handleOptionsMenuBack(menu)
 end
 
 function love.keypressed(key)
-  local player=world.players[currentPlayer]
+  local player=players[1]
   if activeMenu then
     activeMenu:keypressed(key)
   else
-    if currentGameMode==gameModes.help then
-      currentGameMode=gameModes.playing
+    if currentGameMode==gameModes.title then
+      currentGameMode=gameModes.playerSelect
+    elseif currentGameMode==gameModes.help then
       activeMenu=mainMenu:activate()
     elseif currentGameMode==gameModes.dead or currentGameMode==gameModes.winner then
       if key == "escape" then
@@ -415,6 +423,8 @@ function love.keypressed(key)
         currentGameMode=gameModes.playing
         loadLevel(startMap)
       end
+    elseif currentGameMode==gameModes.playerSelect then
+      playerSelectKeyPressed(players,key)
     else
       if key == "escape" then 
         if activeMenu==nil then
@@ -442,15 +452,18 @@ end
 function love.joystickadded(joystick)
   print("joystick added >",joystick:getName(),"< >",joystick:getID(),"<")
   joystate[joystick]=axjoy.createJoystickState(joystick,joystick:getID())
-  thePlayer.joystate=joystate[joystick]
-  currentJoystate=joystate[joystick]
   startText.text=startWithJoystick
+end
+
+function findPlayerJoystickId(id)
+  for i=1,4  do
+    if players[i].controller==id then return players[i] end
+  end
+  return nil
 end
 
 function love.joystickremoved(joystick)
   print("joystick removed >",joystick:getName(),"< >",joystick:getID(),"<")
-  currentJoystate=nil 
-  thePlayer.joystate=nil
   startText.text=startWithKeyboard
 end
 
@@ -460,8 +473,12 @@ function love.gamepadpressed(joystick,button)
   if activeMenu then 
     activeMenu:gamepadpressed(joystick,button)
   else
-    local player=world.players[currentPlayer]
-    if currentGameMode==gameModes.help then
+    local player=findPlayerJoystickId(joystick:getID())
+    if currentGameMode==gameModes.title then
+      currentGameMode=gameModes.playerSelect
+    elseif currentGameMode==gameModes.playerSelect then
+      playerSelectGamepadPressed(players,joystick,button)
+    elseif currentGameMode==gameModes.help then
       currentGameMode=gameModes.playing
       activeMenu=mainMenu
     elseif currentGameMode==gameModes.title then
@@ -509,24 +526,26 @@ function love.gamepadaxis(joystick, axis, value)
   end
 
   -- adjust the direction the 8-direction player sprite faces
-  local player=world.players[currentPlayer]
-  local deg=math.deg(joystate[joystick].leftAngle)
-  if deg>=0 and deg<=20 or deg>=340 then
-    player.direction="up"
-  elseif deg>=25 and deg<=65 then
-    player.direction="upright"
-  elseif deg>=70 and deg<=110 then
-    player.direction="right"
-  elseif deg>=115 and deg<=155 then
-    player.direction="downright"
-  elseif deg>=160 and deg<=200 then
-    player.direction="down"
-  elseif deg>=205 and deg<=245 then
-    player.direction="downleft"
-  elseif deg>=250 and deg<=290 then
-    player.direction="left"
-  elseif deg>=295 and deg<=335 then
-    player.direction="upleft"
+  local player=findPlayerJoystickId(joystick:getID())
+  if player~=nil then
+    local deg=math.deg(joystate[joystick].leftAngle)
+    if deg>=0 and deg<=20 or deg>=340 then
+      player.direction="up"
+    elseif deg>=25 and deg<=65 then
+      player.direction="upright"
+    elseif deg>=70 and deg<=110 then
+      player.direction="right"
+    elseif deg>=115 and deg<=155 then
+      player.direction="downright"
+    elseif deg>=160 and deg<=200 then
+      player.direction="down"
+    elseif deg>=205 and deg<=245 then
+      player.direction="downleft"
+    elseif deg>=250 and deg<=290 then
+      player.direction="left"
+    elseif deg>=295 and deg<=335 then
+      player.direction="upleft"
+    end
   end
 end
 
@@ -538,8 +557,9 @@ end
 
 function love.update(dt)
   flux.update(dt)
-  local player=world.players[currentPlayer]
-  if currentGameMode==gameModes.betweenLevels then
+  if currentGameMode==gameModes.playerSelect then
+    updatePlayerSelect(players,dt)
+  elseif currentGameMode==gameModes.betweenLevels then
     transitionTimer=transitionTimer-dt
     if transitionTimer<=0 then
       loadLevel(mapToLoad)
@@ -559,12 +579,15 @@ function love.update(dt)
       checkCollisions(world.map)
       world:update(dt)
       handlePlayerCameraMovement(world.map, dt)
-      if isPlayerFiring(player) then
-        fireBullet(player,dt)
-      end
+      for i=1,4 do
+        local player=players[i]
+        if isPlayerFiring(player) then
+          fireBullet(player,dt)
+        end
 
-      player.health=player.health-0.01
-      if player.health<=0 then playerDeath() end
+        player.health=player.health-0.01
+        if player.health<=0 then playerDeath() end
+      end
     end
   end
 end
@@ -588,13 +611,12 @@ function handlePlayerCameraMovement(map, dt)
   --restrict player position, look at player, and keep entire map visible
   local mw=map.width * map.tilewidth
   local mh=map.height * map.tileheight
+  if players[1].x-players[1].w/2 < 0  then players[1].x=   world.players[1].w/2 end
+  if players[1].y-players[1].h/2 < 0  then players[1].y=   world.players[1].h/2 end
+  if players[1].x+players[1].w/2 > mw then players[1].x=mw-world.players[1].w/2 end
+  if players[1].y+players[1].h/2 > mh then players[1].y=mh-world.players[1].h/2 end
   
-  if world.players[currentPlayer].x-world.players[currentPlayer].w/2 < 0  then world.players[currentPlayer].x=   world.players[currentPlayer].w/2 end
-  if world.players[currentPlayer].y-world.players[currentPlayer].h/2 < 0  then world.players[currentPlayer].y=   world.players[currentPlayer].h/2 end
-  if world.players[currentPlayer].x+world.players[currentPlayer].w/2 > mw then world.players[currentPlayer].x=mw-world.players[currentPlayer].w/2 end
-  if world.players[currentPlayer].y+world.players[currentPlayer].h/2 > mh then world.players[currentPlayer].y=mh-world.players[currentPlayer].h/2 end
-  
-  cam:lookAt(world.players[currentPlayer].x,world.players[currentPlayer].y)
+  cam:lookAt(players[1].x,players[1].y)
   --keep entire map visible to camera
   if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
   if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
@@ -607,12 +629,19 @@ function handlePlayerCameraMovement(map, dt)
 end
 
 function checkCollisions(map)
-  checkPlayerCollisions(map)
+  checkAllPlayerCollisions(map)
   checkBulletCollisions(map)
 end
 
-function checkPlayerCollisions(map)
-  local player=world.players[currentPlayer]
+function checkAllPlayerCollisions(map)
+  for i,player in pairs(players) do 
+    if player.controller then
+      checkCollisionsForPlayer(player) 
+    end
+  end
+end
+
+function checkCollisionsForPlayer(player)
   player.color=gui.createColor(1,1,1)
   for shape, delta in pairs(world.collider:collisions(player.hitbox.collider)) do
     local hitbox=world.hitboxes[shape]
@@ -735,7 +764,6 @@ end
 function handleBulletHitWall(sourceShape,targetHitbox)
   world:removeHitbox(sourceShape.hitbox)
   world:removeShape(sourceShape)
-  print("bullet hit a wall sourceHitbox destHitbox",sourceShape.hitbox.type,targetHitbox.type)
   playSfx(sfx.hitWall)
 end
 
@@ -753,19 +781,26 @@ function handlePowerup(hitbox)
 end
 
 function loadLevel(mapName)
+  -- print(string.format("loading level=%s",mapName))
   world=nil
   world=createWorld(screenWidth,screenHeight)
-  thePlayer.world=world
   world:loadMap(mapName)
   local px,py=findPlayerSpawnPoint(world.map)
-  if px==nil then
-    px=screenWidth/2
-    py=screenHeight/2
+  for i=1,4 do
+    if players[i].controller then
+      -- print(string.format("adding player i=%d id=%d",i,players[i].id))
+      if px==nil then
+        -- if no spawn point in the map, just put in the top left corner of the map
+        px=100
+        py=100
+      end
+      players[i].world=world
+      players[i].x=px
+      players[i].y=py
+      world:addPlayer(players[i])
+      px=px+players[i].w+5
+    end
   end
-  thePlayer.x=px
-  thePlayer.y=py
-
-  world:addPlayer (thePlayer)
   createObjects(world.map)
   if inbrowser==false and options.music.active==true then
     stopMusic(music.ingame)
@@ -821,6 +856,7 @@ end
 function readInput(dt)
   for key in pairs(keystate) do keystate[key]=false end   -- set all keys to not pressed
   
+  -- TODO lee this needs to go, as we process the joystick differently now
   if joystick~=nil then
     local hat=joystick:getHat(1)
     if hat=="l" then keystate.left=true end
@@ -851,7 +887,9 @@ end
 
 function processInput()
   readInput()
-  local player=world.players[currentPlayer]
+  local player=findPlayerJoystickId(0) 
+  if player==nil then return end
+
   player.keypressed=false
   player.firing=false
 
@@ -891,6 +929,8 @@ end
 function love.draw()
   if currentGameMode==gameModes.help then
     drawHelp()
+  elseif currentGameMode==gameModes.playerSelect then
+    drawPlayerSelect(players)
   elseif currentGameMode==gameModes.title then
     drawTitle()
   elseif currentGameMode==gameModes.betweenLevels then
@@ -899,7 +939,7 @@ function love.draw()
     drawGameOver()
   elseif currentGameMode==gameModes.winner then
     drawWinner()
-  else
+  elseif currentGameMode==gameModes.playing then
     drawGame()
   end
   if activeMenu ~= nil then
@@ -933,9 +973,6 @@ function drawGameOver()
   gui.centerText("SCORE: "..player.score,x,y)
   love.graphics.setFont(fontSheets.small.font)
   local text=instructions.keyboard.playAgain
-  if currentJoystate then
-    text=instructions.joystick.playAgain
-  end
   gui.centerText(text,x,y+height)
 end
 
@@ -952,9 +989,6 @@ function drawWinner()
   gui.centerText("SCORE: "..player.score,x,y)
   love.graphics.setFont(fontSheets.small.font)
   local text=instructions.keyboard.playAgain
-  if currentJoystate then
-    text=instructions.joystick.playAgain
-  end
   gui.centerText(text,x,y+height)
 end
 
@@ -968,24 +1002,18 @@ end
 
 -- draw the game, like the player, monsters, map, etc
 function drawGame()
-  local player=world.players[currentPlayer]
-  love.graphics.setColor(1, 1, 1)
-  cam:attach()
-    world:draw()
-    if options.showExtras.active then
-      gui.crosshair(player.x,player.y,player.color:components())
-      drawTriggers(world.map)
-    end
-    if not player.joystate then
-      drawMouseTarget(player,cam:worldCoords(love.mouse.getPosition()))
-    end
-  cam:detach()
-  drawPlayerInfo(player)
-  if currentJoystate and options.showExtras.active then
-    print("showing the joystate velocity")
-    love.graphics.setColor(1,1,0,1)
-    love.graphics.print(string.format("vx,vy=%f,%f",currentJoystate.vxleft,currentJoystate.vyleft),0,0)
-  end
+    love.graphics.setColor(1, 1, 1)
+    cam:attach()
+      world:draw()
+      if options.showExtras.active then
+        -- gui.crosshair(player.x,player.y,player.color:components())
+        drawTriggers(world.map)
+      end
+      -- if not player.joystate then
+        -- drawMouseTarget(player,cam:worldCoords(love.mouse.getPosition()))
+      -- end
+    cam:detach()
+    -- drawPlayerInfo(player)
 end
 
 -- draw the mouse target
@@ -1159,4 +1187,133 @@ function buildOptionsMenu()
   table.sort(items,function(a,b) return a<b end)
   -- for _,name in pairs(items) do print("options menu name",name) end -- show the options
   return items
+end
+
+function setGameMode(mode)
+  print(string.format("setting game mode to %s, currentGameMode=%s",mode,currentGameMode))
+  if mode==gameModes.playing then
+    stopAllMusic()
+    loadLevel(startMap)
+  end
+  currentGameMode=mode
+end
+
+
+
+
+
+
+
+
+function updatePlayerSelect(players,dt)
+  numPlayers=0
+  numReady=0
+
+  for i=1,4 do
+    if players[i].controller~=nil then numPlayers=numPlayers+1 end
+  end
+  for i=1,4 do
+    if players[i].controller~=nil and confirmedPlayers[i]==true then numReady=numReady+1 end
+  end
+
+  if numPlayers>=1 and numPlayers==numReady then
+    setGameMode(gameModes.playing)
+  end
+end
+
+function drawPlayerSelect(players)
+  local padding=75
+  local w=screenWidth/2
+  local h=screenHeight/2
+  local x,y=0,0
+
+  love.graphics.setColor(0,0,0,1)
+  love.graphics.clear()
+  love.graphics.setColor(1,0,0,1)
+  love.graphics.setLineWidth(3)
+
+  love.graphics.setFont(fontSheets.large.font)
+  gui.centerText(string.format("Player Select n=%d r=%d",numPlayers,numReady),screenWidth/2,0,false)
+  love.graphics.setFont(fontSheets.small.font)
+
+  --player 1
+  drawPlayerSelectForPlayer(players[1],x+padding,y+padding,w-padding*2,h-padding*2)
+  drawPlayerSelectForPlayer(players[2],x+w+padding,y+padding,w-padding*2,h-padding*2)
+  drawPlayerSelectForPlayer(players[3],x+padding,y+h+padding,w-padding*2,h-padding*2)
+  drawPlayerSelectForPlayer(players[4],x+w+padding,y+h+padding,w-padding*2,h-padding*2)
+end
+
+function drawPlayerSelectForPlayer(player,x,y,w,h)
+  local padding=10
+  love.graphics.rectangle("line",x,y,w,h)
+  assert(player.controller==nil or (player.controller>=0 and player.controller<=4),"Invalid player controller setting")
+  if player.controller==nil then
+    love.graphics.print("Press A on controller or ENTER",x+padding,y+padding)
+  elseif player.controller==0 then
+    if confirmedPlayers[player.id]==false then
+      love.graphics.print("Keyboard\nWait for other players\nPress ENTER again to confirm",x+padding,y+padding) 
+    else
+      love.graphics.print("Keyboard CONFIRMED",x+padding,y+padding)
+    end
+  else
+    if confirmedPlayers[player.id]==false then
+      love.graphics.print(string.format("Controller ID %d\nWait for other players\nPress A again to confirm",player.controller),x+padding,y+padding)
+    else
+      love.graphics.print(string.format("Controller ID %d CONFIRMED",player.controller),x+padding,y+padding)
+    end
+  end
+end
+
+function findPlayerWithControllerId(players,id)
+  for i=1,4 do
+    if players[i].controller==id then
+      return players[i]
+    end
+  end
+  return nil
+end
+
+function playerSelectKeyPressed(players,key)
+  if key~="return" then return end
+
+  player=findPlayerWithControllerId(players,0)
+  if player==nil then
+    player=findFirstUnassignedPlayer(players)
+    assert(player~=nil,"No unassigned players")
+    player.controller=0 --player now assigned the keyboard
+  else
+    print("confirming player ",player.id)
+    confirmedPlayers[player.id]=true
+  end
+  
+  for i=1,4 do
+    if players[i] then print("i,controller,confirmed",i,players[i].controller,confirmedPlayers[i]) end
+  end
+end
+
+function playerSelectGamepadPressed(players,joystick,button)
+  print("player gamepad pressed")
+  if button~="a" then return end
+
+  player=findPlayerWithControllerId(players,joystick:getID())
+  if player==nil then
+    player=findFirstUnassignedPlayer(players)
+    assert(player~=nil,"No unassigned joystick players")
+    player.controller=joystick:getID() --player now assigned the keyboard
+    player.joystate=joystate[joystick]
+  else
+    print("confirming player ",player.id)
+    confirmedPlayers[player.id]=true
+  end
+  
+  for i=1,4 do
+    if players[i] then print("i,controller,confirmed",i,players[i].controller,confirmedPlayers[i]) end
+  end
+end
+
+function findFirstUnassignedPlayer(players)
+  for i=1,4 do
+    if players[i].controller==nil then return players[i] end
+  end
+  return nil
 end

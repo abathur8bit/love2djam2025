@@ -12,6 +12,8 @@ function createPlayer(world,id,x,y,w,h,filename)
   local s=shape.createShape(x,y,w,h,0,color)
   s.type="player"
   s.id=id
+  s.controller=nil --nil=no controller selected, 0=keyboard, 1-n=joystick:getID() value
+  s.joystate=nil    -- joystate contains joystick information and the joystick
   s.world=world
   -- s.hitbox=world:createHitbox(xa,ya,wa,ha,s.type,id,s.type,s)
   s.score=0
@@ -34,7 +36,6 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.animType="walk"
   s.direction="downright"
   s.keyPressed=false
-  s.joystate=nil
   s.firing=false
   s.speed=300
   s.fireRate=0.2
