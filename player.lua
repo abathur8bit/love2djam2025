@@ -15,6 +15,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.controller=nil --nil=no controller selected, 0=keyboard, 1-n=joystick:getID() value
   s.joystate=nil    -- joystate contains joystick information and the joystick
   s.world=world
+  s.scale=0.5
   -- s.hitbox=world:createHitbox(xa,ya,wa,ha,s.type,id,s.type,s)
   s.score=0
   s.health=INITIAL_PLAYER_HEALTH

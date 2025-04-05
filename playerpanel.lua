@@ -53,3 +53,9 @@ function drawPlayerPowerups(player)
   y=screenHeight-padding
   love.graphics.print("powerup",x,y-love.graphics.getFont():getHeight())
 end
+
+-- value is a percent from 0-1
+function drawPercentBar(x,y,w,h,value)
+  love.graphics.rectangle("line",x,y,w,h)
+  love.graphics.rectangle("fill",x,y,w*value,h)
+end
