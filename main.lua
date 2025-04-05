@@ -616,17 +616,54 @@ function handlePlayerCameraMovement(map, dt)
   if players[1].y-players[1].h/2 < 0  then players[1].y=   world.players[1].h/2 end
   if players[1].x+players[1].w/2 > mw then players[1].x=mw-world.players[1].w/2 end
   if players[1].y+players[1].h/2 > mh then players[1].y=mh-world.players[1].h/2 end
-  
-  cam:lookAt(players[1].x,players[1].y)
+  local minx=calcminx(players)
+  local maxx=calcmaxx(players)
+  local diff=maxx-minx
+  local x=(maxx-minx)/2+minx
+  cam:lookAt(x,players[1].y)
+  local d=400
+  if diff>screenWidth-d then
+    cam:zoomTo((screenWidth-d)/diff)
+  else
+    cam:zoomTo(1)
+  end
+
   --keep entire map visible to camera
   if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
   if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
   if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
   if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
-  if cam.x<sidePanelWidth then cam.x=sidePanelWidth end
-  if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
-  if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
-  if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
+  -- if cam.y < screenHeight/2 then cam.y=screenHeight/2 end
+  -- if cam.x > mw-screenWidth/2 then cam.x=mw-screenWidth/2 end
+  -- if cam.y > mh-screenHeight/2 then cam.y=mh-screenHeight/2 end
+end
+
+function calcminx(players)
+  local minx=nil
+  for i,player in pairs(players) do
+    if player.controller then
+      if minx==nil then
+        minx=player.x
+      elseif player.x<minx then
+        minx=player.x
+      end
+    end  
+  end
+  return minx
+end
+
+function calcmaxx(players)
+  local maxx=nil
+  for i,player in pairs(players) do
+    if player.controller then
+      if maxx==nil then
+        maxx=player.x
+      elseif player.x>maxx then
+        maxx=player.x
+      end
+    end
+  end
+  return maxx
 end
 
 function checkCollisions(map)
@@ -928,6 +965,9 @@ function processInput()
 end
 
 function love.draw()
+  love.graphics.setFont(fontSheets.small.font)
+  love.graphics.setColor(1,0,0,1)
+  love.graphics.print(string.format("fps=%d",love.timer.getFPS()),0,0)
   if currentGameMode==gameModes.help then
     drawHelp()
   elseif currentGameMode==gameModes.playerSelect then
@@ -1014,7 +1054,7 @@ function drawGame()
         -- drawMouseTarget(player,cam:worldCoords(love.mouse.getPosition()))
       -- end
     cam:detach()
-    -- drawPlayerInfo(player)
+    drawPlayerInfo(players)
 end
 
 -- draw the mouse target
@@ -1080,7 +1120,9 @@ end
 
 -- player panel contains the players score, hp, and power ups
 function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
-  love.graphics.setColor(bgColor:components())
+  local alpha=0.2
+  local r,g,b=bgColor:components()
+  love.graphics.setColor(r,g,b,alpha)
   love.graphics.rectangle("fill",x,y,w,h)
   local offset=5
   y=y+offset
@@ -1091,8 +1133,8 @@ function drawPlayerPanel(playerNumber,x,y,w,h,fontColor,bgColor)
   local score=world.players[currentPlayer].score -- TODO use real player score
   local health=world.players[currentPlayer].score/4 -- TODO use real player health
   local font=fontSheets.medium.font
-  
-  love.graphics.setColor(fontColor:components())
+  r,g,b=fontColor:components()
+  love.graphics.setColor(r,g,b,alpha)
   love.graphics.setFont(font)
   gui.centerText(string.format("PLAYER %d",playerNumber),x+w/2,y,false)
   y=y+font:getHeight()
