@@ -618,15 +618,26 @@ function handlePlayerCameraMovement(map, dt)
   if players[1].y+players[1].h/2 > mh then players[1].y=mh-world.players[1].h/2 end
   local minx=calcminx(players)
   local maxx=calcmaxx(players)
-  local diff=maxx-minx
-  local x=(maxx-minx)/2+minx
-  cam:lookAt(x,players[1].y)
-  local d=400
-  if diff>screenWidth-d then
-    cam:zoomTo((screenWidth-d)/diff)
-  else
-    cam:zoomTo(1)
+  local miny=calcminy(players)
+  local maxy=calcmaxy(players)
+  local diffx=maxx-minx
+  local diffy=maxy-miny
+  local x=diffx/2+minx
+  local y=diffy/2+miny
+  cam:lookAt(x,y)
+  local xd=400
+  local yd=400*aspect
+  local xz=1
+  local yz=1
+  if diffx>screenWidth-xd then
+    xz=(screenWidth-xd)/diffx
   end
+  if diffy>screenHeight-yd then
+    yz=(screenHeight-yd)/diffy
+  end
+
+  local zoom=math.min(xz,yz)
+  cam:zoomTo(zoom)
 
   --keep entire map visible to camera
   if cam.x < screenWidth/2 then cam.x=screenWidth/2 end
@@ -664,6 +675,34 @@ function calcmaxx(players)
     end
   end
   return maxx
+end
+
+function calcminy(players)
+  local miny=nil
+  for i,player in pairs(players) do
+    if player.controller then
+      if miny==nil then
+        miny=player.y
+      elseif player.y<miny then
+        miny=player.y
+      end
+    end  
+  end
+  return miny
+end
+
+function calcmaxy(players)
+  local maxy=nil
+  for i,player in pairs(players) do
+    if player.controller then
+      if maxy==nil then
+        maxy=player.y
+      elseif player.y>maxy then
+        maxy=player.y
+      end
+    end
+  end
+  return maxy
 end
 
 function checkCollisions(map)
