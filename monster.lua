@@ -2,405 +2,46 @@ local shape=require "shape"
 local anim8=require 'lib.anim8'
 local gui=require "lib.gui"
 local math = math
-
--- List of behaviours for the enemies to use
-local Behaviours = {
-
-  -- Basic behaviour, if you see an enemy, move towards them
-  basic = function(monster, dt)
-    local ts = monster.world.tileSize
-
-    -- Reduce melee timer
-    monster.meleeTimer = monster.meleeTimer - dt
-
-    -- Check players to see if it can see one
-    for key, player in pairs(monster.world.players) do
-      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-        
-        -- Set new movement target for the player
-        monster.targetMoveTimeout = 0
-        monster.targetMove = {{x = player.x, y = player.y}}
-        goto continue
-      end
-    end
-    ::continue::
-  end,
-
-  -- Sense behaviour, if the enemy is close enough to a player, then will start to path towards their position around the map
-  sense = function(monster, dt)
-    local ts = monster.world.tileSize
-
-    -- Reduce melee timer
-    monster.meleeTimer = monster.meleeTimer - dt
-
-    -- Check players to see if it can see one
-    for key, player in pairs(monster.world.players) do
-      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-        
-        -- Set new movement target for the player
-        monster.targetMoveTimeout = 0
-        monster.targetMove = {{x = player.x, y = player.y}}
-        goto continue
-      
-      -- Can't see the player, has no target move, see if it can 'sense' them (up to 8 tiles away)
-      elseif not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
-
-        -- Path to that position
-        monster.targetMoveTimeout = 0
-        monster.targetMove = monster.world:getPath(monster.x, monster.y, player.x, player.y)
-        goto continue
-      end
-    end
-    ::continue::
-  end,
-
-  -- Basic ranger
-  basic_ranger = function(monster, dt)
-    local ts = monster.world.tileSize
-
-    -- Reduce melee timer
-    monster.meleeTimer = monster.meleeTimer - dt
-
-    -- Reduce attack cooldown
-    monster.fireRateTimer = monster.fireRateTimer - dt
-
-    -- Check players to see if it can see one
-    for key, player in pairs(monster.world.players) do
-      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-
-        -- Check distance
-        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
-          
-          -- Set new movement target for the player
-          monster.targetMoveTimeout = 0
-          monster.targetMove = {{x = player.x, y = player.y}}
-        else
-
-          -- Remove targetMove
-          monster.targetMove = nil
-        end
-
-        -- Check distance in range
-        if checkDistance(monster.x, monster.y, player.x, player.y, ts * monster.fireRange) then
-          
-          -- Fire a bullet
-          monster:monsterFireBullet(player.x, player.y)
-        end
-        goto continue
-      end
-    end
-    ::continue::
-  end,
-
-  -- Sense ranger
-  sense_ranger = function(monster, dt)
-    local ts = monster.world.tileSize
-
-    -- Reduce melee timer
-    monster.meleeTimer = monster.meleeTimer - dt
-
-    -- Reduce attack cooldown
-    monster.fireRateTimer = monster.fireRateTimer - dt
-
-    -- Check players to see if it can see one
-    for key, player in pairs(monster.world.players) do
-      if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-
-        -- Check distance
-        if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
-          
-          -- Set new movement target for the player
-          monster.targetMoveTimeout = 0
-          monster.targetMove = {{x = player.x, y = player.y}}
-        else
-
-          -- Remove targetMove
-          monster.targetMove = nil
-        end
-
-        -- Check distance in range
-        if checkDistance(monster.x, monster.y, player.x, player.y, ts * monster.fireRange) then
-          
-          -- Fire a bullet
-          monster:monsterFireBullet(player.x, player.y)
-        end
-        goto continue
-
-      -- Can't see the player, has no target move, see if it can 'sense' them (up to 8 tiles away)
-      elseif not monster.targetMove and checkDistance(monster.x, monster.y, player.x, player.y, ts * 8) then
-
-        -- Path to that position
-        monster.targetMove = monster.world:getPath(monster.x, monster.y, player.x, player.y)
-        goto continue
-      end
-    end
-    ::continue::
-  end,
-
-  -- Boss
-  boss = function(monster, dt)
-    local ts = monster.world.tileSize
-
-    -- Phases
-    monster.phaseTimer = monster.phaseTimer or 10
-    monster.phase = monster.phase or 1
-    monster.targetMoveTimeout = 0
-
-    -- Reduce attack cooldown
-    monster.fireRateTimer = monster.fireRateTimer - dt
-
-    -- Phase 1-- Chase the player and fire a burst of 3 shots
-    if monster.phase == 1 then
-
-      -- Set speed for this phase
-      monster.speed = 175
-
-      -- Increase phase timer
-      monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
-    
-      -- Check players to see if it can see one
-      for key, player in pairs(monster.world.players) do
-        if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-
-          -- Check distance
-          if not checkDistance(monster.x, monster.y, player.x, player.y, ts * 3) then
-            
-            -- Set new movement target for the player
-            monster.targetMove = {{x = player.x, y = player.y}}
-          else
-
-            -- Remove targetMove
-            monster.targetMove = nil
-          end
-
-          -- Check distance in range
-          if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) and monster.fireRateTimer <= 0 then
-
-            -- Get angle of shot
-            local theta = math.atan2(player.y - monster.y, player.x - monster.x)
-    
-            -- Fire a barrage of bullets
-            local angle_space = 0.24
-            for i = 1, 3 do
-              monster.fireRateTimer = 0
-              if i==1 then
-                monster:monsterFireBullet(player.x, player.y)
-              elseif i%2==0 then
-                monster:monsterFireBullet(
-                  monster.x + math.cos(theta - angle_space * math.floor(i*0.5)) * 50,
-                  monster.y + math.sin(theta - angle_space * math.floor(i*0.5)) * 50
-                )
-              else
-                monster:monsterFireBullet(
-                  monster.x + math.cos(theta + angle_space * math.floor(i*0.5)) * 50,
-                  monster.y + math.sin(theta + angle_space * math.floor(i*0.5)) * 50
-                )
-              end
-            end
-            monster.fireRateTimer = monster.fireRate
-          end
-          goto continue
-        end
-      end
-      ::continue::
-      
-      -- Move to one of the corners and change to Phase 2
-      if monster.phaseTimer <= 0 then
-        monster.phase = 2
-        monster.phaseTimer = 10
-        monster.fireRate = 2.5
-        monster.meleeTimer = 1
-
-        -- Set a movement target
-        local world = monster.world
-        local map = world.map
-        local list = {}
-        if map.layers["generators"] then
-          for _,generator in pairs(map.layers["generators"].objects) do
-            if generator.name=="boss" then
-              list[#list + 1] = {x = generator.x, y = generator.y}
-            end
-          end
-        end
-
-        -- Set new movement target for the boss
-        monster.targetMove = {list[math.random(1, #list)]}
-      end
-
-    -- Phase 2
-    elseif monster.phase == 2 then
-
-      -- Set speed for this phase
-      monster.speed = 350
-
-      -- Check for no movement
-      if not monster.targetMove then
-
-        -- Increase phase timer
-        monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
-
-        -- Check players to see if it can see one
-        for key, player in pairs(monster.world.players) do
-          if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-
-            -- Check distance in range
-            if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) and monster.fireRateTimer <= 0 then
-
-              -- Get angle of shot
-              local theta = math.atan2(player.y - monster.y, player.x - monster.x)
-      
-              -- Fire a barrage of bullets
-              local angle_space = 0.25
-              for i = 1, 13 do
-                monster.fireRateTimer = 0
-                if i==1 then
-                  monster:monsterFireBullet(player.x, player.y)
-                elseif i%2==0 then
-                  monster:monsterFireBullet(
-                    monster.x + math.cos(theta - angle_space * math.floor(i*0.5)) * 50,
-                    monster.y + math.sin(theta - angle_space * math.floor(i*0.5)) * 50
-                  )
-                else
-                  monster:monsterFireBullet(
-                    monster.x + math.cos(theta + angle_space * math.floor(i*0.5)) * 50,
-                    monster.y + math.sin(theta + angle_space * math.floor(i*0.5)) * 50
-                  )
-                end
-              end
-              monster.fireRateTimer = monster.fireRate
-            end
-            goto continue
-          end
-        end
-        ::continue::
-
-        -- If it's the end of the phase, change to phase 1
-        if monster.phaseTimer <= 0 then
-          monster.fireRate = 0.5
-          monster.phase = 3
-          monster.phaseTimer = 12
-          monster.meleeTimer = 1
-
-          -- Spawn in enemies
-          local world = monster.world
-          local map = world.map
-          local list = {}
-          if map.layers["generators"] then
-            for _,generator in pairs(map.layers["generators"].objects) do
-              if generator.name=="generator" then
-                list[#list + 1] = {x = generator.x, y = generator.y}
-              end
-            end
-          end
-
-          -- Spawn an enemy at each generator
-          for i = 1, #list do
-            local generator = list[i]
-            world:addMonster(createMonster(world,1,generator.x,generator.y,64,64,"assets/helmet.png","monster1","basic"))
-            world:addMonster(createMonster(world,1,generator.x,generator.y,64,64,"assets/helmet.png","monster1","basic"))
-            world:addMonster(createMonster(world,1,generator.x,generator.y,64,64,"assets/helmet.png","monster1","basic_ranger"))
-          end
-        end
-      end
-
-    -- Phase 3
-    elseif monster.phase == 3 then
-
-      -- Set speed for this phase
-      monster.speed = 350
-
-      -- Increase phase timer
-      monster.phaseTimer = math.max(0, monster.phaseTimer - dt)
-
-      -- Check for no movement
-      if not monster.targetMove then
-
-        -- Set a movement target
-        local world = monster.world
-        local map = world.map
-        local list = {}
-        if map.layers["generators"] then
-          for _,generator in pairs(map.layers["generators"].objects) do
-            if generator.name=="boss" then
-              list[#list + 1] = {x = generator.x, y = generator.y}
-            end
-          end
-        end
-
-        -- Set new movement target for the boss
-        monster.targetMove = {list[math.random(1, #list)]}
-      end
-
-      -- Check players to see if it can see one
-      for key, player in pairs(monster.world.players) do
-        if monster.world:checkPositionVisible(monster.x, monster.y, player.x, player.y) then
-
-          -- Check distance in range
-          if checkDistance(monster.x, monster.y, player.x, player.y, ts * 50) then
-            monster:monsterFireBullet(player.x, player.y)
-          end
-          goto continue
-        end
-      end
-      ::continue::
-
-      -- If it's the end of the phase, change to phase 1
-      if monster.phaseTimer <= 0 then
-        monster.fireRate = 1.25
-        monster.phase = 1
-        monster.phaseTimer = 10
-      end
-    end
-  end,
-}
+local Monsters = require('monsters.monster_stats')
 
 function createMonsterHitbox(self)
   self.hitbox=self.world:createHitbox(self.x,self.y,self.w,self.h,self.type,self.id,self.name,self)
 end
 
-function createMonster(world,id,x,y,w,h,filename,name,behaviour)
-  local behaviour = behaviour or 'basic'
-  local s=shape.createShape(x,y,w,h,0,gui.createColor(1,1,1,1))
+function createMonster(world,id,x,y,name)
+
+  -- Get enemy stats and
+  local stats = Monsters[name]()
+
+  -- Create shape object
+  local s=shape.createShape(x,y,stats.w,stats.h,0,gui.createColor(1,1,1,1))
+
+  -- Copy all the stats over
+  for key, value in pairs(stats) do
+    s[key] = value
+  end
 
   -- Setting values
   s.type="monster"
   s.name=name
-  s.behaviour=behaviour
-  s.behaviourUpdate=Behaviours[behaviour]
   s.world=world
   s.id=id
   s.z=9 -- make sure it's under the player
   s.score=0
-  s.health=INITIAL_PLAYER_HEALTH
   s.keyPressed=false
-  s.speed=100
-  s.animType="idle"
-  s.direction="downright"
-  s.update=updateMonster
-  s.checkCollisions=checkMonsterCollisions
-  s.draw=drawMonster
-  s.getPath=getPath
-  s.checkPositionVisible=checkPositionVisible
-  s.monsterFireBullet=monsterFireBullet
-  s.destroy=destroy
-  s.followPath=followPath
-  s.createHitbox=createMonsterHitbox
+
+  -- Set variables for attacking and moving
   s.idleTimer=0.0
   s.idleTimerDelay=5
-  s.sheet=love.graphics.newImage(filename)
-  s.grid=anim8.newGrid(s.w,s.h,s.sheet:getWidth(),s.sheet:getHeight())
-  s.animType="walk"
-  s.direction="downright"
-  s.keyPressed=false
-  s.meleeDamage=100
-  s.meleeTimer=1
-  s.fireRate=2
-  s.fireRange=14
-  s.firePower='monster'
   s.fireRateTimer=s.fireRate
   s.targetAttack=nil
   s.targetMove=nil
   s.targetMoveTimeout=0
+
+  -- Animations
+  s.grid=anim8.newGrid(s.w,s.h,s.sheet:getWidth(),s.sheet:getHeight())
+  s.animType="walk"
+  s.direction="downright"
   s.anims={
     idle={
       up        = anim8.newAnimation(s.grid(1,1),0.15),
@@ -423,12 +64,20 @@ function createMonster(world,id,x,y,w,h,filename,name,behaviour)
       downleft  = anim8.newAnimation(s.grid('1-4',1),0.15),
     },
   }
-  s.current=s.anims[s.animType][s.direction]
 
-  -- Setting the King's health
-  if behaviour=='boss' then
-    s.health = 80000
-  end
+  -- Set up functions
+  s.update=updateMonster
+  s.checkCollisions=checkMonsterCollisions
+  s.draw=drawMonster
+  s.getPath=getPath
+  s.checkPositionVisible=checkPositionVisible
+  s.monsterFireBullet=monsterFireBullet
+  s.destroy=destroy
+  s.followPath=followPath
+  s.createHitbox=createMonsterHitbox
+
+  -- Set up animations
+  s.current=s.anims[s.animType][s.direction]
   return s
 end
 
@@ -436,7 +85,7 @@ end
 function updateMonster(self,dt)
 
   -- Behaviour
-  self:behaviourUpdate(dt)
+  self:behaviour(dt)
 
   -- Follow path
   if self.targetMove then
@@ -580,16 +229,14 @@ function destroy(self)
   for i = #world.monsters, 1, -1 do
     if world.monsters[i] == self then
       world.monsters[#world.monsters], world.monsters[i] = nil, world.monsters[#world.monsters]
-      goto continue1
+      break
     end
   end
-  ::continue1::
   for i = #world.shapes, 1, -1 do
     if world.shapes[i] == self then
       world.shapes[#world.shapes], world.shapes[i] = nil, world.shapes[#world.shapes]
-      goto continue2
+      break
     end
   end
-  ::continue2::
   return true
 end

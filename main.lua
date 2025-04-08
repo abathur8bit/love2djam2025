@@ -441,7 +441,7 @@ function love.keypressed(key)
       end
       -- TODO lee remove after testing
       if key=="m" then
-        world:addMonster(createMonster(world,1,player.x+000,player.y+100,64,64,"assets/helmet.png","monster1","basic_ranger"))
+        world:addMonster(createMonster(world,1,player.x+000,player.y+100,"basic"))
       end
       if key=="k" then
         player.health=5
@@ -567,7 +567,7 @@ function love.update(dt)
       currentGameMode=gameModes.playing
       if mapToLoad=="boss" then
         local x,y=findBossSpawnPoint(world.map)
-        world:addMonster(createMonster(world,1,x,y,192,192,"assets/kingsprites.png","monster1","boss"))
+        world:addMonster(createMonster(world,1,x,y,"boss"))
       end
     end
   elseif currentGameMode==gameModes.dead then
