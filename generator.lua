@@ -1,11 +1,16 @@
 local shape=require "shape"
+local Monsters = require('monsters.monster_stats')
+local MonstersData = {}
+for key, value in pairs(Monsters) do
+  MonstersData[key] = value
+end
 
-local monsters = {basic=6,sense=4,basic_ranger=3,sense_ranger=2}
-local monster_weightings = 0
-local monster_list = {}
-for key, value in pairs(monsters) do
+-- Weightings for Monsters
+local Weightings = {basic=6,sense=4,basic_ranger=3,sense_ranger=2}
+local MonsterList = {}
+for key, value in pairs(Weightings) do
   for i = 1, value do
-    monster_list[#monster_list+1] = tostring(key)
+    MonsterList[#MonsterList+1] = MonstersData[key]()
   end
 end
 
@@ -30,8 +35,8 @@ function updateGenerator(self,dt)
         self.timer=self.spawnRate
 
         -- Choose a random monster to spawn
-        local name = monster_list[math.random(1, #monster_list)]
-        self.world:addMonster(createMonster(self.world,1,self.x,self.y,name))
+        local monster = MonsterList[math.random(1, #MonsterList)]
+        self.world:addMonster(createMonster(self.world,1,self.x,self.y,monster.name))
       end
     end
   end
