@@ -33,7 +33,6 @@ function createWorld(screenWidth,screenHeight)
   w.getPath=getPath
   w.newPath=newPath
   w.checkPositionVisible=checkPositionVisible
-
   w.createHitbox=createHitbox
   w.removeHitbox=removeHitbox
   w.removeShape=removeWorldShape
@@ -162,6 +161,7 @@ function getPath(self, ax, ay, bx, by, ts)
     local path
   
     -- Iterate paths to see if one has already been created
+    local pathCopied
     for _, worldPath in ipairs(paths) do
   
       -- Check to see if the first node is nearby
@@ -180,16 +180,17 @@ function getPath(self, ax, ay, bx, by, ts)
                   x = worldPath[j-1+i].x,
                   y = worldPath[j-1+i].y,
                 }
-              else path = nil goto pathCopied end
+              else
+                path = nil
+                pathCopied = true
+                break
+              end
             end
-            goto pathCopied
+            if pathCopied then break end
           end
         end
       end
     end
-
-    -- Successfully copied an existing path
-    ::pathCopied::
     
     -- Unable to copy an existing path, so create a new one
     if not path then
@@ -340,7 +341,6 @@ function raytraceGrid(x0, y0, x1, y1)
 end
 
 function addPlayerShape(self,p)
-  print(string.format("adding player id=%d",p.id))
   table.insert(self.players,p)
   addWorldShape(self,p)
 end

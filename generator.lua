@@ -30,8 +30,8 @@ function updateGenerator(self,dt)
         self.timer=self.spawnRate
 
         -- Choose a random monster to spawn
-        local behaviour = monster_list[math.random(1, #monster_list)]
-        self.world:addMonster(createMonster(self.world,1,self.x,self.y,64,64,"assets/helmet.png","monster",behaviour))
+        local name = monster_list[math.random(1, #monster_list)]
+        self.world:addMonster(createMonster(self.world,1,self.x,self.y,name))
       end
     end
   end
