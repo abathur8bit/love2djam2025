@@ -1,16 +1,18 @@
 -- Example Usage: lua colortable.lua > palette.html
 
 -- Create an HTML table with boxes showing the color and color value in hex and decimal
-local maxCols=7
+local maxCols=8
 local colors={
-  "000000","5F5F5F","7F7F7F","9F9F9F","BFBFBF","DFDFDF","FFFFFF",
-  "3F0000","5F0000","7F0000","9F0000","BF0000","DF0000","FF0000",
-  "003F00","005F00","007F00","009F00","00BF00","00DF00","00FF00",
-  "3F3F00","5F5F00","7F7F00","9F9F00","BFBF00","DFDF00","FFFF00",
-  "3F003F","5F005F","7F007F","9F009F","BF00BF","DF00DF","FF00FF",
-  "003F3F","005F5F","007F7F","009F9F","00BFBF","00DFDF","00FFFF",
-  "00003F","00005F","00007F","00009F","0000BF","0000DF","0000FF",
+"000000","111111","222222","333333","444444","555555","656565","767676",  -- grey
+"888888","999999","AAAAAA","BBBBBB","CBCBCB","DCDCDC","EDEDED","FFFFFF",  -- grey
+"200000","400000","600000","800000","A00000","C00000","E00000","FF0000",  -- red
+"002000","004000","006000","008000","00A000","00C000","00E000","00FF00",  -- green
+"202000","404000","606000","808000","A0A000","C0C000","E0E000","FFFF00",  -- yellow
+"200020","400040","600060","800080","A000A0","C000C0","E000E0","FF00FF",  -- purple
+"002020","004040","006060","008080","00A0A0","00C0C0","00E0E0","00FFFF",  -- cyan
+"000020","000040","000060","000080","0000A0","0000C0","0000E0","0000FF",  -- blue
 }
+
 
 -- Convert a hex color like "FFFFFF" to 255,255,255. Also treats "FFF" or "111" as "FFFFFF" or "111111".
 function hex2decColor(hex)

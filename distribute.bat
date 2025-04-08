@@ -1,7 +1,7 @@
 @echo off
 @if "%1" == "" goto usage
 
-set VERSION=%1
+set VERSION="%1"
 set GAME_BASE=badwizard
 set LOVE="C:\util\love2d\love-11.5-win64"
 set GAME=%GAME_BASE%-%VERSION%

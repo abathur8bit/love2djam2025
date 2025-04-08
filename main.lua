@@ -29,7 +29,7 @@ version={x=0,y=-100,text="a.b"}
 if buildVersion~=nil then version.text=buildVersion end
 
 gameTitle="Bad Wizard"
-startMap="circuit-01"
+startMap="circuit-02"
 
 local instructions={
   keyboard={start="Press Escape to start",playAgain="Press Escape to try again",filename="assets/instructionsKeyboard.png",image=nil},
@@ -92,17 +92,17 @@ music={
   -- combat={filename="assets/Room 1 (Alt Idle).mp3",music=nil},
 }
 sfx={
-  shoot={filename="assets/Weapon Swing.ogg",sfx=nil},
-  hitWall={filename="assets/HitWall.ogg",sfx=nil},
-  hitMonster={filename="assets/EnemyDamaged.ogg",sfx=nil},
-  monsterHitPlayer={filename="assets/EnemyDamaged.ogg",sfx=nil},
+  shoot={filename="assets/player_shoot.wav",sfx=nil},
+  hitWall={filename="assets/hit_wall.wav",sfx=nil},
+  hitMonster={filename="assets/hit_monster.wav",sfx=nil},
+  monsterHitPlayer={filename="assets/player_hit.wav",sfx=nil},
   killPlayer={filename="assets/Player Death.ogg",sfx=nil},
-  killMonster={filename="assets/EnemyKilled.ogg",sfx=nil},
+  killMonster={filename="assets/monster_explode.wav",sfx=nil},
   doorOpen={filename="assets/Door Open.ogg",sfx=nil},
   footsteps={filename="assets/Footsteps.ogg",sfx=nil},
   pickupPowerup={filename="assets/Power-up Equip.ogg",sfx=nil},
   usePowerupAsHealth={filename="assets/Item Equip.ogg",sfx=nil},
-  usePowerupAsPower={filename="assets/playerexplode.wav",sfx=nil},
+  usePowerupAsPower={filename="assets/player_explode.wav",sfx=nil},
   exitFloor={filename="assets/ExitFloor.ogg",sfx=nil},
   monsterMeleePlayer={filename="assets/Melee.ogg",sfx=nil},
   endGame={filename="assets/Victory.ogg",sfx=nil},
@@ -295,7 +295,7 @@ function createPowerups(map)
 end
 
 function createWalls(map)
-  if map.layers["walls"].objects then
+  if map.layers["walls"] then
     for i,obj in pairs(map.layers["walls"].objects) do
       print("wall at x,y,w,h",obj.id,obj.x,obj.y,obj.width,obj.height)
       world:createHitbox(obj.x,obj.y,obj.width,obj.height,"wall",obj.id,obj.id,obj)
