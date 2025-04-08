@@ -28,7 +28,7 @@ function drawPlayerSelect(players)
   love.graphics.setLineWidth(3)
 
   love.graphics.setFont(fontSheets.large.font)
-  gui.centerText(string.format("Player Select n=%d r=%d",numPlayers,numReady),screenWidth/2,0,false)
+  gui.centerText(string.format("Player Select"),screenWidth/2,0,false)
   love.graphics.setFont(fontSheets.small.font)
 
   --player 1

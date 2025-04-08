@@ -394,6 +394,7 @@ end
 
 function drawWorld(self)
   love.graphics.setColor(1, 1, 1)
+  if self.map.layers["floor"] then self.map:drawLayer(self.map.layers["floor"]) end
   self.map:drawLayer(self.map.layers["ground"])
   if self.map.layers["coloring"] then self.map:drawLayer(self.map.layers["coloring"]) end
   if self.map.layers["decorations"] then self.map:drawLayer(self.map.layers["decorations"]) end
