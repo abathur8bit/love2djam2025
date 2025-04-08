@@ -19,6 +19,7 @@ local Monsters = {
     -- Ghost
     ghost = function()
         return {
+            name = 'ghost',
             type = 'monster',
             behaviour = Behaviours.ghost,
             sheet = Assets.ghost,
@@ -33,6 +34,7 @@ local Monsters = {
     -- Basic
     basic = function()
         return {
+            name = 'basic',
             type = 'monster',
             behaviour = Behaviours.basic,
             sheet = Assets.badguy1,
@@ -48,9 +50,29 @@ local Monsters = {
         }
     end,
 
+    -- Sense    
+    sense = function()
+        return {
+            name = 'sense',
+            type = 'monster',
+            behaviour = Behaviours.sense,
+            sheet = Assets.badguy1,
+            w = 64,
+            h = 64,
+            health = 1000,
+            speed = 100,
+            meleeDamage= 100,
+            meleeTimer = 1,
+            fireRate = 2,
+            fireRange = 2,
+            firePower = 'monster',
+        }
+    end,
+
     -- Basic ranger
     basic_ranger = function()
         return {
+            name = 'basic_ranger',
             type = 'monster',
             behaviour = Behaviours.basic_ranger,
             sheet = Assets.badguy2,
@@ -66,9 +88,29 @@ local Monsters = {
         }
     end,
 
+    -- Sense ranger
+    sense_ranger = function()
+        return {
+            name = 'sense_ranger',
+            type = 'monster',
+            behaviour = Behaviours.sense_ranger,
+            sheet = Assets.badguy2,
+            w = 64,
+            h = 64,
+            health = 500,
+            speed = 100,
+            meleeDamage= 100,
+            meleeTimer = 1,
+            fireRate = 2,
+            fireRange = 2,
+            firePower = 'monster',
+        }
+    end,
+
     -- Boss
     boss = function()
         return {
+            name = 'boss',
             type = 'monster',
             behaviour = Behaviours.boss,
             sheet = Assets.king,
