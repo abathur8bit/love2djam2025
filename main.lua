@@ -272,11 +272,11 @@ function createGenerators(map)
       if generator.name=="generator" then
         count=count+1
         local spawnRate=generator.properties.spawnrate or 3
-        print(" generatorat x,y,w,h,spawnRate",generator.id,generator.x,generator.y,generator.width,generator.height,spawnRate)
+        -- print(" generatorat x,y,w,h,spawnRate",generator.id,generator.x,generator.y,generator.width,generator.height,spawnRate)
         world:addShape(createGenerator(world,generator.x,generator.y,generator.width,generator.height,spawnRate))
       end
     end
-    print(string.format("created %d generators",count))
+    -- print(string.format("created %d generators",count))
   end
 end
 
@@ -285,7 +285,7 @@ function createPowerups(map)
     local count=0
     for _,powerup in pairs(map.layers["powerups"].objects) do
       count=count+1
-      print("trigger at x,y,w,h,name",powerup.id,powerup.x,powerup.y,powerup.width,powerup.height,powerup.name)
+      -- print("trigger at x,y,w,h,name",powerup.id,powerup.x,powerup.y,powerup.width,powerup.height,powerup.name)
       if powerup.name=="bean" then
         world:addShape(createPowerup(world,"earth",powerup.x,powerup.y,powerup.width,powerup.height))
       end
@@ -297,7 +297,7 @@ end
 function createWalls(map)
   if map.layers["walls"] then
     for i,obj in pairs(map.layers["walls"].objects) do
-      print("wall at x,y,w,h",obj.id,obj.x,obj.y,obj.width,obj.height)
+      -- print("wall at x,y,w,h",obj.id,obj.x,obj.y,obj.width,obj.height)
       world:createHitbox(obj.x,obj.y,obj.width,obj.height,"wall",obj.id,obj.id,obj)
     end
   end
