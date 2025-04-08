@@ -77,17 +77,17 @@ function playerSelectKeyPressed(players,key)
     assert(player~=nil,"No unassigned players")
     player.controller=0 --player now assigned the keyboard
   else
-    print("confirming player ",player.id)
+    -- print("confirming player ",player.id)
     confirmedPlayers[player.id]=true
   end
   
-  for i=1,4 do
-    if players[i] then print("i,controller,confirmed",i,players[i].controller,confirmedPlayers[i]) end
-  end
+  -- for i=1,4 do
+  --   if players[i] then print("i,controller,confirmed",i,players[i].controller,confirmedPlayers[i]) end
+  -- end
 end
 
 function playerSelectGamepadPressed(players,joystick,button)
-  print("player gamepad pressed")
+  -- print("player gamepad pressed")
   if button~="a" then return end
 
   player=findPlayerWithControllerId(players,joystick:getID())
@@ -97,13 +97,13 @@ function playerSelectGamepadPressed(players,joystick,button)
     player.controller=joystick:getID() --player now assigned the keyboard
     player.joystate=joystate[joystick]
   else
-    print("confirming player ",player.id)
+    -- print("confirming player ",player.id)
     confirmedPlayers[player.id]=true
   end
   
-  for i=1,4 do
-    if players[i] then print("i,controller,confirmed",i,players[i].controller,confirmedPlayers[i]) end
-  end
+  -- for i=1,4 do
+  --   if players[i] then print("i,controller,confirmed",i,players[i].controller,confirmedPlayers[i]) end
+  -- end
 end
 
 function findFirstUnassignedPlayer(players)
