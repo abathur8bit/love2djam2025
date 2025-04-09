@@ -92,8 +92,8 @@ music={
   -- combat={filename="assets/Room 1 (Alt Idle).mp3",music=nil},
 }
 sfx={
-  shoot={filename="assets/player_shoot.wav",sfx=nil},
-  hitWall={filename="assets/hit_wall.wav",sfx=nil},
+  shoot={filename="assets/player_shoot.wav",sfx=nil,volume=1},
+  hitWall={filename="assets/hit_wall.wav",sfx=nil,volume=0.3},
   hitMonster={filename="assets/hit_monster.wav",sfx=nil},
   monsterHitPlayer={filename="assets/player_hit.wav",sfx=nil},
   killPlayer={filename="assets/Player Death.ogg",sfx=nil},
@@ -106,6 +106,7 @@ sfx={
   exitFloor={filename="assets/ExitFloor.ogg",sfx=nil},
   monsterMeleePlayer={filename="assets/Melee.ogg",sfx=nil},
   endGame={filename="assets/Victory.ogg",sfx=nil},
+  monsterGenerate={filename="assets/generate_monster.wav",sfx=nil},
 
   menuHighlightChange=   {filename="assets/MenuHighlightChange.ogg",sfx=nil},
   menuSelectConfirm=     {filename="assets/MenuSelectConfirm.ogg",sfx=nil},
@@ -200,6 +201,7 @@ function love.load(args)
     for key,sfxInfo in pairs(sfx) do
       -- print("loading sound "..sfxInfo.filename)
       sfxInfo.sfx=love.audio.newSource(sfxInfo.filename,"static")
+      if sfxInfo.volume then sfxInfo.sfx:setVolume(sfxInfo.volume) end
     end
     for key,musicInfo in pairs(music) do
       -- print("loading music filename,loop"..musicInfo.filename,musicInfo.loop)
@@ -822,6 +824,7 @@ end
 function handleBulletHitMonster(bullet,targetHitbox)
   local monster=targetHitbox.object
   print("bullet hit a monster damage health",bullet.damage,monster.health)
+  monster:playHitAnim()
   monster.health=monster.health-bullet.damage
   if monster.health<=0 then
     monster:destroy()

@@ -38,7 +38,7 @@ function createPlayer(world,id,x,y,w,h,filename)
   s.direction="downright"
   s.keyPressed=false
   s.firing=false
-  s.speed=300
+  s.speed=200
   s.fireRate=0.2
   s.fireRateTimer=s.fireRate
   s.powerups=0

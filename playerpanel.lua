@@ -93,6 +93,8 @@ end
 
 -- value is a percent from 0-1
 function drawPercentBar(x,y,w,h,value)
-  love.graphics.rectangle("line",x,y,w,h)
+  if h>=3 then
+    love.graphics.rectangle("line",x,y,w,h)
+  end
   love.graphics.rectangle("fill",x,y,w*value,h)
 end

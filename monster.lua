@@ -28,6 +28,7 @@ function createMonster(world,id,x,y,name)
   s.id=id
   s.z=9 -- make sure it's under the player
   s.score=0
+  s.maxHealth=s.health
   s.keyPressed=false
 
   -- Set variables for attacking and moving
@@ -40,28 +41,38 @@ function createMonster(world,id,x,y,name)
 
   -- Animations
   s.grid=anim8.newGrid(s.w,s.h,s.sheet:getWidth(),s.sheet:getHeight())
-  s.animType="walk"
+  s.animType="idle"
   s.direction="downright"
   s.anims={
     idle={
-      up        = anim8.newAnimation(s.grid(1,1),0.15),
-      down      = anim8.newAnimation(s.grid(1,1),0.15),
-      right     = anim8.newAnimation(s.grid(1,1),0.15),
-      left      = anim8.newAnimation(s.grid(1,1),0.15),
-      upleft    = anim8.newAnimation(s.grid(1,1),0.15),
-      upright   = anim8.newAnimation(s.grid(1,1),0.15),
-      downright = anim8.newAnimation(s.grid(1,1),0.15),
-      downleft  = anim8.newAnimation(s.grid(1,1),0.15),
+      up        = anim8.newAnimation(s.grid("1-15",1),0.15),
+      down      = anim8.newAnimation(s.grid("1-15",1),0.15),
+      right     = anim8.newAnimation(s.grid("1-15",1),0.15),
+      left      = anim8.newAnimation(s.grid("1-15",1),0.15),
+      upleft    = anim8.newAnimation(s.grid("1-15",1),0.15),
+      upright   = anim8.newAnimation(s.grid("1-15",1),0.15),
+      downright = anim8.newAnimation(s.grid("1-15",1),0.15),
+      downleft  = anim8.newAnimation(s.grid("1-15",1),0.15),
     },
     walk={
-      up        = anim8.newAnimation(s.grid('1-4',1),0.15),
-      down      = anim8.newAnimation(s.grid('1-4',1),0.15),
-      right     = anim8.newAnimation(s.grid('1-4',1),0.15),
-      left      = anim8.newAnimation(s.grid('1-4',1),0.15),
-      upleft    = anim8.newAnimation(s.grid('1-4',1),0.15),
-      upright   = anim8.newAnimation(s.grid('1-4',1),0.15),
-      downright = anim8.newAnimation(s.grid('1-4',1),0.15),
-      downleft  = anim8.newAnimation(s.grid('1-4',1),0.15),
+      up        = anim8.newAnimation(s.grid('1-15',2),0.15),
+      down      = anim8.newAnimation(s.grid('1-15',2),0.15),
+      right     = anim8.newAnimation(s.grid('1-15',2),0.15),
+      left      = anim8.newAnimation(s.grid('1-15',2),0.15),
+      upleft    = anim8.newAnimation(s.grid('1-15',2),0.15),
+      upright   = anim8.newAnimation(s.grid('1-15',2),0.15),
+      downright = anim8.newAnimation(s.grid('1-15',2),0.15),
+      downleft  = anim8.newAnimation(s.grid('1-15',2),0.15),
+    },
+    hit={
+      up        = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      down      = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      right     = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      left      = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      upleft    = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      upright   = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      downright = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
+      downleft  = anim8.newAnimation(s.grid('1-8',3),0.15,function() s.animType="idle" end),
     },
   }
 
@@ -75,10 +86,18 @@ function createMonster(world,id,x,y,name)
   s.destroy=destroy
   s.followPath=followPath
   s.createHitbox=createMonsterHitbox
+  s.playHitAnim=playHitAnim
 
   -- Set up animations
   s.current=s.anims[s.animType][s.direction]
   return s
+end
+
+function playHitAnim(self)
+  if self.animType~="hit" then
+    self.animType="hit"
+    self.current:gotoFrame(1)
+  end
 end
 
 -- Update function
@@ -96,6 +115,7 @@ function updateMonster(self,dt)
   self:checkCollisions(dt)
 
   -- Animations
+  if self.targetMove then self.animType="walk" else self.animType="idle" end
   self.current=self.anims[self.animType][self.direction]  -- set the correct animation
   self.current:update(dt) -- update anim8
 end
@@ -105,8 +125,13 @@ function drawMonster(self)
   love.graphics.setFont(fontSheets.small.font)
   love.graphics.setColor(1,1,1,1)
   self.current:draw(self.sheet,self.x,self.y,nil,self.scale,self.scale,self.w/2,self.h/2) -- draw anim8
+
+  -- draw how much health is left
   love.graphics.setColor(1,0,0)
-  gui.centerText(self.health,self.x,self.y-self.h/2)
+  -- gui.centerText(self.health,self.x,self.y-self.h/2)
+  love.graphics.setLineWidth(1)
+  local barHeight=2
+  drawPercentBar(self.x-self.w/2,self.y-self.w/2-barHeight,self.w,barHeight,self.health/self.maxHealth)
 end
 
 -- Check collisions
