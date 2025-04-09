@@ -114,8 +114,14 @@ function updateMonster(self,dt)
   -- Check collisions
   self:checkCollisions(dt)
 
-  -- Animations
-  if self.targetMove then self.animType="walk" else self.animType="idle" end
+  -- Animations if we are not playing hit, then play idle or walk
+  if self.animType~="hit" then
+    if self.targetMove then
+      self.animType="walk"
+    else
+      self.animType="idle"
+    end
+  end
   self.current=self.anims[self.animType][self.direction]  -- set the correct animation
   self.current:update(dt) -- update anim8
 end
