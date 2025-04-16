@@ -9,7 +9,7 @@ function drawPlayerInfo(players)
   local y={padding+cellHeight+height*0,padding+cellHeight+height*1,padding+cellHeight+height*2,padding+cellHeight+height*3}
   for i=1,4 do
     if players[i].controller~=nil then
-      drawPlayerScoreHealth(players[1],x,y[i],i)
+      drawPlayerScoreHealth(players[i],x,y[i],i)
 
       -- drawPlayerPowerups(players[1])
     end
@@ -36,14 +36,16 @@ function drawPlayerScoreHealth(player,x,y,playerNumber)
   love.graphics.setFont(fontSheets.medium.font)
   gui.rightText(playerName,x,y-love.graphics.getFont():getHeight())
 
+  -- score
   love.graphics.setFont(fontSheets.small.font)
   y=y-love.graphics.getFont():getHeight()-offset
   x=screenWidth-padding-textWidth
-  love.graphics.print(powerText,x,y-love.graphics.getFont():getHeight())
+  love.graphics.print(scoreText,x,y-love.graphics.getFont():getHeight())
   x=x-offset
   love.graphics.setFont(fontSheets.medium.font)
   gui.rightText(math.floor(player.score),x,y-love.graphics.getFont():getHeight())
 
+  -- powerup
   love.graphics.setFont(fontSheets.small.font)
   y=y-love.graphics.getFont():getHeight()-offset
   x=screenWidth-padding-textWidth
@@ -53,6 +55,7 @@ function drawPlayerScoreHealth(player,x,y,playerNumber)
   gui.rightText(string.format("%d%%",math.floor(player.powerups/player.maxPowerups*100)),x,y-love.graphics.getFont():getHeight())
   drawPercentBar(x-barWidth,y-barHeight,barWidth,barHeight,player.powerups/player.maxPowerups)
 
+  -- firepower
   love.graphics.setFont(fontSheets.small.font)
   y=y-love.graphics.getFont():getHeight()-offset
   x=screenWidth-padding-textWidth
@@ -62,6 +65,7 @@ function drawPlayerScoreHealth(player,x,y,playerNumber)
   gui.rightText(string.format("%d%%",math.floor((player.firePower-1)/(player.firePowerMax-1)*100)),x,y-love.graphics.getFont():getHeight())
   drawPercentBar(x-barWidth,y-barHeight,barWidth,barHeight,(player.firePower-1)/(player.firePowerMax-1))
 
+  -- health. larger font when health is low
   love.graphics.setFont(fontSheets.small.font)
   y=y-love.graphics.getFont():getHeight()-offset
   x=screenWidth-padding-textWidth

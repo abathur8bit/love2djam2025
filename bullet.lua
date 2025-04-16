@@ -5,7 +5,7 @@ function createBullet(world,shooter,x,y,angle,color)
   local growMins={[1]=3,[2]=6,[3]=10,monster=3}
   local growMaxs={[1]=10,[2]=16,[3]=25,monster=10}
   local speeds={[1]=500,[2]=600,[3]=800,monster=500}
-  local damages={[1]=400,[2]=600,[3]=800,monster=100} -- the higher the level, the more damage it does
+  local damages={[1]=1000,[2]=1500,[3]=2000,monster=100} -- the higher the level, the more damage it does
   local times={[1]=10,[2]=7,[3]=4,monster=10} -- the higher the level the less time you get to use it
   local colors={
     [1]=gui.createColor(1.0,1.0,1.0,1),
