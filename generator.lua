@@ -43,7 +43,7 @@ end
 function updateGenerator(self,dt)
   self.anim:update(dt)
   if self.spawnRate>0 and self.counter>0 then
-    if self.world:checkPositionVisible(self.x,self.y,self.world.players[1].x,self.world.players[1].y) then
+    if checkPlayerVisible(self.world,self.x,self.y,self.world.players) then
       self.timer=self.timer-dt
       if self.timer<=0 then
         self.counter=self.counter-1
@@ -60,6 +60,16 @@ function updateGenerator(self,dt)
       end
     end
   end
+end
+
+-- check if any player is visible from given generator spot
+function checkPlayerVisible(world,x,y,players)
+  for _,player in pairs(players) do
+    if world:checkPositionVisible(x,y,player.x,player.y) then
+      return true
+    end
+  end
+  return false
 end
 
 function drawGenerator(self)
