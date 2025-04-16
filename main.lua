@@ -747,7 +747,7 @@ function checkCollisionsForPlayer(player)
         if hitboxName~=nil and hitboxName=="key" then
           -- print("collision with key ",hitboxNumber)
           hitbox.active=false
-          dumpTable(hitbox,"hitbox")
+          -- dumpTable(hitbox,"hitbox")
           for _,door in pairs(world.hitboxes) do
             local doorName,doorNumber=parseNameNumber(door.name)
             -- print("inspecting hitbox id,name,active,doorname,doornumber",door.id,door.name,door.active,doorName,doorNumber)
@@ -823,16 +823,17 @@ end
 
 function handleBulletHitMonster(bullet,targetHitbox)
   local monster=targetHitbox.object
+  local player=bullet.hitbox.object.shooter
   print("bullet hit a monster damage health",bullet.damage,monster.health)
   monster:playHitAnim()
   monster.health=monster.health-bullet.damage
   if monster.health<=0 then
     monster:destroy()
-    world.players[currentPlayer].score=world.players[currentPlayer].score+10
+    player.score=player.score+10
 
     -- Boss
     if monster.behaviour == 'boss' then
-      world.players[currentPlayer].score=world.players[currentPlayer].score+500
+      player.score=player.score+500
       playerWin()
     end
   end
